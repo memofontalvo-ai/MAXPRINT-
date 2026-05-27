@@ -611,7 +611,7 @@ main{padding:12px;max-width:700px;margin:0 auto;}
     <div class="sub-ttl" style="color:var(--a);">⚙️ Tareas de Producción</div>
   </div>
   
-<div id="av" style="display:none">
+<div id="av">
   <div class="tabs">
     <div class="tab on" data-d="todos" onclick="setTab('todos')"><span class="td" style="background:#888"></span>Todos <span class="tc" id="ct-todos">0</span></div>
     <div class="tab" data-d="carpinteria" onclick="setTab('carpinteria')"><span class="td" style="background:var(--carp)"></span>Carpintería <span class="tc" id="ct-carpinteria">0</span></div>
@@ -687,7 +687,7 @@ main{padding:12px;max-width:700px;margin:0 auto;}
     <div class="sub-ttl" style="color:var(--blue);">👥 Gestión Humana</div>
   </div>
   
-<div id="rv" style="display:none">
+<div id="rv">
   <main>
     <div id="rlv">
       <div class="rh">
@@ -1162,10 +1162,10 @@ window.chkPw=function(){var v=document.getElementById('pwi').value;if(v===PASS){
 window.canLogin=function(){document.getElementById('lmod').classList.remove('open');document.getElementById('pwi').value='';document.getElementById('pwe').textContent='';_history=[];showEmp();};
 document.getElementById('pwi').addEventListener('keydown',function(e){if(e.key==='Enter')window.chkPw();});
 
-function showAdm(){document.getElementById('av').style.display='';document.getElementById('ev').style.display='none';document.getElementById('rv').style.display='none';_navigate('adm-screen');document.getElementById('bad').classList.add('on');document.getElementById('bad').textContent='🔓 Admin';document.getElementById('bem').classList.remove('on');document.getElementById('brh').style.display='';document.getElementById('brh').classList.remove('on');}
-function showEmp(){_history=[];document.getElementById('av').style.display='none';document.getElementById('ev').style.display='';document.getElementById('rv').style.display='none';_gs('home');document.getElementById('bem').classList.add('on');document.getElementById('bad').classList.remove('on');document.getElementById('bad').textContent='🔒 Admin';document.getElementById('brh').style.display='none';document.getElementById('brh').classList.remove('on');isAdm=false;}
+function showAdm(){_navigate('adm-screen');document.getElementById('bad').classList.add('on');document.getElementById('bad').textContent='🔓 Admin';document.getElementById('bem').classList.remove('on');document.getElementById('brh').style.display='';document.getElementById('brh').classList.remove('on');}
+function showEmp(){_history=[];_gs('home');document.getElementById('bem').classList.add('on');document.getElementById('bad').classList.remove('on');document.getElementById('bad').textContent='🔒 Admin';document.getElementById('brh').style.display='none';document.getElementById('brh').classList.remove('on');isAdm=false;}
 window.goEmp=showEmp;
-window.goRH=function(){var _cur=document.querySelector('.screen.active');if(_cur&&_cur.id&&_cur.id!=='rrhh-screen')_history.push(_cur.id);document.getElementById('av').style.display='none';document.getElementById('ev').style.display='none';document.getElementById('rv').style.display='';document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});var _el=document.getElementById('rrhh-screen');if(_el)_el.classList.add('active');window.scrollTo(0,0);_updateBackBtn('rrhh-screen');document.getElementById('brh').classList.add('on');document.getElementById('bad').classList.remove('on');document.getElementById('bem').classList.remove('on');renderRH();renderDEL();};
+window.goRH=function(){var _cur=document.querySelector('.screen.active');if(_cur&&_cur.id&&_cur.id!=='rrhh-screen')_history.push(_cur.id);document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});var _el=document.getElementById('rrhh-screen');if(_el)_el.classList.add('active');window.scrollTo(0,0);_updateBackBtn('rrhh-screen');document.getElementById('brh').classList.add('on');document.getElementById('bad').classList.remove('on');document.getElementById('bem').classList.remove('on');renderRH();renderDEL();};
 
 // TABS
 window.setTab=function(d){curTab=d;document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('on');});document.querySelector('.tab[data-d="'+d+'"]').classList.add('on');var has=d!=='todos'&&d!=='pendientes';document.getElementById('ast').style.display=has?'':'none';aSub='t';document.querySelectorAll('#ast .sv').forEach(function(t,i){t.classList.toggle('on',i===0);});document.getElementById('atp').style.display='';document.getElementById('aep').style.display='none';document.getElementById('asp').style.display='none';updEmpSel();renderAdm();};
@@ -1389,9 +1389,6 @@ window.goBack = function(){
 
 window.goEmpModule = function(){
   _history = [];
-  document.getElementById('ev').style.display='';
-  document.getElementById('av').style.display='none';
-  document.getElementById('rv').style.display='none';
   _gs('emp-screen');
 };
 
@@ -1410,9 +1407,6 @@ window.goAdmTareas = function(){
 window.goAdmEmps = function(){
   var cur = document.querySelector('.screen.active');
   if(cur && cur.id) _history.push(cur.id);
-  document.getElementById('av').style.display='none';
-  document.getElementById('ev').style.display='none';
-  document.getElementById('rv').style.display='';
   document.getElementById('rlv').style.display='';
   document.getElementById('rfv').style.display='none';
   document.getElementById('rpv').style.display='none';
@@ -1430,9 +1424,6 @@ window.goAdmEmps = function(){
 window.goAdmDots = function(){
   var cur = document.querySelector('.screen.active');
   if(cur && cur.id) _history.push(cur.id);
-  document.getElementById('av').style.display='none';
-  document.getElementById('ev').style.display='none';
-  document.getElementById('rv').style.display='';
   document.getElementById('rlv').style.display='';
   document.getElementById('rfv').style.display='none';
   document.getElementById('rpv').style.display='none';
