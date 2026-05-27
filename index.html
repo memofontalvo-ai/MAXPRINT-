@@ -514,7 +514,7 @@ main{padding:12px;max-width:700px;margin:0 auto;}
     <div class="sub-ttl" style="color:var(--g);">👷 Módulo Empleado</div>
   </div>
   
-<div id="ev" style="display:none">
+<div id="ev">
   <main>
     <div id="dsel">
       <div class="eg"><h3>¡Hola, Equipo Maxprint! 👋</h3><p>Seleccioná tu departamento.</p></div>
@@ -1408,6 +1408,9 @@ window.goAdmEmps = function(){
   var cur = document.querySelector('.screen.active');
   if(cur && cur.id) _history.push(cur.id);
   document.getElementById('rlv').style.display='';
+  document.getElementById('rfv').style.display='none';
+  document.getElementById('rpv') && (document.getElementById('rpv').style.display='none');
+  document.getElementById('dfv').style.display='none';
   document.getElementById('rfv').style.display='none';
   document.getElementById('rpv').style.display='none';
   document.getElementById('dfv').style.display='none';
