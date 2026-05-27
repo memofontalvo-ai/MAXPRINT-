@@ -592,15 +592,6 @@ main{padding:12px;max-width:700px;margin:0 auto;}
       <div class="adm-btn-arrow">›</div>
     </button>
 
-    <button class="adm-btn adm-btn-dt" onclick="goAdmDots()">
-      <div class="adm-btn-ico">👕</div>
-      <div>
-        <div class="adm-btn-name">Dotaciones</div>
-        <div class="adm-btn-desc">Entregas de uniformes y EPP · Historial · Formato Excel · Importar · PDF</div>
-      </div>
-      <div class="adm-btn-arrow">›</div>
-    </button>
-
   </div>
 </div>
 
@@ -1411,17 +1402,17 @@ window.goAdmEmps = function(){
   document.getElementById('rfv').style.display='none';
   document.getElementById('rpv') && (document.getElementById('rpv').style.display='none');
   document.getElementById('dfv').style.display='none';
-  document.getElementById('rfv').style.display='none';
-  document.getElementById('rpv').style.display='none';
-  document.getElementById('dfv').style.display='none';
-  var svs = document.querySelectorAll('#rlv .st .sv');
-  if(svs && svs[0]) setRS('e', svs[0]);
-  renderRH(); renderDEL();
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   var el = document.getElementById('rrhh-screen');
   if(el) el.classList.add('active');
   window.scrollTo(0,0);
   _updateBackBtn('rrhh-screen');
+  setTimeout(function(){
+    // Switch to Empleados tab
+    var svs = document.querySelectorAll('#rlv .st .sv');
+    if(svs && svs[0]) setRS('e', svs[0]);
+    renderRH();
+  }, 80);
 };
 
 window.goAdmDots = function(){
@@ -1429,17 +1420,25 @@ window.goAdmDots = function(){
   if(cur && cur.id) _history.push(cur.id);
   document.getElementById('rlv').style.display='';
   document.getElementById('rfv').style.display='none';
-  document.getElementById('rpv').style.display='none';
+  document.getElementById('rpv') && (document.getElementById('rpv').style.display='none');
   document.getElementById('dfv').style.display='none';
-  setTimeout(function(){
-    var svs = document.querySelectorAll('#rlv .st .sv');
-    if(svs && svs[1]) setRS('d', svs[1]);
-  }, 60);
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   var el = document.getElementById('rrhh-screen');
   if(el) el.classList.add('active');
   window.scrollTo(0,0);
   _updateBackBtn('rrhh-screen');
+  setTimeout(function(){
+    // Switch to Dotaciones tab in rlv
+    var svs = document.querySelectorAll('#rlv .st .sv');
+    if(svs && svs[1]) setRS('d', svs[1]);
+    // Show rdp and select Nueva Entrega
+    setTimeout(function(){
+      document.getElementById('rdp').style.display='';
+      var dsvs = document.querySelectorAll('#rdp .st .sv');
+      if(dsvs && dsvs[0]) setDT('n', dsvs[0]);
+      renderDEL();
+    }, 80);
+  }, 80);
 };
 
 window.goNewEmp = function(){
