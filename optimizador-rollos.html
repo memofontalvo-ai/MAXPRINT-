@@ -560,6 +560,11 @@
       <label for="proyectoNombre">NOMBRE DEL PROYECTO</label>
       <input type="text" id="proyectoNombre" placeholder="ej. Cambio de lonas Supergiros Atlántico">
     </div>
+    <div class="row-inline" style="margin-bottom:6px;">
+      <button class="preset-btn" id="guardarProyectoBtn" style="border-color:var(--good);color:var(--good);">💾 guardar como proyecto</button>
+      <button class="preset-btn" id="verProyectosBtn">📂 proyectos guardados</button>
+    </div>
+    <div id="proyectoGuardadoInfo" class="sub" style="margin-bottom:10px;"></div>
     <p class="sub" style="margin-bottom:10px;">Marca los avisos en las listas de arriba — puedes entrar a un rango, chulear los que quieras, luego entrar a otro rango y seguir chuleando. Al agregarlos al montaje se descuentan de los rangos para que no los repitas.</p>
     <div id="seleccionBar" style="display:none;margin-bottom:12px;padding:10px 12px;background:var(--panel-2);border:1px solid var(--magenta);border-radius:8px;">
       <div style="font-size:13px;color:var(--text);margin-bottom:8px;"><strong id="selCount">0</strong> aviso(s) seleccionado(s)</div>
@@ -575,6 +580,18 @@
   </div><!-- /designerView -->
 
   <div id="printArea"></div>
+
+  <!-- MODAL: proyectos guardados -->
+  <div id="proyectosOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;padding:16px;box-sizing:border-box;overflow-y:auto;">
+    <div style="max-width:560px;margin:30px auto;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <h2 style="margin:0;font-size:15px;">📂 Proyectos guardados</h2>
+        <button class="preset-btn" id="cerrarProyectosBtn">✕ cerrar</button>
+      </div>
+      <input type="text" id="buscarProyectoInput" placeholder="buscar por nombre..." style="width:100%;box-sizing:border-box;background:var(--panel-2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:10px 12px;font-size:14px;margin-bottom:12px;">
+      <div id="proyectosLista"></div>
+    </div>
+  </div>
 
   <footer>medidas en centímetros · cálculo tipo shelf-nesting</footer>
 </div>
@@ -743,37 +760,75 @@ function loadPieceArray(list){
 // la lista empieza vacía — el usuario carga su propio archivo con "+ subir planilla"
 
 // --- Importación compartida: matriz de filas (arrays de columnas) -> filas de piezas ---
+// Una celda solo cuenta como "número puro" si es TODA ella un número (ej. "4664" o "50").
+// Un texto como "7 MURILLO" o "LA 17" NO cuenta como número aunque empiece con un dígito —
+// antes se colaba como si fuera el código del local, y ahí estaba el error.
+function isPureNumber(s){
+  return /^-?\d+([.,]\d+)?$/.test(s.trim());
+}
+// Medida compuesta: "366+386" = aviso en L (2 tramos), "120+122+90" = aviso en U (3 tramos,
+// izquierda+centro+derecha). El ancho total del aviso es la suma de todos los tramos.
+function parseCompoundSize(s){
+  const t = s.trim();
+  if(!/^\d+([.,]\d+)?(\s*\+\s*\d+([.,]\d+)?){1,2}$/.test(t)) return null;
+  const parts = t.split('+').map(p=> parseFloat(p.trim().replace(',','.')));
+  if(parts.some(p=> isNaN(p))) return null;
+  return { total: parts.reduce((a,b)=>a+b,0), parts, shape: parts.length===2 ? 'L' : 'U' };
+}
+
 function importRowsFromMatrix(rows, clearFirst){
   if(clearFirst) pieceList.innerHTML = '';
   let imported = 0, ignored = 0;
   let lastCodigo = '', lastLabel = '';
   rows.forEach(cols=>{
     if(!cols || !cols.length) return;
-    const numericIdx = [];
+
+    // Se recorren las celdas de la fila identificando cuáles son medidas: un número puro
+    // (alto, o ancho simple) o una medida compuesta con "+" (ancho de un aviso en L/U).
+    const pureIdx = [];
+    const measures = []; // {idx, value, compound}
     cols.forEach((c,i)=>{
       const val = (c===null || c===undefined) ? '' : String(c).trim();
       if(val === '') return;
-      const n = parseFloat(val.replace(',','.'));
-      if(!isNaN(n) && isFinite(n)) numericIdx.push(i);
+      if(isPureNumber(val)){
+        pureIdx.push(i);
+        measures.push({ idx:i, value: parseFloat(val.replace(',','.')), compound:null });
+        return;
+      }
+      const comp = parseCompoundSize(val);
+      if(comp) measures.push({ idx:i, value: comp.total, compound: comp });
     });
-    if(numericIdx.length < 2){ ignored++; return; }
-    const altoIdx = numericIdx[numericIdx.length-1];
-    const anchoIdx = numericIdx[numericIdx.length-2];
-    const ancho = parseFloat(String(cols[anchoIdx]).replace(',','.'));
-    const alto = parseFloat(String(cols[altoIdx]).replace(',','.'));
-    if(!ancho || !alto || ancho<=0 || alto<=0){ ignored++; return; }
 
-    // El código del local suele ser un número aparte de las medidas (ej. NOMPUNTO 4776).
-    // Se toma el último número que sobra, ignorando un posible consecutivo ITEM al inicio.
-    const restNumeric = numericIdx.filter(i=> i!==anchoIdx && i!==altoIdx);
+    if(measures.length < 2){ ignored++; return; }
+    measures.sort((a,b)=> a.idx - b.idx);
+    // el ALTO siempre es la última medida de la fila (nunca viene compuesto con "+");
+    // el ANCHO es la medida justo antes — puede ser un número simple o uno compuesto.
+    const altoM  = measures[measures.length-1];
+    const anchoM = measures[measures.length-2];
+    const ancho = anchoM.value, alto = altoM.value;
+    if(!ancho || !alto || ancho<=0 || alto<=0){ ignored++; return; }
+    const anchoIdx = anchoM.idx, altoIdx = altoM.idx;
+
+    // El código del local es el número puro que sobra después de sacar ancho y alto —
+    // nunca un texto, aunque empiece con dígito (eso es un nombre de zona/CDA, no un código).
+    const restPure = pureIdx.filter(i=> i!==anchoIdx && i!==altoIdx);
     let codigo = '';
-    if(restNumeric.length){
-      codigo = String(cols[restNumeric[restNumeric.length-1]]).trim();
+    if(restPure.length){
+      codigo = String(cols[restPure[restPure.length-1]]).trim();
     }
 
     let label = cols
-      .filter((c,i)=> i!==anchoIdx && i!==altoIdx && c!==null && c!==undefined && String(c).trim()!=='' && isNaN(parseFloat(String(c))))
+      .filter((c,i)=> i!==anchoIdx && i!==altoIdx && !pureIdx.includes(i) && c!==null && c!==undefined && String(c).trim()!=='')
       .map(c=>String(c).trim()).join(' ');
+
+    // aviso en L o en U: se deja constancia en el nombre para que el equipo de corte/
+    // instalación sepa que ese ancho es la suma de varios tramos (izquierda+derecha, o
+    // izquierda+centro+derecha), y no una sola pieza continua.
+    if(anchoM.compound){
+      const tag = anchoM.compound.shape === 'L' ? 'aviso en L' : 'aviso en U';
+      const detalle = anchoM.compound.parts.map(p=> p % 1 === 0 ? p : p.toFixed(1)).join('+');
+      label = (label || 'sin nombre') + ` (${tag}: ${detalle} cm)`;
+    }
 
     // filas de continuación (segunda lona del mismo local): heredan código y nombre
     if(codigo) lastCodigo = codigo; else codigo = lastCodigo;
@@ -784,6 +839,39 @@ function importRowsFromMatrix(rows, clearFirst){
     imported++;
   });
   return { imported, ignored };
+}
+
+// Lee el encabezado de la planilla (NOMBRE PROYECTO / LISTA No. / FECHA DE LISTA) para
+// pre-llenar el nombre del proyecto automáticamente — sin pisar lo que ya hayas escrito.
+function extractProjectMetaFromMatrix(rows){
+  const meta = { nombre: '', listaNo: '' };
+  for(let r = 0; r < Math.min(rows.length, 6); r++){
+    const row = rows[r] || [];
+    for(let c = 0; c < row.length; c++){
+      const val = (row[c]===null || row[c]===undefined) ? '' : String(row[c]).trim();
+      if(!val) continue;
+      if(!meta.nombre && /NOMBRE\s*(DEL)?\s*PROYECTO/i.test(val)){
+        for(let k=c+1;k<row.length;k++){
+          const v2 = (row[k]===null||row[k]===undefined) ? '' : String(row[k]).trim();
+          if(v2){ meta.nombre = v2; break; }
+        }
+      }
+      if(!meta.listaNo && /LISTA\s*No/i.test(val)){
+        // el valor puede estar en la misma fila (celda siguiente) o en la fila de abajo,
+        // en la misma columna (algunas planillas combinan el encabezado en dos filas)
+        for(let k=c+1;k<row.length;k++){
+          const v2 = (row[k]===null||row[k]===undefined) ? '' : String(row[k]).trim();
+          if(v2){ meta.listaNo = v2; break; }
+        }
+        if(!meta.listaNo && rows[r+1]){
+          const below = rows[r+1][c];
+          const v2 = (below===null||below===undefined) ? '' : String(below).trim();
+          if(v2) meta.listaNo = v2;
+        }
+      }
+    }
+  }
+  return meta;
 }
 
 // Importar filas pegadas desde el portapapeles (separadas por tabs al copiar de Excel)
@@ -958,6 +1046,15 @@ document.getElementById('fileUpload').addEventListener('change', async (e)=>{
     msgEl.textContent = `${imported} fila(s) cargada(s) desde "${file.name}"${ignored ? `, ${ignored} fila(s) ignorada(s) (encabezados u otras sin medidas)` : ''}.`;
     msgEl.style.color = imported ? 'var(--good)' : 'var(--danger)';
     refreshPieceCount();
+    // pre-llena el nombre del proyecto con lo que diga el encabezado de la planilla
+    // (NOMBRE PROYECTO / LISTA No.), sin pisar lo que ya hayas escrito a mano.
+    const campoProyecto = document.getElementById('proyectoNombre');
+    if(campoProyecto && !campoProyecto.value.trim()){
+      const meta = extractProjectMetaFromMatrix(rows);
+      if(meta.nombre){
+        campoProyecto.value = meta.listaNo ? `${meta.nombre} — Lista ${meta.listaNo}` : meta.nombre;
+      }
+    }
   if(imported > 0){ selectedUids.clear(); showInitialRecommendation(); saveEstado(); }
   } catch(err){
     console.error(err);
@@ -2641,28 +2738,46 @@ document.addEventListener('click', (e)=>{
 });
 
 // ---- Guardado local (para no perder el trabajo al cerrar) ----
+function buildEstadoSnapshot(){
+  const piezas = [...pieceList.querySelectorAll('.piece-row')].map(r=>({
+    codigo: r.querySelector('.f-codigo').value,
+    nombre: r.querySelector('.f-nombre').value,
+    ancho: r.querySelector('.f-ancho').value,
+    alto: r.querySelector('.f-alto').value,
+    cant: r.querySelector('.f-cant').value
+  }));
+  return {
+    piezas, montajes, montajeSeq,
+    config: {
+      machineWidth: document.getElementById('machineWidth').value,
+      sangrado: document.getElementById('sangrado').value,
+      maxTiraje: document.getElementById('maxTiraje').value,
+      numRanges: document.getElementById('numRanges').value,
+      rollosDisponibles: document.getElementById('rollosDisponibles').value,
+      minAprov: document.getElementById('minAprov').value,
+      organizarPor: document.getElementById('organizarPor').value,
+      proyectoNombre: document.getElementById('proyectoNombre').value
+    }
+  };
+}
+
+function aplicarEstadoSnapshot(st){
+  if(st.config){
+    Object.entries(st.config).forEach(([k,v])=>{
+      const el = document.getElementById(k);
+      if(el && v !== undefined && v !== null) el.value = v;
+    });
+    syncOrganizarPor();
+  }
+  pieceList.innerHTML = '';
+  (st.piezas||[]).forEach(p=> addPieceRow(p.codigo, p.nombre, p.ancho, p.alto, p.cant));
+  montajes = st.montajes || [];
+  montajeSeq = st.montajeSeq || (montajes.length+1);
+}
+
 function saveEstado(){
   try{
-    const piezas = [...pieceList.querySelectorAll('.piece-row')].map(r=>({
-      codigo: r.querySelector('.f-codigo').value,
-      nombre: r.querySelector('.f-nombre').value,
-      ancho: r.querySelector('.f-ancho').value,
-      alto: r.querySelector('.f-alto').value,
-      cant: r.querySelector('.f-cant').value
-    }));
-    localStorage.setItem('optimizador_estado', JSON.stringify({
-      piezas, montajes, montajeSeq,
-      config: {
-        machineWidth: document.getElementById('machineWidth').value,
-        sangrado: document.getElementById('sangrado').value,
-        maxTiraje: document.getElementById('maxTiraje').value,
-        numRanges: document.getElementById('numRanges').value,
-        rollosDisponibles: document.getElementById('rollosDisponibles').value,
-        minAprov: document.getElementById('minAprov').value,
-        organizarPor: document.getElementById('organizarPor').value,
-        proyectoNombre: document.getElementById('proyectoNombre').value
-      }
-    }));
+    localStorage.setItem('optimizador_estado', JSON.stringify(buildEstadoSnapshot()));
   }catch(err){ /* almacenamiento lleno o no disponible: se ignora */ }
 }
 
@@ -2671,22 +2786,144 @@ function loadEstado(){
     const raw = localStorage.getItem('optimizador_estado');
     if(!raw) return false;
     const st = JSON.parse(raw);
-    if(st.config){
-      Object.entries(st.config).forEach(([k,v])=>{
-        const el = document.getElementById(k);
-        if(el && v !== undefined && v !== null) el.value = v;
-      });
-      syncOrganizarPor();
-    }
-    if(st.piezas && st.piezas.length){
-      pieceList.innerHTML = '';
-      st.piezas.forEach(p=> addPieceRow(p.codigo, p.nombre, p.ancho, p.alto, p.cant));
-    }
-    montajes = st.montajes || [];
-    montajeSeq = st.montajeSeq || (montajes.length+1);
+    aplicarEstadoSnapshot(st);
     return !!(st.piezas && st.piezas.length);
   }catch(err){ return false; }
 }
+
+// ============ PROYECTOS GUARDADOS ============
+// Cada "planilla" que subes (con su título y fecha) queda guardada como un proyecto
+// independiente, separado del autoguardado normal — así puedes tener varias listas
+// distintas guardadas al mismo tiempo y volver a abrir cualquiera para seguir
+// trabajando sobre ella, sin que se pisen entre sí.
+const PROYECTOS_KEY = 'optimizador_proyectos_guardados';
+
+function cargarListaProyectos(){
+  try{ return JSON.parse(localStorage.getItem(PROYECTOS_KEY) || '[]'); }
+  catch(e){ return []; }
+}
+function guardarListaProyectos(lista){
+  try{ localStorage.setItem(PROYECTOS_KEY, JSON.stringify(lista)); }
+  catch(e){ alert('No se pudo guardar: el almacenamiento del navegador está lleno o no disponible.'); }
+}
+function fmtFechaHora(iso){
+  try{
+    const d = new Date(iso);
+    return d.toLocaleDateString('es-CO', {day:'2-digit', month:'short', year:'numeric'}) + ' · ' +
+           d.toLocaleTimeString('es-CO', {hour:'2-digit', minute:'2-digit'});
+  }catch(e){ return iso; }
+}
+
+function guardarProyectoActual(){
+  const nombreActual = (document.getElementById('proyectoNombre').value || '').trim();
+  const titulo = prompt('Nombre del proyecto (título de esta lista de avisos):', nombreActual);
+  if(titulo === null) return; // canceló
+  const tituloFinal = titulo.trim() || 'Proyecto sin nombre';
+  document.getElementById('proyectoNombre').value = tituloFinal;
+
+  const lista = cargarListaProyectos();
+  const snapshot = buildEstadoSnapshot();
+  const existente = lista.find(p=> p.titulo.trim().toLowerCase() === tituloFinal.toLowerCase());
+
+  if(existente){
+    const confirmar = confirm(`Ya existe un proyecto guardado con el nombre "${tituloFinal}".\n\n¿Quieres actualizarlo con lo que tienes ahora? (Aceptar = actualizar / Cancelar = guardar como uno nuevo)`);
+    if(confirmar){
+      existente.titulo = tituloFinal;
+      existente.fechaActualizacion = new Date().toISOString();
+      existente.snapshot = snapshot;
+      guardarListaProyectos(lista);
+      mostrarInfoProyectoGuardado(`Proyecto "${tituloFinal}" actualizado — ${fmtFechaHora(existente.fechaActualizacion)}`);
+      return;
+    }
+  }
+
+  const nuevo = {
+    id: 'p' + Date.now() + Math.random().toString(36).slice(2,7),
+    titulo: tituloFinal,
+    fechaCreacion: new Date().toISOString(),
+    fechaActualizacion: new Date().toISOString(),
+    snapshot
+  };
+  lista.push(nuevo);
+  guardarListaProyectos(lista);
+  mostrarInfoProyectoGuardado(`Proyecto "${tituloFinal}" guardado — ${fmtFechaHora(nuevo.fechaCreacion)}`);
+}
+
+function mostrarInfoProyectoGuardado(texto){
+  const el = document.getElementById('proyectoGuardadoInfo');
+  if(el) el.textContent = '✅ ' + texto;
+}
+
+function abrirProyecto(id){
+  const lista = cargarListaProyectos();
+  const p = lista.find(x=> x.id === id);
+  if(!p) return;
+  if(!confirm(`¿Abrir el proyecto "${p.titulo}"?\n\nEsto reemplaza los avisos y montajes que tienes en pantalla ahora (si no los has guardado, se pierden).`)) return;
+  aplicarEstadoSnapshot(p.snapshot);
+  saveEstado();
+  refreshPieceCount();
+  renderMontajes();
+  updateSeleccionBar();
+  document.getElementById('results').innerHTML = '';
+  document.getElementById('compareResults').innerHTML = '';
+  mostrarInfoProyectoGuardado(`Proyecto "${p.titulo}" abierto — última actualización ${fmtFechaHora(p.fechaActualizacion)}`);
+  cerrarProyectos();
+}
+
+function eliminarProyecto(id){
+  const lista = cargarListaProyectos();
+  const p = lista.find(x=> x.id === id);
+  if(!p) return;
+  if(!confirm(`¿Eliminar el proyecto "${p.titulo}"? Esta acción no se puede deshacer.`)) return;
+  guardarListaProyectos(lista.filter(x=> x.id !== id));
+  renderListaProyectos(document.getElementById('buscarProyectoInput').value);
+}
+
+function renderListaProyectos(filtro){
+  const cont = document.getElementById('proyectosLista');
+  let lista = cargarListaProyectos().sort((a,b)=> new Date(b.fechaActualizacion) - new Date(a.fechaActualizacion));
+  if(filtro && filtro.trim()){
+    const f = filtro.trim().toLowerCase();
+    lista = lista.filter(p=> p.titulo.toLowerCase().includes(f));
+  }
+  if(!lista.length){
+    cont.innerHTML = '<p class="sub">No hay proyectos guardados todavía. Arma tu lista de avisos y toca "guardar como proyecto".</p>';
+    return;
+  }
+  cont.innerHTML = lista.map(p=>{
+    const nAvisos = (p.snapshot.piezas||[]).reduce((s,pz)=> s + (parseInt(pz.cant)||1), 0);
+    const nMontajes = (p.snapshot.montajes||[]).length;
+    return `<div style="padding:11px 12px;background:var(--panel-2);border-radius:8px;margin-bottom:8px;">
+      <div style="font-weight:700;font-size:14px;margin-bottom:2px;">${p.titulo}</div>
+      <div class="sub" style="margin-bottom:8px;">${fmtFechaHora(p.fechaActualizacion)} · ${nAvisos} aviso${nAvisos!==1?'s':''} · ${nMontajes} montaje${nMontajes!==1?'s':''}</div>
+      <div class="row-inline">
+        <button class="preset-btn abrir-proyecto-btn" data-id="${p.id}" style="border-color:var(--good);color:var(--good);">abrir</button>
+        <button class="preset-btn eliminar-proyecto-btn" data-id="${p.id}" style="border-color:var(--danger);color:var(--danger);">eliminar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function abrirProyectos(){
+  document.getElementById('proyectosOverlay').style.display = 'block';
+  document.getElementById('buscarProyectoInput').value = '';
+  renderListaProyectos('');
+}
+function cerrarProyectos(){
+  document.getElementById('proyectosOverlay').style.display = 'none';
+}
+
+document.getElementById('guardarProyectoBtn').addEventListener('click', guardarProyectoActual);
+document.getElementById('verProyectosBtn').addEventListener('click', abrirProyectos);
+document.getElementById('cerrarProyectosBtn').addEventListener('click', cerrarProyectos);
+document.getElementById('proyectosOverlay').addEventListener('click', (e)=>{ if(e.target.id==='proyectosOverlay') cerrarProyectos(); });
+document.getElementById('buscarProyectoInput').addEventListener('input', (e)=> renderListaProyectos(e.target.value));
+document.getElementById('proyectosLista').addEventListener('click', (e)=>{
+  const abrirBtn = e.target.closest('.abrir-proyecto-btn');
+  if(abrirBtn){ abrirProyecto(abrirBtn.dataset.id); return; }
+  const delBtn = e.target.closest('.eliminar-proyecto-btn');
+  if(delBtn){ eliminarProyecto(delBtn.dataset.id); return; }
+});
 
 // Exportar los avisos que quedaron por fuera (modo "mis rollos")
 document.addEventListener('click', (e)=>{
