@@ -466,8 +466,46 @@ main{padding:12px;max-width:700px;margin:0 auto;}
 <span id="bem" style="display:none"></span>
 <span id="brh" style="display:none"></span>
 
+<!-- ════════ LOGIN ════════ -->
+<div class="screen active" id="login-screen">
+  <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;">
+    <div style="margin-bottom:18px;text-align:center;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:6px;color:var(--a);">MAXPRINT</div>
+      <div style="font-size:11px;letter-spacing:3px;color:var(--tm);margin-top:2px;">SISTEMA DE GESTIÓN</div>
+    </div>
+    <div style="background:var(--s);border:2px solid var(--a);border-radius:20px;padding:28px 22px;width:100%;max-width:340px;text-align:center;">
+      <span style="font-size:44px;">🔐</span>
+      <h2 style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--a);margin:10px 0 4px;">ACCESO AL SISTEMA</h2>
+      <p style="font-size:12px;color:var(--tm);margin-bottom:20px;">Ingresa tus credenciales para continuar</p>
+      <input id="login-user" type="text" placeholder="Usuario" autocomplete="username"
+        style="width:100%;background:var(--s2);border:1.5px solid var(--b);border-radius:10px;color:var(--t);font-size:15px;padding:11px 13px;outline:none;margin-bottom:10px;font-family:'DM Sans',sans-serif;">
+      <input id="login-pass" type="password" placeholder="Contraseña" autocomplete="current-password"
+        style="width:100%;background:var(--s2);border:1.5px solid var(--b);border-radius:10px;color:var(--t);font-size:15px;padding:11px 13px;outline:none;margin-bottom:10px;font-family:'DM Sans',sans-serif;"
+        onkeydown="if(event.key==='Enter')doLogin()">
+      <div id="login-err" style="font-size:11px;color:var(--r);min-height:16px;margin-bottom:8px;"></div>
+      <button onclick="doLogin()" style="width:100%;background:var(--a);color:#000;border:none;border-radius:10px;padding:12px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1.5px;cursor:pointer;margin-bottom:12px;">INGRESAR</button>
+      <button onclick="openChangePass()" style="background:transparent;border:none;color:var(--tm);font-size:12px;cursor:pointer;text-decoration:underline;">Cambiar contraseña</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ MODAL CAMBIAR CONTRASEÑA ════════ -->
+<div class="mo" id="chpass-mod">
+  <div class="mc">
+    <span class="mc-ico">🔑</span>
+    <h2>CAMBIAR CONTRASEÑA</h2>
+    <p>Ingresa la contraseña actual y la nueva</p>
+    <input id="cp-old" type="password" placeholder="Contraseña actual" style="width:100%;background:var(--s2);border:1.5px solid var(--b);border-radius:10px;color:var(--t);font-size:15px;padding:10px 13px;outline:none;margin-bottom:10px;font-family:'DM Sans',sans-serif;">
+    <input id="cp-new1" type="password" placeholder="Nueva contraseña" style="width:100%;background:var(--s2);border:1.5px solid var(--b);border-radius:10px;color:var(--t);font-size:15px;padding:10px 13px;outline:none;margin-bottom:10px;font-family:'DM Sans',sans-serif;">
+    <input id="cp-new2" type="password" placeholder="Confirmar nueva contraseña" style="width:100%;background:var(--s2);border:1.5px solid var(--b);border-radius:10px;color:var(--t);font-size:15px;padding:10px 13px;outline:none;margin-bottom:10px;font-family:'DM Sans',sans-serif;">
+    <div id="cp-err" style="font-size:11px;color:var(--r);min-height:16px;margin-bottom:8px;"></div>
+    <button class="btn-lo" onclick="doChangePass()">GUARDAR</button>
+    <button class="btn-can" onclick="document.getElementById('chpass-mod').classList.remove('open')">Cancelar</button>
+  </div>
+</div>
+
 <!-- ════════ HOME ════════ -->
-<div class="screen active" id="home">
+<div class="screen" id="home">
   <div class="home-brand">
     <div class="brand-name">MAXPRINT</div>
     <div class="brand-tag">Sistema de Gestión</div>
@@ -1415,8 +1453,47 @@ window.goPDF = function(){
     },80);
   },80);
 };
+/* ── LOGIN ── */
+var SYS_USER = 'admin';
+var SYS_PASS = localStorage.getItem('mp_pass') || 'MaxPrint2026';
+
+window.doLogin = function(){
+  var u = document.getElementById('login-user').value.trim();
+  var p = document.getElementById('login-pass').value;
+  var err = document.getElementById('login-err');
+  if(u === SYS_USER && p === SYS_PASS){
+    err.textContent = '';
+    _gs('home');
+  } else {
+    err.textContent = '⚠️ Usuario o contraseña incorrectos';
+    document.getElementById('login-pass').value = '';
+  }
+};
+
+window.openChangePass = function(){
+  document.getElementById('cp-old').value='';
+  document.getElementById('cp-new1').value='';
+  document.getElementById('cp-new2').value='';
+  document.getElementById('cp-err').textContent='';
+  document.getElementById('chpass-mod').classList.add('open');
+};
+
+window.doChangePass = function(){
+  var old = document.getElementById('cp-old').value;
+  var n1  = document.getElementById('cp-new1').value;
+  var n2  = document.getElementById('cp-new2').value;
+  var err = document.getElementById('cp-err');
+  if(old !== SYS_PASS){ err.textContent='⚠️ Contraseña actual incorrecta'; return; }
+  if(n1.length < 6){ err.textContent='⚠️ La nueva contraseña debe tener al menos 6 caracteres'; return; }
+  if(n1 !== n2){ err.textContent='⚠️ Las contraseñas no coinciden'; return; }
+  SYS_PASS = n1;
+  localStorage.setItem('mp_pass', n1);
+  document.getElementById('chpass-mod').classList.remove('open');
+  toast('✅ Contraseña actualizada');
+};
+
 /* Start */
-_gs('home');
+_gs('login-screen');
 </script>
 </body>
 </html>
