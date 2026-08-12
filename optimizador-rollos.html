@@ -2049,11 +2049,7 @@ document.addEventListener('click', (e)=>{
       <div style="overflow-x:auto;">
       <table style="width:100%;border-collapse:collapse;font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:11.5px;">
         <thead><tr style="border-bottom:1px solid var(--line);">
-          <th style="width:56px;padding:5px 2px;">
-            <label style="display:flex;align-items:center;gap:3px;font-weight:400;font-size:9px;color:var(--text-dim);cursor:pointer;">
-              <input type="checkbox" class="sel-all-tirada" style="width:15px;height:15px;">TODOS
-            </label>
-          </th>
+          <th style="width:26px;padding:5px 2px;"></th>
           <th style="text-align:left;padding:5px 4px;color:var(--text-dim);font-weight:500;">CÓDIGO</th>
           <th style="text-align:left;padding:5px 4px;color:var(--text-dim);font-weight:500;">LOCAL</th>
           <th style="text-align:right;padding:5px 4px;color:var(--text-dim);font-weight:500;">MEDIDA</th>
@@ -2119,38 +2115,80 @@ function exportMontajePDF(m){
   const maxTirajeM = parseFloat(document.getElementById('maxTiraje').value) || 0;
   const parts = splitResultByMaxLength(res, maxTirajeM*100);
   const proy = proyectoActual();
+  const sangrado = sangradoActual();
 
-  // hoja carta = 215.9 x 279.4 mm; se restan los 10mm de margen de @page por lado.
-  // Se deja además unos milímetros de colchón real (no solo un % del área del dibujo)
-  // para que el alto de la página nunca quede exacto al límite y dispare una hoja extra.
-  const pageW = 195.9, pageH = 259.4;
-  const headerH = 28; // mm reservados para el encabezado de texto
-  const usableW = pageW * 0.96;
-  const usableH = (pageH - headerH) * 0.96;
+  // Todo el montaje va en UNA sola hoja carta: el plano a la izquierda (una tira por
+  // cada tirada si hay más de una) y a la derecha el resumen de locales/medidas.
+  // hoja carta = 215.9 x 279.4 mm; @page margin 10mm por lado -> usable 195.9 x 259.4mm.
+  const usableW = 195.9, usableH = 259.4;
+  const headerH = 20;
+  const bodyH = usableH - headerH;
+  const gap = 4;
+  const leftW = usableW * 0.42;
+  const rightW = usableW - leftW - gap;
 
-  let pagesHtml = '';
+  // ---- columna izquierda: un plano por tirada, apilados verticalmente ----
+  const tiraGap = 3;
+  const stripH = (bodyH - (parts.length-1)*tiraGap) / parts.length;
+  let leftHtml = '';
   parts.forEach((p, pi)=>{
-    const scale = Math.min(usableW / m.width, usableH / p.totalLength); // mm por cm de rollo
+    const labelH = parts.length>1 ? 5 : 0;
+    const availH = Math.max(stripH - labelH, 10);
+    const scale = Math.min(leftW / m.width, availH / Math.max(p.totalLength,1));
     const wMm = (m.width * scale).toFixed(1);
     const hMm = (p.totalLength * scale).toFixed(1);
     const svg = buildPrintSvg(m.width, p);
-    // el salto de página se controla por código según la posición real (no por CSS
-    // :last-child), y la altura de la página ya NO se fuerza al máximo: se deja que
-    // mida justo lo que ocupa su contenido (que ya cabe dentro de la hoja por el
-    // cálculo de escala) — así no queda una hoja en blanco de más al final.
-    const esUltima = pi === parts.length - 1;
-    const breakStyle = esUltima ? '' : 'page-break-after:always;break-after:page;';
-    pagesHtml += `<div class="print-page" style="${breakStyle}">
-      <div style="font-family:-apple-system,Arial,sans-serif;margin-bottom:4mm;height:${headerH}mm;box-sizing:border-box;">
-        ${proy ? `<div style="font-size:8pt;color:#666;letter-spacing:.05em;text-transform:uppercase;">${proy}</div>` : ''}
-        <div style="font-size:14pt;font-weight:700;">${m.nombre}${parts.length>1 ? ` — tirada ${pi+1} de ${parts.length}` : ''}</div>
-        <div style="font-size:8.5pt;color:#666;margin-top:1mm;">Rollo ${m.width} cm · ${(p.totalLength/100).toFixed(2)} m · MR = medida real · MS = medida con sangrado</div>
-      </div>
+    leftHtml += `<div style="height:${stripH}mm;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;${pi<parts.length-1?`margin-bottom:${tiraGap}mm;`:''}">
+      ${parts.length>1 ? `<div style="font-size:6.5pt;color:#666;margin-bottom:1mm;">Tirada ${pi+1} de ${parts.length} · ${(p.totalLength/100).toFixed(2)} m</div>` : ''}
       <div style="width:${wMm}mm;height:${hMm}mm;">${svg}</div>
     </div>`;
   });
 
-  document.getElementById('printArea').innerHTML = pagesHtml;
+  // ---- columna derecha: resumen de medidas y locales de todos los avisos ----
+  const allItems = [];
+  parts.forEach((p, pi)=> p.shelves.forEach(sh=> sh.items.forEach(it=> allItems.push({...it, _tirada: pi+1}))));
+  allItems.sort((a,b)=> a.nombre.localeCompare(b.nombre));
+  const n = allItems.length;
+  // la letra se achica automáticamente si hay muchos avisos, para que la lista completa
+  // quepa siempre dentro de la misma hoja.
+  const rowFont = n>34 ? 5.2 : n>26 ? 5.8 : n>18 ? 6.4 : n>10 ? 7.1 : 7.8;
+  const rowPad = n>26 ? 0.7 : 1.2;
+
+  const rowsHtml = allItems.map(it=>{
+    const msW = Math.round(it.origW + sangrado*2), msH = Math.round(it.origH + sangrado*2);
+    return `<tr>
+      <td style="padding:${rowPad}mm 1mm;color:#a05a00;white-space:nowrap;">${it.codigo||'—'}</td>
+      <td style="padding:${rowPad}mm 1mm;">${it.nombre}${parts.length>1?` <span style="color:#999;">(T${it._tirada})</span>`:''}</td>
+      <td style="padding:${rowPad}mm 1mm;text-align:right;white-space:nowrap;color:#555;">${Math.round(it.origW)}×${Math.round(it.origH)}</td>
+      <td style="padding:${rowPad}mm 1mm;text-align:right;white-space:nowrap;color:#0a6ea6;">${msW}×${msH}</td>
+    </tr>`;
+  }).join('');
+
+  const rightHtml = `<table style="width:100%;border-collapse:collapse;font-family:monospace;font-size:${rowFont}pt;">
+    <thead><tr style="border-bottom:0.4mm solid #ccc;">
+      <th style="text-align:left;padding:${rowPad}mm 1mm;color:#888;font-weight:600;">CÓDIGO</th>
+      <th style="text-align:left;padding:${rowPad}mm 1mm;color:#888;font-weight:600;">LOCAL</th>
+      <th style="text-align:right;padding:${rowPad}mm 1mm;color:#888;font-weight:600;">MR</th>
+      <th style="text-align:right;padding:${rowPad}mm 1mm;color:#888;font-weight:600;">MS</th>
+    </tr></thead>
+    <tbody>${rowsHtml}</tbody>
+  </table>`;
+
+  const totalM = (parts.reduce((s,p)=> s+p.totalLength, 0)/100).toFixed(2);
+
+  const pageHtml = `<div class="print-page">
+    <div style="font-family:-apple-system,Arial,sans-serif;height:${headerH}mm;box-sizing:border-box;margin-bottom:2mm;">
+      ${proy ? `<div style="font-size:8pt;color:#666;letter-spacing:.05em;text-transform:uppercase;">${proy}</div>` : ''}
+      <div style="font-size:14pt;font-weight:700;">${m.nombre}</div>
+      <div style="font-size:8pt;color:#666;margin-top:0.5mm;">Rollo ${m.width} cm · ${totalM} m total · ${n} aviso${n!==1?'s':''}${parts.length>1?` · ${parts.length} tiradas`:''} · sangrado ${sangrado} cm/lado · MR = medida real · MS = medida con sangrado</div>
+    </div>
+    <div style="display:flex;gap:${gap}mm;height:${bodyH}mm;">
+      <div style="width:${leftW}mm;flex-shrink:0;">${leftHtml}</div>
+      <div style="width:${rightW}mm;overflow:hidden;">${rightHtml}</div>
+    </div>
+  </div>`;
+
+  document.getElementById('printArea').innerHTML = pageHtml;
   setTimeout(()=> window.print(), 60);
 }
 
@@ -2273,22 +2311,9 @@ document.addEventListener('change', (e)=>{
   updateSeleccionBar();
 });
 
-// marcar toda una tirada de una vez
-document.addEventListener('change', (e)=>{
-  const cb = e.target.closest('.sel-all-tirada');
-  if(!cb) return;
-  const table = cb.closest('table');
-  table.querySelectorAll('.sel-aviso').forEach(x=>{
-    x.checked = cb.checked;
-    if(cb.checked) selectedUids.add(x.dataset.uid);
-    else selectedUids.delete(x.dataset.uid);
-  });
-  updateSeleccionBar();
-});
-
 document.getElementById('clearSelBtn').addEventListener('click', ()=>{
   selectedUids.clear();
-  document.querySelectorAll('.sel-aviso, .sel-all-tirada').forEach(x=> x.checked = false);
+  document.querySelectorAll('.sel-aviso').forEach(x=> x.checked = false);
   updateSeleccionBar();
 });
 
@@ -2360,7 +2385,7 @@ document.getElementById('addToMontajeBtn').addEventListener('click', ()=>{
     if(it){ m.items.push(it); agregados++; }
   });
   selectedUids.clear();
-  document.querySelectorAll('.sel-aviso, .sel-all-tirada').forEach(x=> x.checked = false);
+  document.querySelectorAll('.sel-aviso').forEach(x=> x.checked = false);
   renderMontajes();
   updateSeleccionBar();
   refrescarListasAbiertas();
