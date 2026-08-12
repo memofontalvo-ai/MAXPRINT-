@@ -583,6 +583,15 @@
 let pieceIdCounter = 0;
 let forcedGroups = null;      // agrupamiento fijado al aplicar una unificación
 let lastIdealConfig = null;   // última recomendación de formatos calculada
+
+// Los "Rango"/formatos SIEMPRE se muestran y se guardan ordenados de menor a mayor
+// por el ancho real de rollo que necesitan (el "ancho del material", con sangrado
+// incluido) — sin importar el orden en que el optimizador los calculó internamente.
+// Se ordena aquí, en la fuente, para que las listas, el detalle de cada rango y las
+// exportaciones queden siempre consistentes entre sí (todos leen el mismo arreglo).
+function sortGroupsByWidth(groups){
+  return groups.slice().sort((a,b)=> a.width - b.width);
+}
 let lastLeftover = null;      // avisos que quedaron por fuera (modo "mis rollos")
 let selectedUids = new Set(); // avisos marcados para armar un montaje
 let montajes = [];            // montajes que arma el diseñador
@@ -1816,6 +1825,7 @@ function showInitialRecommendation(){
     }
     const minEff = parseFloat(document.getElementById('minAprov').value) || 90;
     const data = packByAvailableRolls(items, widths, minEff, allowRotation, machineWidth);
+    data.rolls = sortGroupsByWidth(data.rolls);
     lastIdealConfig = { groups: data.rolls };  // para las listas y exportaciones
     lastLeftover = data.leftover;
     forcedGroups = null;
@@ -1825,6 +1835,7 @@ function showInitialRecommendation(){
 
   const numRanges = parseInt(document.getElementById('numRanges').value) || 4;
   const config = suggestIdealWidths(items, machineWidth, allowRotation, numRanges);
+  config.groups = sortGroupsByWidth(config.groups);
   lastIdealConfig = config;   // guardar para poder desplegar la lista de cada rango
   lastLeftover = null;
   forcedGroups = null;
@@ -1942,6 +1953,7 @@ function runAnalysis(silent){
     // Recomendación de formatos (independiente de tu bodega) — optimización automática de
     // cuántos anchos conviene usar y de cuáles, minimizando el desperdicio total.
     const idealConfig = suggestIdealWidths(items, machineWidth, allowRotation, numRanges);
+    idealConfig.groups = sortGroupsByWidth(idealConfig.groups);
     const recoHtml = renderIdealWidthsHtml(idealConfig, machineWidth);
 
     // Si estás usando exactamente los anchos que la optimización recomendó (no los cambiaste
@@ -2409,7 +2421,11 @@ function renderMontajes(){
   const maquina = parseFloat(document.getElementById('machineWidth').value) || 160;
   const maxTirajeM = parseFloat(document.getElementById('maxTiraje').value) || 0;
 
-  cont.innerHTML = montajes.map((m, mi)=>{
+  // la lista de montajes se muestra siempre ordenada de menor a mayor por el ancho
+  // del rollo (m.width), sin importar el orden en que se hayan creado.
+  const montajesOrdenados = montajes.slice().sort((a,b)=> a.width - b.width);
+
+  cont.innerHTML = montajesOrdenados.map((m, mi)=>{
     const res = m.items.length ? packRoll(m.width, m.items, allowRotation) : null;
     const parts = res ? splitResultByMaxLength(res, maxTirajeM*100) : [];
     const noCaben = res ? res.unplaced : [];
@@ -2741,7 +2757,8 @@ let planosAbiertosImpresor = new Set(); // ids de montaje con plano desplegado e
 // ============ VISTA IMPRESOR ============
 function renderPrinterView(){
   const cont = document.getElementById('printerList');
-  const listos = montajes.filter(m=> m.procesado && m.items.length);
+  const listos = montajes.filter(m=> m.procesado && m.items.length)
+    .sort((a,b)=> a.width - b.width); // menor a mayor por ancho de rollo
   if(!listos.length){
     cont.innerHTML = `<div class="unplaced-box">El diseñador todavía no ha procesado ningún montaje. Cuando procese uno, aparece aquí.</div>`;
     return;
