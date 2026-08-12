@@ -6,20 +6,22 @@
 <title>Optimizador de Rollo — Nesting para Plotter</title>
 <style>
   :root{
-    --bg:#17191a;
-    --panel:#202325;
-    --panel-2:#26292b;
-    --line:#34383a;
+    --bg:#000000;
+    --panel:#0d0f10;
+    --panel-2:#15181a;
+    --line:#26292c;
     --paper:#ede6d6;
     --paper-dark:#ddd3bc;
-    --cyan:#00aeef;
-    --magenta:#ec008c;
+    --brand:#f5a623;        /* naranja MAXPRINT */
+    --accent:#c3e600;       /* lima del módulo Optimizador */
+    --cyan:#3aa8e0;
+    --magenta:#e0348b;
     --yellow:#f0c000;
     --key:#0d0d0d;
     --text:#f2efe9;
-    --text-dim:#a9a79e;
+    --text-dim:#8b8f93;
     --danger:#ff5c5c;
-    --good:#5fd58a;
+    --good:#3ddc84;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -32,43 +34,96 @@
   }
   .wrap{max-width:720px;margin:0 auto;}
 
-  header{margin-bottom:22px;}
-  .eyebrow{
+  /* ---- Cabecera estilo MAXPRINT ---- */
+  header{margin-bottom:26px;text-align:center;}
+  .brandbar{
     font-family:ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-    font-size:11px;
-    letter-spacing:.14em;
+    font-size:12px;
+    letter-spacing:.22em;
     text-transform:uppercase;
-    color:var(--cyan);
+    color:var(--brand);
     display:flex;
     align-items:center;
+    justify-content:center;
     gap:8px;
-  }
-  .eyebrow::before{
-    content:"";
-    width:7px;height:7px;border-radius:50%;
-    background:var(--magenta);
-    display:inline-block;
+    padding-bottom:12px;
+    border-bottom:1px solid rgba(245,166,35,.35);
+    margin-bottom:20px;
   }
   h1{
     font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-weight:700;
-    font-size:26px;
-    margin:6px 0 4px;
-    letter-spacing:-.01em;
+    font-weight:800;
+    font-size:30px;
+    margin:0 0 8px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--accent);
+    line-height:1.1;
+  }
+  .tagline{
+    font-family:ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    font-size:11px;
+    letter-spacing:.26em;
+    text-transform:uppercase;
+    color:var(--text-dim);
+    margin:0 0 16px;
+  }
+  .rule{height:1px;background:var(--line);margin:16px 0;}
+  .section-label{
+    font-family:ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    font-size:11.5px;
+    letter-spacing:.24em;
+    text-transform:uppercase;
+    color:var(--text-dim);
+    text-align:center;
+    margin:0 0 16px;
   }
   .sub{color:var(--text-dim);font-size:13.5px;line-height:1.5;max-width:52ch;}
+  header .sub{margin:0 auto;}
+
+  /* ---- Tarjetas de módulo ---- */
+  .modulo-card{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    width:100%;
+    text-align:left;
+    padding:20px 18px;
+    border-radius:14px;
+    cursor:pointer;
+    background:var(--panel);
+    border:1px solid var(--line);
+    color:var(--text);
+    font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    transition:transform .12s ease;
+  }
+  .modulo-card:active{transform:scale(.99);}
+  .modulo-card .ico{font-size:34px;line-height:1;flex-shrink:0;}
+  .modulo-card .mtitle{
+    font-weight:800;font-size:19px;letter-spacing:.09em;text-transform:uppercase;line-height:1.15;
+  }
+  .modulo-card .mdesc{display:block;font-size:13px;color:var(--text-dim);margin-top:6px;line-height:1.45;}
+  .badge{
+    display:inline-block;margin-top:11px;
+    font-family:ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;
+    padding:4px 9px;border-radius:5px;
+  }
+  .chev{margin-left:auto;color:var(--text-dim);font-size:20px;flex-shrink:0;}
 
   .panel{
     background:var(--panel);
     border:1px solid var(--line);
-    border-radius:10px;
+    border-radius:12px;
     padding:16px;
     margin-bottom:14px;
   }
   .panel h2{
     font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-size:14px;
-    font-weight:600;
+    font-size:13px;
+    font-weight:800;
+    letter-spacing:.11em;
+    text-transform:uppercase;
     margin:0 0 12px;
     color:var(--text);
     display:flex;
@@ -78,10 +133,10 @@
   .panel h2 .tag{
     font-family:ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
     font-size:10px;
-    color:var(--bg);
-    background:var(--cyan);
-    padding:2px 6px;
-    border-radius:4px;
+    color:#000;
+    background:var(--accent);
+    padding:3px 7px;
+    border-radius:5px;
     font-weight:700;
     letter-spacing:.04em;
   }
@@ -153,7 +208,7 @@
 
   .calc-btn{
     width:100%;
-    background:var(--cyan);
+    background:var(--accent);
     color:#0a0a0a;
     border:none;
     padding:14px;
@@ -191,7 +246,7 @@
     font-family:ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
     font-size:20px;
     font-weight:700;
-    color:var(--cyan);
+    color:var(--accent);
     display:block;
     line-height:1.1;
   }
@@ -248,16 +303,76 @@
     margin-top:26px;
     letter-spacing:.03em;
   }
+  #printArea{ display:none; }
+  @media print{
+    html, body{ background:#fff !important; }
+    .wrap > *{ display:none !important; }
+    .wrap > #printArea{
+      display:block !important;
+      background:#fff;
+      color:#111;
+    }
+    .print-page{
+      width:100%;
+      overflow:hidden; /* nunca deja que se desborde a una página extra */
+      background:#fff;
+    }
+    .print-page *{ color:#111 !important; }
+    @page{ size: letter; margin: 10mm; }
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
 
   <header>
-    <div class="eyebrow">Rollo · Plotter · Publicidad</div>
-    <h1>Optimizador de anidado</h1>
-    <p class="sub">Da el ancho de tu rollo y las medidas de tus archivos. El programa los acomoda para gastar el menor largo lineal posible.</p>
+    <div class="brandbar">⚙ Control Maxprint</div>
+    <h1>Optimizador de Rollos</h1>
+    <p class="tagline">Nesting · Plotter · Publicidad</p>
+    <p class="sub" id="headerSub">Organiza los avisos por medidas y arma los montajes para impresión.</p>
   </header>
+
+  <!-- PANTALLA DE ENTRADA: elegir módulo -->
+  <div id="homeScreen">
+    <div class="rule"></div>
+    <p class="section-label">Seleccioná tu módulo</p>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <button class="modulo-card modulo-btn" data-vista="designer"
+        style="border-color:rgba(58,168,224,.55);background:linear-gradient(180deg, rgba(58,168,224,.10), rgba(13,15,16,1));">
+        <span class="ico">🎨</span>
+        <span style="flex:1;">
+          <span class="mtitle" style="color:var(--cyan);display:block;">Módulo Diseñador</span>
+          <span class="mdesc">Cargar planilla · Organizar por rangos · Armar montajes</span>
+          <span class="badge" style="background:rgba(58,168,224,.16);color:var(--cyan);">Acceso libre</span>
+        </span>
+        <span class="chev">›</span>
+      </button>
+
+      <button class="modulo-card modulo-btn" data-vista="printer"
+        style="border-color:rgba(224,52,139,.55);background:linear-gradient(180deg, rgba(224,52,139,.10), rgba(13,15,16,1));">
+        <span class="ico">🖨️</span>
+        <span style="flex:1;">
+          <span class="mtitle" style="color:var(--magenta);display:block;">Módulo Impresor</span>
+          <span class="mdesc">Montajes listos · Plano de corte · Lista de avisos</span>
+          <span class="badge" id="homeMontajeCount" style="background:rgba(224,52,139,.16);color:var(--magenta);"></span>
+        </span>
+        <span class="chev">›</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- VISTA IMPRESOR -->
+  <div id="printerView" style="display:none;">
+    <button class="add-btn volver-btn" style="margin-bottom:16px;border-style:solid;border-color:var(--line);color:var(--text-dim);letter-spacing:.08em;text-transform:uppercase;font-size:11.5px;">← Volver a módulos</button>
+    <div class="row-inline" style="margin-bottom:12px;">
+      <button class="preset-btn" id="refreshPrinterBtn" style="border-color:var(--magenta);color:var(--magenta);">↻ actualizar montajes</button>
+    </div>
+    <div id="printerList"></div>
+  </div>
+
+  <!-- VISTA DISEÑADOR -->
+  <div id="designerView" style="display:none;">
+  <button class="add-btn volver-btn" style="margin-bottom:16px;border-style:solid;border-color:var(--line);color:var(--text-dim);letter-spacing:.08em;text-transform:uppercase;font-size:11.5px;">← Volver a módulos</button>
 
   <div class="panel" style="border-color:var(--magenta);">
     <h2><span class="tag" style="background:var(--magenta);">01</span> Máquina de impresión</h2>
@@ -388,8 +503,14 @@
 
   <div class="panel">
     <h2><span class="tag">05</span> Archivos a tirar</h2>
-    <div id="pieceList"></div>
-    <button class="add-btn" id="addPiece">+ agregar medida</button>
+    <button class="add-btn" id="togglePieceList" style="margin-bottom:10px;margin-top:0;display:flex;justify-content:space-between;align-items:center;">
+      <span id="pieceCountLabel">0 archivos cargados</span>
+      <span id="pieceListArrow">ver lista ▸</span>
+    </button>
+    <div id="pieceListWrap" style="display:none;">
+      <div id="pieceList"></div>
+      <button class="add-btn" id="addPiece">+ agregar medida</button>
+    </div>
 
     <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line);">
       <label style="display:block;margin-bottom:8px;">CARGAR ARCHIVO (.XLSX o .CSV)</label>
@@ -433,6 +554,28 @@
   <div id="results" style="margin-top:18px;"></div>
   <div id="compareResults" style="margin-top:14px;"></div>
 
+  <div class="panel" id="montajesPanel" style="margin-top:18px;border-color:var(--magenta);">
+    <h2><span class="tag" style="background:var(--magenta);">07</span> Montajes para impresión</h2>
+    <div class="field" style="margin-bottom:12px;">
+      <label for="proyectoNombre">NOMBRE DEL PROYECTO</label>
+      <input type="text" id="proyectoNombre" placeholder="ej. Cambio de lonas Supergiros Atlántico">
+    </div>
+    <p class="sub" style="margin-bottom:10px;">Marca los avisos en las listas de arriba — puedes entrar a un rango, chulear los que quieras, luego entrar a otro rango y seguir chuleando. Al agregarlos al montaje se descuentan de los rangos para que no los repitas.</p>
+    <div id="seleccionBar" style="display:none;margin-bottom:12px;padding:10px 12px;background:var(--panel-2);border:1px solid var(--magenta);border-radius:8px;">
+      <div style="font-size:13px;color:var(--text);margin-bottom:8px;"><strong id="selCount">0</strong> aviso(s) seleccionado(s)</div>
+      <div class="row-inline">
+        <select id="montajeDestino" style="flex:1;min-width:140px;background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:8px 10px;font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:12.5px;"></select>
+        <button class="preset-btn" id="addToMontajeBtn" style="border-color:var(--magenta);color:var(--magenta);">agregar</button>
+        <button class="preset-btn" id="clearSelBtn">quitar selección</button>
+      </div>
+    </div>
+    <button class="add-btn" id="newMontajeBtn" style="border-color:var(--magenta);color:var(--magenta);">+ nuevo montaje</button>
+    <div id="montajesList" style="margin-top:12px;"></div>
+  </div>
+  </div><!-- /designerView -->
+
+  <div id="printArea"></div>
+
   <footer>medidas en centímetros · cálculo tipo shelf-nesting</footer>
 </div>
 
@@ -441,6 +584,9 @@ let pieceIdCounter = 0;
 let forcedGroups = null;      // agrupamiento fijado al aplicar una unificación
 let lastIdealConfig = null;   // última recomendación de formatos calculada
 let lastLeftover = null;      // avisos que quedaron por fuera (modo "mis rollos")
+let selectedUids = new Set(); // avisos marcados para armar un montaje
+let montajes = [];            // montajes que arma el diseñador
+let montajeSeq = 1;
 const pieceList = document.getElementById('pieceList');
 const CMYK_PALETTE = ['#00aeef','#ec008c','#f0c000','#5fd58a','#8b7fe8','#ff8a4c'];
 
@@ -476,7 +622,19 @@ function addPieceRow(codigo, local, ancho, alto, cant){
   pieceList.appendChild(row);
 }
 
-document.getElementById('addPiece').addEventListener('click', () => addPieceRow());
+document.getElementById('addPiece').addEventListener('click', () => { addPieceRow(); refreshPieceCount(); });
+
+function refreshPieceCount(){
+  const n = pieceList.querySelectorAll('.piece-row').length;
+  document.getElementById('pieceCountLabel').textContent =
+    n === 0 ? 'ningún archivo cargado' : `${n} archivo${n!==1?'s':''} cargado${n!==1?'s':''}`;
+}
+document.getElementById('togglePieceList').addEventListener('click', ()=>{
+  const wrap = document.getElementById('pieceListWrap');
+  const open = wrap.style.display === 'block';
+  wrap.style.display = open ? 'none' : 'block';
+  document.getElementById('pieceListArrow').textContent = open ? 'ver lista ▸' : 'ocultar lista ▾';
+});
 document.querySelectorAll('.preset-btn[data-w]').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     document.getElementById('rollWidth').value = btn.dataset.w;
@@ -516,6 +674,7 @@ document.querySelectorAll('.stock-add-btn').forEach(btn=>{
     el.value = cur.sort((a,b)=>a-b).join(', ');
   });
 });
+document.getElementById('proyectoNombre').addEventListener('change', ()=>{ saveEstado(); renderMontajes(); });
 document.getElementById('stockClearBtn').addEventListener('click', ()=>{
   document.getElementById('rollosDisponibles').value = '';
 });
@@ -637,7 +796,8 @@ document.getElementById('importBtn').addEventListener('click', ()=>{
   msgEl.textContent = `${imported} fila(s) importada(s)${ignored ? `, ${ignored} ignorada(s) por falta de medidas` : ''}.`;
   msgEl.style.color = imported ? 'var(--good)' : 'var(--danger)';
   document.getElementById('importText').value = '';
-  if(imported > 0) showInitialRecommendation();
+  refreshPieceCount();
+  if(imported > 0){ selectedUids.clear(); showInitialRecommendation(); saveEstado(); }
 });
 
 // --- Lector de .xlsx (ZIP + inflate nativo del navegador) y .csv, sin librerías externas ---
@@ -788,7 +948,8 @@ document.getElementById('fileUpload').addEventListener('change', async (e)=>{
     const { imported, ignored } = importRowsFromMatrix(rows, true);
     msgEl.textContent = `${imported} fila(s) cargada(s) desde "${file.name}"${ignored ? `, ${ignored} fila(s) ignorada(s) (encabezados u otras sin medidas)` : ''}.`;
     msgEl.style.color = imported ? 'var(--good)' : 'var(--danger)';
-    if(imported > 0) showInitialRecommendation();
+    refreshPieceCount();
+  if(imported > 0){ selectedUids.clear(); showInitialRecommendation(); saveEstado(); }
   } catch(err){
     console.error(err);
     msgEl.textContent = 'No se pudo leer el archivo: ' + err.message;
@@ -800,7 +961,7 @@ document.getElementById('fileUpload').addEventListener('change', async (e)=>{
 function readPieces(sangrado){
   const rows = pieceList.querySelectorAll('.piece-row');
   const items = [];
-  rows.forEach(row=>{
+  rows.forEach((row, ri)=>{
     const codigo = row.querySelector('.f-codigo').value.trim();
     const nombre = row.querySelector('.f-nombre').value.trim() || 'sin nombre';
     const ancho = parseFloat(row.querySelector('.f-ancho').value);
@@ -810,7 +971,7 @@ function readPieces(sangrado){
     const bledW = ancho + sangrado*2;
     const bledH = alto + sangrado*2;
     for(let i=0;i<cant;i++){
-      items.push({codigo, nombre, w:bledW, h:bledH, origW:ancho, origH:alto});
+      items.push({uid:`r${ri}c${i}`, codigo, nombre, w:bledW, h:bledH, origW:ancho, origH:alto});
     }
   });
   return items;
@@ -830,10 +991,12 @@ function packRoll(rollWidth, items, allowRotation){
       unplaced.push(it);
       return;
     }
-    // choose orientation with the larger width (<=rollWidth) -> tends to minimize height used
+    // Cuando las dos orientaciones caben, se prefiere la que deja el ANCHO más angosto
+    // (no la más ancha): así la pieza deja hueco libre en la fila para combinarse con
+    // otras, en vez de ocupar casi todo el rollo ella sola.
     if(allowRotation){
       if(fitsAsIs && fitsRotated){
-        if(h > w){ // rotating gives larger width along roll
+        if(w > h){ // girar deja un ancho más angosto, más fácil de combinar
           [w,h] = [h,w];
         }
       } else if(!fitsAsIs && fitsRotated){
@@ -843,26 +1006,68 @@ function packRoll(rollWidth, items, allowRotation){
     placeable.push({...it, w, h});
   });
 
-  // sort tallest first for FFDH
+  // sort tallest first
   placeable.sort((a,b)=> b.h - a.h);
 
-  const shelves = []; // {height, usedWidth, items:[{...,x,y}]}
+  // Cada fila puede tener varias COLUMNAS lado a lado (no solo una pieza de punta a
+  // punta). Una pieza larga abre su propia columna; las piezas chicas que caben en el
+  // ancho que le sobra a esa fila se APILAN una debajo de otra en esa misma columna,
+  // en vez de arrancar una fila nueva — así se aprovecha el largo que deja libre la
+  // pieza grande en vez de dejarlo en blanco.
+  const shelves = []; // {height, usedWidth, y, columns:[{x,width,filledHeight,items[]}]}
+
   placeable.forEach(it=>{
-    let shelf = shelves.find(s => s.usedWidth + it.w <= rollWidth + 1e-6 && it.h <= s.height + 1e-6);
-    if(!shelf){
-      shelf = { height: it.h, usedWidth: 0, y: 0, items: [] };
-      shelves.push(shelf);
+    // 1) ¿cabe apilada en una columna ya abierta (de cualquier fila)? — se elige la
+    //    que deje menos alto libre después de ponerla (mejor ajuste).
+    let bestCol = null, bestColLeftover = Infinity;
+    shelves.forEach(shelf=>{
+      shelf.columns.forEach(col=>{
+        const leftoverH = shelf.height - col.filledHeight;
+        if(col.width + 1e-6 >= it.w && leftoverH + 1e-6 >= it.h){
+          if(leftoverH < bestColLeftover){ bestColLeftover = leftoverH; bestCol = { shelf, col }; }
+        }
+      });
+    });
+    if(bestCol){
+      const { col } = bestCol;
+      col.items.push({...it, x: col.x, y: col.filledHeight});
+      col.filledHeight += it.h;
+      return;
     }
-    const x = shelf.usedWidth;
-    shelf.items.push({...it, x, y: 0});
-    shelf.usedWidth += it.w;
+
+    // 2) si no, ¿se puede abrir una columna NUEVA en una fila ya existente? (la pieza
+    //    no puede ser más alta que esa fila, y debe sobrar ancho) — se prefiere la
+    //    fila donde menos alto sobre después (para no desperdiciar filas muy altas).
+    let bestShelf = null, bestShelfLeftover = Infinity;
+    shelves.forEach(shelf=>{
+      if(it.h <= shelf.height + 1e-6 && shelf.usedWidth + it.w <= rollWidth + 1e-6){
+        const leftover = shelf.height - it.h;
+        if(leftover < bestShelfLeftover){ bestShelfLeftover = leftover; bestShelf = shelf; }
+      }
+    });
+    if(bestShelf){
+      const col = { x: bestShelf.usedWidth, width: it.w, filledHeight: it.h, items: [] };
+      col.items.push({...it, x: col.x, y: 0});
+      bestShelf.columns.push(col);
+      bestShelf.usedWidth += it.w;
+      return;
+    }
+
+    // 3) si nada de lo anterior sirve, se abre una fila nueva
+    const shelf = { height: it.h, usedWidth: it.w, y: 0, columns: [] };
+    const col = { x: 0, width: it.w, filledHeight: it.h, items: [] };
+    col.items.push({...it, x: 0, y: 0});
+    shelf.columns.push(col);
+    shelves.push(shelf);
   });
 
-  // compute cumulative y offsets
+  shelves.forEach(shelf=>{ shelf.items = shelf.columns.flatMap(c=>c.items); });
+
+  // posiciones Y acumuladas (cada fila arranca donde terminó la anterior)
   let cursorY = 0;
   shelves.forEach(s=>{
     s.y = cursorY;
-    s.items.forEach(it=> it.y = cursorY);
+    s.items.forEach(it=> it.y += cursorY);
     cursorY += s.height;
   });
 
@@ -894,8 +1099,17 @@ function buildViz(rollWidth, result, maxPxWidth){
       const color = nameColor[it.nombre];
       const x = it.x*scale, y = it.y*scale, w = it.w*scale, h = it.h*scale;
       rects += `<rect x="${x}" y="${y}" width="${Math.max(w-1,0)}" height="${Math.max(h-1,0)}" fill="${color}" fill-opacity="0.85" stroke="#0d0d0d" stroke-width="1"/>`;
-      if(w>26 && h>16){
-        rects += `<text x="${x+w/2}" y="${y+h/2}" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="9" fill="#0d0d0d" text-anchor="middle" dominant-baseline="middle">${Math.round(it.origW)}×${Math.round(it.origH)}</text>`;
+      // se muestran las DOS medidas dentro del rectángulo: MR = medida real del
+      // archivo, MS = medida con sangrado (la que de verdad ocupa en el rollo).
+      if(w>34 && h>30){
+        rects += `<text x="${x+w/2}" y="${y+h/2-6}" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="9" fill="#0d0d0d" text-anchor="middle" dominant-baseline="middle">MR ${Math.round(it.origW)}×${Math.round(it.origH)}</text>`;
+        rects += `<text x="${x+w/2}" y="${y+h/2+7}" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="8" fill="#5a4a00" text-anchor="middle" dominant-baseline="middle">MS ${Math.round(it.w)}×${Math.round(it.h)}</text>`;
+      } else if(w>26 && h>22){
+        // espacio angosto pero con altura suficiente para dos líneas: se mantienen MR y MS
+        rects += `<text x="${x+w/2}" y="${y+h/2-5}" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="7.5" fill="#0d0d0d" text-anchor="middle" dominant-baseline="middle">MR ${Math.round(it.origW)}×${Math.round(it.origH)}</text>`;
+        rects += `<text x="${x+w/2}" y="${y+h/2+5}" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="7" fill="#5a4a00" text-anchor="middle" dominant-baseline="middle">MS ${Math.round(it.w)}×${Math.round(it.h)}</text>`;
+      } else if(w>26 && h>16){
+        rects += `<text x="${x+w/2}" y="${y+h/2}" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="9" fill="#0d0d0d" text-anchor="middle" dominant-baseline="middle">MR ${Math.round(it.origW)}×${Math.round(it.origH)}</text>`;
       }
     });
     if(si>0){
@@ -925,6 +1139,7 @@ function buildViz(rollWidth, result, maxPxWidth){
     legendHtml += `<span><span class="swatch" style="background:${color}"></span>${name}</span>`;
   });
   legendHtml += '</div>';
+  legendHtml += `<div style="font-size:10.5px;color:var(--text-dim);margin-top:6px;">MR = medida real del archivo · MS = medida con sangrado</div>`;
 
   return { svg, legendHtml };
 }
@@ -1212,7 +1427,10 @@ function splitResultByMaxLength(result, maxLenCm){
   return chunks.map(shelvesRaw=>{
     let y = 0;
     const shelves = shelvesRaw.map(sh=>{
-      const ns = { height: sh.height, usedWidth: sh.usedWidth, y, items: sh.items.map(it=>({...it, y})) };
+      // se desplazan los avisos por el mismo delta que la fila, para conservar el
+      // orden en que están apilados dentro de sus columnas (no todos al mismo y).
+      const delta = y - sh.y;
+      const ns = { height: sh.height, usedWidth: sh.usedWidth, y, items: sh.items.map(it=>({...it, y: it.y + delta})) };
       y += sh.height;
       return ns;
     });
@@ -1308,7 +1526,10 @@ function renderAvailableRollsHtml(data, minEffPct, machineWidth){
       </div>
       <div style="font-size:12px;color:var(--text-dim);margin-top:5px;">${r.items.length} aviso${r.items.length!==1?'s':''} · alto ${minR===maxR? minR+' cm' : minR+'–'+maxR+' cm'}</div>
       <div style="font-size:12px;color:var(--cyan);margin-top:6px;display:flex;justify-content:space-between;align-items:center;">
-        <span>${parts.length>1 ? `${parts.length} tiradas de máx ${maxTirajeM} m` : '1 tirada'}</span>
+        <span>${(()=>{const u=uidsUsados();const pend=r.items.filter(x=>!u.has(x.uid)).length;
+          return pend===0 ? '<span style="color:var(--good);">✓ todos en montajes</span>'
+               : (pend===r.items.length ? `${parts.length>1?parts.length+' tiradas de máx '+maxTirajeM+' m':'1 tirada'}`
+                                        : `${pend} sin montar de ${r.items.length}`);})()}</span>
         <span class="fmt-arrow" style="font-family:ui-monospace,monospace;">ver lista de avisos ▸</span>
       </div>
       <div class="fmt-detail" data-fmt-detail="${i}" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);"></div>
@@ -1378,7 +1599,10 @@ function renderIdealWidthsHtml(config, machineWidth){
       </div>
       <div style="font-size:12px;color:var(--text-dim);margin-top:5px;">${g.items.length} aviso${g.items.length!==1?'s':''} · ${lenM} m · ${g.result.efficiency.toFixed(0)}% aprov. · con sangrado ${minA}–${maxA} cm</div>
       <div style="font-size:12px;color:var(--cyan);margin-top:6px;display:flex;justify-content:space-between;align-items:center;">
-        <span>${parts.length>1 ? `${parts.length} tiradas de máx ${maxTirajeM} m` : '1 tirada'}</span>
+        <span>${(()=>{const u=uidsUsados();const pend=g.items.filter(x=>!u.has(x.uid)).length;
+          return pend===0 ? '<span style="color:var(--good);">✓ todos en montajes</span>'
+               : (pend===g.items.length ? `${parts.length>1?parts.length+' tiradas de máx '+maxTirajeM+' m':'1 tirada'}`
+                                        : `${pend} sin montar de ${g.items.length}`);})()}</span>
         <span class="fmt-arrow" style="font-family:ui-monospace,monospace;">ver lista de avisos ▸</span>
       </div>
       <div class="fmt-detail" data-fmt-detail="${i}" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);"></div>
@@ -1769,6 +1993,9 @@ document.getElementById('calcBtn').addEventListener('click', ()=>{
 // agrupada por tirada, con opción de exportarla.
 document.addEventListener('click', (e)=>{
   if(e.target.closest('.export-btn')) return;
+  // los clics DENTRO de la lista ya abierta (chulear un aviso, etc.) no deben
+  // cerrar el panel — solo tocar el encabezado de la tarjeta abre/cierra.
+  if(e.target.closest('.fmt-detail')) return;
   const card = e.target.closest('.format-card');
   if(!card) return;
   const idx = parseInt(card.dataset.fmt);
@@ -1793,27 +2020,40 @@ document.addEventListener('click', (e)=>{
   const maxTirajeM = parseFloat(document.getElementById('maxTiraje').value) || 0;
   const parts = splitResultByMaxLength(g.result, maxTirajeM*100);
 
+  const usados = uidsUsados();
   let inner = '';
   parts.forEach((p, pi)=>{
     const rows = [];
     p.shelves.forEach(sh=> sh.items.forEach(it=> rows.push(it)));
     rows.sort((a,b)=> a.nombre.localeCompare(b.nombre));
-    const rowsHtml = rows.map(it=>`
-      <tr style="border-bottom:1px solid var(--line);">
+    const libres = rows.filter(it=> !usados.has(it.uid));
+    const rowsHtml = rows.map(it=>{
+      const yaUsado = usados.has(it.uid);
+      const cual = yaUsado ? montajes.find(m=> m.items.some(x=>x.uid===it.uid)) : null;
+      return `
+      <tr style="border-bottom:1px solid var(--line);${yaUsado?'opacity:.45;':''}">
+        <td style="padding:6px 2px;">${yaUsado
+          ? '<span title="ya está en un montaje" style="color:var(--good);font-size:13px;">✓</span>'
+          : `<input type="checkbox" class="sel-aviso" data-uid="${it.uid}" ${selectedUids.has(it.uid)?'checked':''} style="width:16px;height:16px;">`}</td>
         <td style="padding:6px 4px;color:var(--yellow);white-space:nowrap;">${it.codigo||"—"}</td>
-        <td style="padding:6px 4px;color:var(--text);">${it.nombre}</td>
+        <td style="padding:6px 4px;color:var(--text);">${it.nombre}${yaUsado&&cual?`<br><span style="font-size:10px;color:var(--good);">en ${cual.nombre}</span>`:''}</td>
         <td style="padding:6px 4px;text-align:right;color:var(--text-dim);white-space:nowrap;">${it.origW}×${it.origH}</td>
         <td style="padding:6px 4px;text-align:right;color:var(--cyan);white-space:nowrap;">${(it.origW+sangradoActual()*2).toFixed(0)}×${(it.origH+sangradoActual()*2).toFixed(0)}</td>
-      </tr>`).join('');
+      </tr>`;}).join('');
 
     inner += `<div style="margin-bottom:${pi<parts.length-1?'18px':'0'};">
       <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;margin-bottom:6px;">
         <strong style="font-size:13px;color:var(--text);">${parts.length>1 ? `Tirada ${pi+1} de ${parts.length}` : 'Tirada única'} · rollo ${g.width} cm</strong>
-        <span style="font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:11.5px;color:var(--cyan);">${(p.totalLength/100).toFixed(2)} m · ${rows.length} avisos</span>
+        <span style="font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:11.5px;color:var(--cyan);">${(p.totalLength/100).toFixed(2)} m · ${libres.length} disponible${libres.length!==1?'s':''}${rows.length!==libres.length?` de ${rows.length}`:''}</span>
       </div>
       <div style="overflow-x:auto;">
       <table style="width:100%;border-collapse:collapse;font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:11.5px;">
         <thead><tr style="border-bottom:1px solid var(--line);">
+          <th style="width:56px;padding:5px 2px;">
+            <label style="display:flex;align-items:center;gap:3px;font-weight:400;font-size:9px;color:var(--text-dim);cursor:pointer;">
+              <input type="checkbox" class="sel-all-tirada" style="width:15px;height:15px;">TODOS
+            </label>
+          </th>
           <th style="text-align:left;padding:5px 4px;color:var(--text-dim);font-weight:500;">CÓDIGO</th>
           <th style="text-align:left;padding:5px 4px;color:var(--text-dim);font-weight:500;">LOCAL</th>
           <th style="text-align:right;padding:5px 4px;color:var(--text-dim);font-weight:500;">MEDIDA</th>
@@ -1836,6 +2076,10 @@ function currentGroups(){
        : (lastIdealConfig && lastIdealConfig.groups) ? lastIdealConfig.groups : null;
 }
 
+function proyectoActual(){
+  return (document.getElementById('proyectoNombre').value || '').trim();
+}
+
 function sangradoActual(){
   return parseFloat(document.getElementById('sangrado').value) || 0;
 }
@@ -1844,6 +2088,78 @@ function csvEscape(v){
   const s = String(v==null?'':v);
   return /[",;\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s;
 }
+
+// ---- Exportar montaje a PDF (hoja carta), usando el diálogo de impresión del navegador ----
+// Cada tirada se dibuja escalada para caber COMPLETA en una hoja carta, conservando la
+// proporción real del rollo (si es angosta y larga, o ancha y corta, se ajusta igual).
+function buildPrintSvg(rollWidth, result){
+  let rects = '';
+  const nameColor = {};
+  let colorIdx = 0;
+  const fontBig = Math.max(rollWidth, result.totalLength) * 0.014;
+  const fontSmall = fontBig * 0.85;
+  result.shelves.forEach(shelf=>{
+    shelf.items.forEach(it=>{
+      if(!(it.nombre in nameColor)){ nameColor[it.nombre] = CMYK_PALETTE[colorIdx % CMYK_PALETTE.length]; colorIdx++; }
+      const color = nameColor[it.nombre];
+      rects += `<rect x="${it.x}" y="${it.y}" width="${it.w}" height="${it.h}" fill="${color}" fill-opacity="0.9" stroke="#000" stroke-width="${rollWidth*0.002}"/>`;
+      if(it.w > rollWidth*0.09 && it.h > rollWidth*0.09){
+        rects += `<text x="${it.x+it.w/2}" y="${it.y+it.h/2-fontBig*0.6}" font-family="monospace" font-size="${fontBig}" fill="#000" text-anchor="middle" dominant-baseline="middle">MR ${Math.round(it.origW)}×${Math.round(it.origH)}</text>`;
+        rects += `<text x="${it.x+it.w/2}" y="${it.y+it.h/2+fontSmall*0.9}" font-family="monospace" font-size="${fontSmall}" fill="#333" text-anchor="middle" dominant-baseline="middle">MS ${Math.round(it.w)}×${Math.round(it.h)}</text>`;
+      }
+    });
+  });
+  return `<svg viewBox="0 0 ${rollWidth} ${result.totalLength}" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" style="background:#ede6d6;display:block;">${rects}</svg>`;
+}
+
+function exportMontajePDF(m){
+  const allowRotation = document.getElementById('allowRotation').checked;
+  if(!m.items.length){ alert('Este montaje todavía no tiene avisos.'); return; }
+  const res = packRoll(m.width, m.items, allowRotation);
+  const maxTirajeM = parseFloat(document.getElementById('maxTiraje').value) || 0;
+  const parts = splitResultByMaxLength(res, maxTirajeM*100);
+  const proy = proyectoActual();
+
+  // hoja carta = 215.9 x 279.4 mm; se restan los 10mm de margen de @page por lado.
+  // Se deja además unos milímetros de colchón real (no solo un % del área del dibujo)
+  // para que el alto de la página nunca quede exacto al límite y dispare una hoja extra.
+  const pageW = 195.9, pageH = 259.4;
+  const headerH = 28; // mm reservados para el encabezado de texto
+  const usableW = pageW * 0.96;
+  const usableH = (pageH - headerH) * 0.96;
+
+  let pagesHtml = '';
+  parts.forEach((p, pi)=>{
+    const scale = Math.min(usableW / m.width, usableH / p.totalLength); // mm por cm de rollo
+    const wMm = (m.width * scale).toFixed(1);
+    const hMm = (p.totalLength * scale).toFixed(1);
+    const svg = buildPrintSvg(m.width, p);
+    // el salto de página se controla por código según la posición real (no por CSS
+    // :last-child), y la altura de la página ya NO se fuerza al máximo: se deja que
+    // mida justo lo que ocupa su contenido (que ya cabe dentro de la hoja por el
+    // cálculo de escala) — así no queda una hoja en blanco de más al final.
+    const esUltima = pi === parts.length - 1;
+    const breakStyle = esUltima ? '' : 'page-break-after:always;break-after:page;';
+    pagesHtml += `<div class="print-page" style="${breakStyle}">
+      <div style="font-family:-apple-system,Arial,sans-serif;margin-bottom:4mm;height:${headerH}mm;box-sizing:border-box;">
+        ${proy ? `<div style="font-size:8pt;color:#666;letter-spacing:.05em;text-transform:uppercase;">${proy}</div>` : ''}
+        <div style="font-size:14pt;font-weight:700;">${m.nombre}${parts.length>1 ? ` — tirada ${pi+1} de ${parts.length}` : ''}</div>
+        <div style="font-size:8.5pt;color:#666;margin-top:1mm;">Rollo ${m.width} cm · ${(p.totalLength/100).toFixed(2)} m · MR = medida real · MS = medida con sangrado</div>
+      </div>
+      <div style="width:${wMm}mm;height:${hMm}mm;">${svg}</div>
+    </div>`;
+  });
+
+  document.getElementById('printArea').innerHTML = pagesHtml;
+  setTimeout(()=> window.print(), 60);
+}
+
+document.addEventListener('click', (e)=>{
+  const b = e.target.closest('.export-pdf-btn');
+  if(!b) return;
+  const m = montajes.find(x=> x.id === parseInt(b.dataset.m));
+  if(m) exportMontajePDF(m);
+});
 
 function downloadCsv(filename, rows){
   // BOM para que Excel abra bien los acentos; ; como separador (Excel en español)
@@ -1906,6 +2222,427 @@ document.addEventListener('click', (e)=>{
   downloadCsv('avisos-por-rango.csv', buildExportRows(groups));
 });
 
+// avisos que ya están dentro de algún montaje (no deben volver a ofrecerse)
+function uidsUsados(){
+  const s = new Set();
+  montajes.forEach(m=> m.items.forEach(it=> s.add(it.uid)));
+  return s;
+}
+
+
+// vuelve a dibujar los rangos y las listas abiertas, para reflejar los descuentos
+function refrescarListasAbiertas(){
+  const abiertos = [...document.querySelectorAll('.fmt-detail')]
+    .filter(d=> d.style.display === 'block')
+    .map(d=> d.dataset.fmtDetail);
+
+  // re-dibuja las tarjetas de rango (actualiza el contador de pendientes)
+  if(pieceList.querySelectorAll('.piece-row').length) showInitialRecommendation();
+
+  // vuelve a abrir las que estaban abiertas
+  abiertos.forEach(idx=>{
+    const card = document.querySelector(`.format-card[data-fmt="${idx}"]`);
+    if(card){
+      const d = card.querySelector('.fmt-detail');
+      if(d) d.dataset.ts = '0';
+      card.click();
+    }
+  });
+}
+
+// ============ MÓDULO: MONTAJES PARA IMPRESIÓN ============
+// El diseñador marca avisos (de cualquier rango) y los agrega al montaje que quiera.
+
+function updateSeleccionBar(){
+  const bar = document.getElementById('seleccionBar');
+  document.getElementById('selCount').textContent = selectedUids.size;
+  bar.style.display = selectedUids.size ? 'block' : 'none';
+  const sel = document.getElementById('montajeDestino');
+  const prev = sel.value;
+  sel.innerHTML = montajes.map(m=>`<option value="${m.id}">${m.nombre} (${m.items.length})</option>`).join('')
+    || '<option value="">— crea un montaje primero —</option>';
+  if(montajes.some(m=>String(m.id)===prev)) sel.value = prev;
+}
+
+// marcar / desmarcar un aviso
+document.addEventListener('change', (e)=>{
+  const cb = e.target.closest('.sel-aviso');
+  if(!cb) return;
+  if(cb.checked) selectedUids.add(cb.dataset.uid);
+  else selectedUids.delete(cb.dataset.uid);
+  updateSeleccionBar();
+});
+
+// marcar toda una tirada de una vez
+document.addEventListener('change', (e)=>{
+  const cb = e.target.closest('.sel-all-tirada');
+  if(!cb) return;
+  const table = cb.closest('table');
+  table.querySelectorAll('.sel-aviso').forEach(x=>{
+    x.checked = cb.checked;
+    if(cb.checked) selectedUids.add(x.dataset.uid);
+    else selectedUids.delete(x.dataset.uid);
+  });
+  updateSeleccionBar();
+});
+
+document.getElementById('clearSelBtn').addEventListener('click', ()=>{
+  selectedUids.clear();
+  document.querySelectorAll('.sel-aviso, .sel-all-tirada').forEach(x=> x.checked = false);
+  updateSeleccionBar();
+});
+
+document.getElementById('newMontajeBtn').addEventListener('click', ()=>{
+  const maquina = parseFloat(document.getElementById('machineWidth').value) || 160;
+  montajes.push({ id: montajeSeq++, nombre: 'Montaje '+(montajes.length+1), width: maquina, items: [], procesado: false });
+  renderMontajes();
+  updateSeleccionBar();
+  saveEstado();
+});
+
+// mostrar/ocultar el plano de un montaje — nunca se dibuja solo, hay que pedirlo
+document.addEventListener('click', (e)=>{
+  const b = e.target.closest('.toggle-plano-disenador-btn');
+  if(!b) return;
+  const id = parseInt(b.dataset.m);
+  if(planosAbiertosDisenador.has(id)) planosAbiertosDisenador.delete(id);
+  else planosAbiertosDisenador.add(id);
+  renderMontajes();
+});
+
+// procesar un montaje: lo marca listo y lo hace visible en el Módulo Impresor
+document.addEventListener('click', (e)=>{
+  const b = e.target.closest('.procesar-btn');
+  if(!b) return;
+  const m = montajes.find(x=> x.id === parseInt(b.dataset.m));
+  if(!m || !m.items.length) return;
+  m.procesado = true;
+  renderMontajes();
+  actualizarConteoHome();
+  saveEstado();
+});
+
+// devolver un montaje procesado a edición (deja de verse en el módulo Impresor)
+document.addEventListener('click', (e)=>{
+  const b = e.target.closest('.despublicar-btn');
+  if(!b) return;
+  const m = montajes.find(x=> x.id === parseInt(b.dataset.m));
+  if(!m) return;
+  m.procesado = false;
+  renderMontajes();
+  actualizarConteoHome();
+  saveEstado();
+});
+
+// por si el picker no encontró rangos calculados (dato viejo o navegador con versión
+// cacheada): fuerza el recálculo con lo que hay cargado ahora mismo.
+document.addEventListener('click', (e)=>{
+  const b = e.target.closest('.recalcular-rangos-btn');
+  if(!b) return;
+  if(!pieceList.querySelectorAll('.piece-row').length){
+    alert('Primero carga la planilla (paso 05).');
+    return;
+  }
+  showInitialRecommendation();
+  renderMontajes();
+});
+
+document.getElementById('addToMontajeBtn').addEventListener('click', ()=>{
+  const id = parseInt(document.getElementById('montajeDestino').value);
+  const m = montajes.find(x=>x.id===id);
+  if(!m){ alert('Crea primero un montaje.'); return; }
+  const sangrado = sangradoActual();
+  const todos = readPieces(sangrado);
+  let agregados = 0;
+  selectedUids.forEach(uid=>{
+    if(m.items.some(it=>it.uid===uid)) return;
+    const it = todos.find(x=>x.uid===uid);
+    if(it){ m.items.push(it); agregados++; }
+  });
+  selectedUids.clear();
+  document.querySelectorAll('.sel-aviso, .sel-all-tirada').forEach(x=> x.checked = false);
+  renderMontajes();
+  updateSeleccionBar();
+  refrescarListasAbiertas();
+  saveEstado();
+  document.getElementById('montajesPanel').scrollIntoView({behavior:'smooth', block:'start'});
+});
+
+let planosAbiertosDisenador = new Set(); // ids de montaje con el plano desplegado (solo si se pide)
+
+function renderMontajes(){
+  const cont = document.getElementById('montajesList');
+  if(!montajes.length){
+    cont.innerHTML = '<p class="sub">Todavía no has creado ningún montaje.</p>';
+    return;
+  }
+  const allowRotation = document.getElementById('allowRotation').checked;
+  const maquina = parseFloat(document.getElementById('machineWidth').value) || 160;
+  const maxTirajeM = parseFloat(document.getElementById('maxTiraje').value) || 0;
+
+  cont.innerHTML = montajes.map((m, mi)=>{
+    const res = m.items.length ? packRoll(m.width, m.items, allowRotation) : null;
+    const parts = res ? splitResultByMaxLength(res, maxTirajeM*100) : [];
+    const noCaben = res ? res.unplaced : [];
+
+    // el plano NO se dibuja automáticamente — solo si el usuario lo pide con el botón
+    const planoAbierto = planosAbiertosDisenador.has(m.id);
+    let planos = '';
+    if(planoAbierto && res && res.placedCount){
+      parts.forEach((p, pi)=>{
+        const { svg } = buildViz(m.width, p, 240);
+        const usedArea = p._usedArea!==undefined ? p._usedArea
+          : p.shelves.reduce((s,sh)=> s + sh.items.reduce((si,it)=> si+it.w*it.h,0),0);
+        const eff = p.totalLength>0 ? (usedArea/(m.width*p.totalLength)*100) : 0;
+        planos += `${parts.length>1?`<div style="font-size:12px;color:var(--text);margin:10px 0 4px;font-weight:600;">Tirada ${pi+1} de ${parts.length} — ${(p.totalLength/100).toFixed(2)} m · ${eff.toFixed(0)}%</div>`:''}
+          <div class="viz-scroll" style="padding:10px 8px;">${svg}</div>`;
+      });
+    }
+
+    const lista = m.items.map(it=>`<li>${it.codigo?`<span style="color:var(--yellow);">${it.codigo}</span> · `:''}${it.nombre} — ${it.origW}×${it.origH} cm
+      <button class="preset-btn quitar-aviso-btn" data-m="${m.id}" data-uid="${it.uid}" style="padding:1px 6px;font-size:10px;border-color:var(--danger);color:var(--danger);margin-left:4px;">quitar</button></li>`).join('');
+
+    // ---- Selector de avisos por rango, dentro del propio montaje ----
+    const grupos = currentGroups() || [];
+    const usados = uidsUsados();
+    let picker = '';
+    if(grupos.length){
+      picker = `<div class="picker-wrap" data-m="${m.id}" style="margin-top:10px;border-top:1px solid var(--line);padding-top:10px;">
+        <button class="add-btn toggle-picker-btn" data-m="${m.id}" style="border-color:var(--magenta);color:var(--magenta);margin-top:0;">+ agregar avisos desde los rangos</button>
+        <div class="picker-body" data-m="${m.id}" style="display:none;margin-top:10px;">`;
+      grupos.forEach((g, gi)=>{
+        const libres = g.items.filter(it=> !usados.has(it.uid));
+        const altos = g.items.map(it=> it.origH);
+        const minR = Math.round(Math.min(...altos)), maxR = Math.round(Math.max(...altos));
+        picker += `<div style="margin-bottom:8px;border:1px solid var(--line);border-radius:7px;overflow:hidden;">
+          <button class="preset-btn toggle-rango-btn" data-m="${m.id}" data-g="${gi}" style="width:100%;text-align:left;border:none;border-radius:0;padding:9px 11px;background:var(--panel);display:flex;justify-content:space-between;align-items:center;">
+            <span style="color:var(--yellow);font-weight:600;">Rango ${gi+1} · ${minR===maxR?minR+' cm':minR+'–'+maxR+' cm'} · rollo ${g.width} cm</span>
+            <span style="color:${libres.length?'var(--good)':'var(--text-dim)'};">${libres.length} libre${libres.length!==1?'s':''} ▸</span>
+          </button>
+          <div class="rango-body" data-m="${m.id}" data-g="${gi}" style="display:none;padding:8px 10px;background:var(--panel-2);">
+            ${libres.length ? `
+              <button class="preset-btn pick-all-btn" data-m="${m.id}" data-g="${gi}" style="margin-bottom:8px;">marcar todos</button>
+              <div style="overflow-x:auto;">
+              <table style="width:100%;border-collapse:collapse;font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:11.5px;">
+                <thead><tr style="border-bottom:1px solid var(--line);">
+                  <th style="width:22px;padding:4px 2px;"></th>
+                  <th style="text-align:left;padding:4px 4px;color:var(--text-dim);font-weight:500;">CÓDIGO</th>
+                  <th style="text-align:left;padding:4px 4px;color:var(--text-dim);font-weight:500;">LOCAL</th>
+                  <th style="text-align:right;padding:4px 4px;color:var(--text-dim);font-weight:500;">MEDIDA</th>
+                  <th style="text-align:right;padding:4px 4px;color:var(--text-dim);font-weight:500;">C/SANGRADO</th>
+                </tr></thead>
+                <tbody>${libres.map(it=>`
+                  <tr style="border-bottom:1px solid var(--line);">
+                    <td style="padding:5px 2px;width:22px;"><input type="checkbox" class="pick-aviso" data-m="${m.id}" data-uid="${it.uid}" style="width:16px;height:16px;"></td>
+                    <td style="padding:5px 4px;color:var(--yellow);white-space:nowrap;">${it.codigo||'—'}</td>
+                    <td style="padding:5px 4px;color:var(--text);">${it.nombre}</td>
+                    <td style="padding:5px 4px;text-align:right;color:var(--text-dim);white-space:nowrap;">${it.origW}×${it.origH}</td>
+                    <td style="padding:5px 4px;text-align:right;color:var(--cyan);white-space:nowrap;">${Math.round(it.w)}×${Math.round(it.h)}</td>
+                  </tr>`).join('')}</tbody>
+              </table></div>`
+            : '<p class="sub" style="margin:0;">Todos los avisos de este rango ya están en algún montaje.</p>'}
+          </div>
+        </div>`;
+      });
+      picker += `<button class="add-btn confirmar-picker-btn" data-m="${m.id}" style="border-color:var(--good);color:var(--good);">✓ agregar los marcados a ${m.nombre}</button>
+        </div></div>`;
+    } else {
+      picker = `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line);">
+        <div class="unplaced-box" style="margin-bottom:8px;">No hay rangos calculados todavía.</div>
+        <button class="add-btn recalcular-rangos-btn" style="border-color:var(--magenta);color:var(--magenta);">↻ calcular rangos ahora</button>
+      </div>`;
+    }
+
+    const procesado = !!m.procesado;
+    const estadoHtml = procesado
+      ? `<div style="margin-top:10px;padding:9px 11px;background:rgba(61,220,132,.10);border:1px solid var(--good);border-radius:7px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+          <span style="color:var(--good);font-weight:700;font-size:12px;">✓ Procesado — visible en Módulo Impresor</span>
+          <button class="preset-btn despublicar-btn" data-m="${m.id}" style="border-color:var(--good);color:var(--good);">↩ devolver a edición</button>
+        </div>`
+      : (m.items.length
+          ? `<button class="add-btn procesar-btn" data-m="${m.id}" style="margin-top:10px;border-color:var(--good);color:var(--good);">✓ Procesar montaje para impresión</button>`
+          : '');
+
+    return `<div style="border:1px solid ${procesado?'var(--good)':'var(--line)'};border-radius:8px;padding:12px;margin-bottom:12px;background:var(--panel-2);">
+      <div class="row-inline" style="margin-bottom:8px;">
+        <input type="text" class="montaje-nombre" data-m="${m.id}" value="${m.nombre}" style="flex:1;min-width:120px;background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:7px 9px;font-size:13px;font-weight:600;">
+        <button class="preset-btn del-montaje-btn" data-m="${m.id}" style="border-color:var(--danger);color:var(--danger);">borrar</button>
+      </div>
+      <div class="row-inline" style="margin-bottom:8px;">
+        <label style="font-size:11px;">ANCHO ROLLO (CM)</label>
+        <input type="number" class="montaje-width" data-m="${m.id}" value="${m.width}" min="1" max="${maquina}" step="1" style="width:90px;background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:6px 8px;font-family:ui-monospace,monospace;font-size:12.5px;">
+        ${res && res.placedCount ? `<span style="font-family:ui-monospace,monospace;font-size:12px;color:var(--cyan);">${(res.totalLength/100).toFixed(2)} m · ${res.efficiency.toFixed(0)}% aprov.</span>` : ''}
+      </div>
+      ${noCaben.length ? `<div class="unplaced-box" style="margin:8px 0;">⚠ ${noCaben.length} aviso(s) no caben en un rollo de ${m.width} cm.</div>` : ''}
+      ${m.items.length ? `<ul style="margin:6px 0 10px;padding-left:18px;font-size:12px;color:var(--text-dim);line-height:1.7;">${lista}</ul>` : '<p class="sub" style="margin:6px 0;">Vacío — usa el botón de abajo para agregar avisos.</p>'}
+      ${m.items.length ? `<button class="preset-btn toggle-plano-disenador-btn" data-m="${m.id}" style="margin-top:6px;">${planoAbierto?'ocultar plano ▾':'ver plano ▸'}</button>` : ''}
+      ${planos}
+      ${picker}
+      ${estadoHtml}
+      ${m.items.length ? `<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+        <button class="add-btn export-montaje-btn" data-m="${m.id}" style="margin:0;flex:1;min-width:140px;border-color:var(--good);color:var(--good);">⬇ CSV</button>
+        <button class="add-btn export-pdf-btn" data-m="${m.id}" style="margin:0;flex:1;min-width:140px;border-color:var(--cyan);color:var(--cyan);">🖶 PDF (hoja carta)</button>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ---- Selector de avisos dentro del montaje ----
+// abrir/cerrar el selector completo
+document.addEventListener('click', (e)=>{
+  const b = e.target.closest('.toggle-picker-btn');
+  if(!b) return;
+  const body = document.querySelector(`.picker-body[data-m="${b.dataset.m}"]`);
+  if(!body) return;
+  const abierto = body.style.display === 'block';
+  body.style.display = abierto ? 'none' : 'block';
+  b.textContent = abierto ? '+ agregar avisos desde los rangos' : '− ocultar rangos';
+});
+
+// abrir/cerrar un rango dentro del selector
+document.addEventListener('click', (e)=>{
+  const b = e.target.closest('.toggle-rango-btn');
+  if(!b) return;
+  const body = document.querySelector(`.rango-body[data-m="${b.dataset.m}"][data-g="${b.dataset.g}"]`);
+  if(!body) return;
+  body.style.display = (body.style.display === 'block') ? 'none' : 'block';
+});
+
+// marcar todos los libres de un rango
+document.addEventListener('click', (e)=>{
+  const b = e.target.closest('.pick-all-btn');
+  if(!b) return;
+  const body = document.querySelector(`.rango-body[data-m="${b.dataset.m}"][data-g="${b.dataset.g}"]`);
+  if(!body) return;
+  const cbs = body.querySelectorAll('.pick-aviso');
+  const todos = [...cbs].every(c=>c.checked);
+  cbs.forEach(c=> c.checked = !todos);
+  b.textContent = todos ? 'marcar todos' : 'desmarcar todos';
+});
+
+// confirmar: agrega los marcados a ese montaje
+document.addEventListener('click', (e)=>{
+  const b = e.target.closest('.confirmar-picker-btn');
+  if(!b) return;
+  const m = montajes.find(x=> x.id === parseInt(b.dataset.m));
+  if(!m) return;
+  const marcados = [...document.querySelectorAll(`.pick-aviso[data-m="${b.dataset.m}"]`)]
+    .filter(c=> c.checked).map(c=> c.dataset.uid);
+  if(!marcados.length){ alert('Marca primero los avisos que quieres agregar.'); return; }
+
+  const todos = readPieces(sangradoActual());
+  let n = 0;
+  marcados.forEach(uid=>{
+    if(m.items.some(it=> it.uid === uid)) return;
+    const it = todos.find(x=> x.uid === uid);
+    if(it){ m.items.push(it); n++; }
+  });
+  renderMontajes();
+  updateSeleccionBar();
+  refrescarListasAbiertas();
+  saveEstado();
+
+  // deja abierto el selector de ese montaje para seguir agregando de otros rangos
+  const body = document.querySelector(`.picker-body[data-m="${m.id}"]`);
+  const toggle = document.querySelector(`.toggle-picker-btn[data-m="${m.id}"]`);
+  if(body){ body.style.display = 'block'; if(toggle) toggle.textContent = '− ocultar rangos'; }
+});
+
+// editar nombre / ancho de un montaje
+document.addEventListener('change', (e)=>{
+  const nm = e.target.closest('.montaje-nombre');
+  if(nm){
+    const m = montajes.find(x=>x.id===parseInt(nm.dataset.m));
+    if(m){ m.nombre = nm.value.trim() || m.nombre; saveEstado(); }
+    return;
+  }
+  const wd = e.target.closest('.montaje-width');
+  if(wd){
+    const m = montajes.find(x=>x.id===parseInt(wd.dataset.m));
+    const maquina = parseFloat(document.getElementById('machineWidth').value) || 160;
+    let v = parseFloat(wd.value);
+    if(!v || v<=0) v = maquina;
+    if(v > maquina){ alert(`Tu máquina solo llega a ${maquina} cm.`); v = maquina; }
+    if(m){ m.width = v; renderMontajes(); saveEstado(); }
+  }
+});
+
+// quitar un aviso de un montaje / borrar montaje / exportar montaje
+document.addEventListener('click', (e)=>{
+  const q = e.target.closest('.quitar-aviso-btn');
+  if(q){
+    const m = montajes.find(x=>x.id===parseInt(q.dataset.m));
+    if(m){ m.items = m.items.filter(it=> it.uid !== q.dataset.uid); renderMontajes(); updateSeleccionBar(); refrescarListasAbiertas(); saveEstado(); }
+    return;
+  }
+  const d = e.target.closest('.del-montaje-btn');
+  if(d){
+    montajes = montajes.filter(x=> x.id !== parseInt(d.dataset.m));
+    renderMontajes(); updateSeleccionBar(); refrescarListasAbiertas(); saveEstado();
+    return;
+  }
+  const x = e.target.closest('.export-montaje-btn');
+  if(x){
+    const m = montajes.find(y=>y.id===parseInt(x.dataset.m));
+    if(!m) return;
+    const sangrado = sangradoActual();
+    const proy = proyectoActual();
+    const rows = [['PROYECTO','MONTAJE','ROLLO (CM)','CODIGO','LOCAL','ANCHO (CM)','ALTO (CM)','ANCHO C/SANGRADO','ALTO C/SANGRADO']];
+    m.items.forEach(it=> rows.push([proy, m.nombre, m.width, it.codigo||'', it.nombre, it.origW, it.origH,
+      (it.origW+sangrado*2).toFixed(1), (it.origH+sangrado*2).toFixed(1)]));
+    const base = (proy? proy+'-' : '') + m.nombre;
+    downloadCsv(`${base.replace(/[^\w\-]+/g,'_')}.csv`, rows);
+  }
+});
+
+// ---- Guardado local (para no perder el trabajo al cerrar) ----
+function saveEstado(){
+  try{
+    const piezas = [...pieceList.querySelectorAll('.piece-row')].map(r=>({
+      codigo: r.querySelector('.f-codigo').value,
+      nombre: r.querySelector('.f-nombre').value,
+      ancho: r.querySelector('.f-ancho').value,
+      alto: r.querySelector('.f-alto').value,
+      cant: r.querySelector('.f-cant').value
+    }));
+    localStorage.setItem('optimizador_estado', JSON.stringify({
+      piezas, montajes, montajeSeq,
+      config: {
+        machineWidth: document.getElementById('machineWidth').value,
+        sangrado: document.getElementById('sangrado').value,
+        maxTiraje: document.getElementById('maxTiraje').value,
+        numRanges: document.getElementById('numRanges').value,
+        rollosDisponibles: document.getElementById('rollosDisponibles').value,
+        minAprov: document.getElementById('minAprov').value,
+        organizarPor: document.getElementById('organizarPor').value,
+        proyectoNombre: document.getElementById('proyectoNombre').value
+      }
+    }));
+  }catch(err){ /* almacenamiento lleno o no disponible: se ignora */ }
+}
+
+function loadEstado(){
+  try{
+    const raw = localStorage.getItem('optimizador_estado');
+    if(!raw) return false;
+    const st = JSON.parse(raw);
+    if(st.config){
+      Object.entries(st.config).forEach(([k,v])=>{
+        const el = document.getElementById(k);
+        if(el && v !== undefined && v !== null) el.value = v;
+      });
+      syncOrganizarPor();
+    }
+    if(st.piezas && st.piezas.length){
+      pieceList.innerHTML = '';
+      st.piezas.forEach(p=> addPieceRow(p.codigo, p.nombre, p.ancho, p.alto, p.cant));
+    }
+    montajes = st.montajes || [];
+    montajeSeq = st.montajeSeq || (montajes.length+1);
+    return !!(st.piezas && st.piezas.length);
+  }catch(err){ return false; }
+}
+
 // Exportar los avisos que quedaron por fuera (modo "mis rollos")
 document.addEventListener('click', (e)=>{
   const btn = e.target.closest('#exportLeftoverBtn');
@@ -1920,6 +2657,205 @@ document.addEventListener('click', (e)=>{
   });
   downloadCsv('avisos-por-fuera.csv', rows);
 });
+
+// ============ NAVEGACIÓN ENTRE MÓDULOS ============
+function mostrarVista(v){
+  document.getElementById('homeScreen').style.display  = (v==='home')     ? 'block' : 'none';
+  document.getElementById('designerView').style.display= (v==='designer') ? 'block' : 'none';
+  document.getElementById('printerView').style.display = (v==='printer')  ? 'block' : 'none';
+  const sub = document.getElementById('headerSub');
+  const h1 = document.querySelector('h1');
+  const tag = document.querySelector('.tagline');
+  if(v==='home'){
+    h1.textContent = 'Optimizador de Rollos';
+    h1.style.color = 'var(--accent)';
+    tag.textContent = 'Nesting · Plotter · Publicidad';
+    sub.textContent = 'Organiza los avisos por medidas y arma los montajes para impresión.';
+  }
+  if(v==='designer'){
+    h1.textContent = 'Módulo Diseñador';
+    h1.style.color = 'var(--cyan)';
+    tag.textContent = 'Cargar · Organizar · Montar';
+    sub.textContent = 'Carga la planilla, organiza por rangos o por tus rollos, y arma los montajes.';
+  }
+  if(v==='printer'){
+    h1.textContent = 'Módulo Impresor';
+    h1.style.color = 'var(--magenta)';
+    tag.textContent = 'Montajes listos para tirar';
+    sub.textContent = 'Consulta lo que el diseñador dejó armado: rollo, metros, plano y avisos.';
+  }
+  if(v==='printer') renderPrinterView();
+  if(v==='home') actualizarConteoHome();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+document.querySelectorAll('.modulo-btn').forEach(b=>{
+  b.addEventListener('click', ()=> mostrarVista(b.dataset.vista));
+});
+document.querySelectorAll('.volver-btn').forEach(b=>{
+  b.addEventListener('click', ()=> mostrarVista('home'));
+});
+document.getElementById('refreshPrinterBtn').addEventListener('click', ()=>{
+  loadEstado();
+  renderPrinterView();
+});
+
+function actualizarConteoHome(){
+  const el = document.getElementById('homeMontajeCount');
+  const procesados = montajes.filter(m=> m.procesado && m.items.length);
+  el.textContent = procesados.length
+    ? `${procesados.length} montaje${procesados.length!==1?'s':''} procesado${procesados.length!==1?'s':''}`
+    : 'Sin montajes procesados';
+}
+
+let planosAbiertosImpresor = new Set(); // ids de montaje con plano desplegado en Impresión
+
+// ============ VISTA IMPRESOR ============
+function renderPrinterView(){
+  const cont = document.getElementById('printerList');
+  const listos = montajes.filter(m=> m.procesado && m.items.length);
+  if(!listos.length){
+    cont.innerHTML = `<div class="unplaced-box">El diseñador todavía no ha procesado ningún montaje. Cuando procese uno, aparece aquí.</div>`;
+    return;
+  }
+  const allowRotation = true;
+  const maxTirajeM = parseFloat(document.getElementById('maxTiraje').value) || 0;
+  const sangrado = sangradoActual();
+
+  let html = '';
+  const proy = proyectoActual();
+  if(proy){
+    html += `<div class="panel" style="border-color:var(--magenta);margin-bottom:14px;">
+      <div style="font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--text-dim);">Proyecto</div>
+      <div style="font-weight:800;font-size:18px;letter-spacing:.04em;color:var(--magenta);margin-top:4px;">${proy}</div>
+    </div>`;
+  }
+  let totalMetros = 0, totalAvisos = 0, totalImpresos = 0;
+  listos.forEach(m=>{
+    const res = packRoll(m.width, m.items, allowRotation);
+    totalMetros += res.totalLength/100;
+    totalAvisos += m.items.length;
+    totalImpresos += m.items.filter(it=> it.impreso).length;
+  });
+
+  html += `<div class="stats" style="margin-bottom:14px;">
+    <div class="stat"><span class="num">${listos.length}</span><span class="lbl">montajes</span></div>
+    <div class="stat"><span class="num">${totalMetros.toFixed(1)} m</span><span class="lbl">material total</span></div>
+    <div class="stat"><span class="num">${totalImpresos}/${totalAvisos}</span><span class="lbl">avisos impresos</span></div>
+  </div>`;
+
+  listos.forEach(m=>{
+    const res = packRoll(m.width, m.items, allowRotation);
+    const parts = splitResultByMaxLength(res, maxTirajeM*100);
+    const impresos = m.items.filter(it=> it.impreso).length;
+    const completo = impresos === m.items.length;
+
+    const planoAbierto = planosAbiertosImpresor.has(m.id);
+    let planos = '';
+    if(planoAbierto){
+      parts.forEach((p, pi)=>{
+        const { svg, legendHtml } = buildViz(m.width, p, 260);
+        const usedArea = p._usedArea!==undefined ? p._usedArea
+          : p.shelves.reduce((s,sh)=> s + sh.items.reduce((si,it)=> si+it.w*it.h,0),0);
+        const eff = p.totalLength>0 ? (usedArea/(m.width*p.totalLength)*100) : 0;
+        planos += `<div style="margin-top:10px;">
+          <div style="font-size:12.5px;color:var(--text);font-weight:600;margin-bottom:4px;">
+            ${parts.length>1?`Tirada ${pi+1} de ${parts.length}`:'Tirada única'} — ${(p.totalLength/100).toFixed(2)} m · ${eff.toFixed(0)}% aprov.
+          </div>
+          <div class="viz-scroll" style="padding:10px 8px;">${svg}</div>
+          ${pi===parts.length-1 ? legendHtml : ''}
+        </div>`;
+      });
+    }
+
+    const filas = m.items.slice().sort((a,b)=>(a.codigo||'').localeCompare(b.codigo||'')).map(it=>`
+      <tr style="border-bottom:1px solid var(--line);${it.impreso?'opacity:.5;':''}">
+        <td style="padding:6px 2px;width:22px;"><input type="checkbox" class="marcar-impreso" data-m="${m.id}" data-uid="${it.uid}" ${it.impreso?'checked':''} style="width:17px;height:17px;"></td>
+        <td style="padding:6px 4px;color:var(--yellow);white-space:nowrap;${it.impreso?'text-decoration:line-through;':''}">${it.codigo||'—'}</td>
+        <td style="padding:6px 4px;color:var(--text);${it.impreso?'text-decoration:line-through;':''}">${it.nombre}</td>
+        <td style="padding:6px 4px;text-align:right;color:var(--text-dim);white-space:nowrap;">${it.origW}×${it.origH}</td>
+        <td style="padding:6px 4px;text-align:right;color:var(--cyan);white-space:nowrap;">${(it.origW+sangrado*2).toFixed(0)}×${(it.origH+sangrado*2).toFixed(0)}</td>
+      </tr>`).join('');
+
+    html += `<div class="viz-panel" style="border-left:3px solid ${completo?'var(--good)':'var(--magenta)'};">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;">
+        <strong style="font-family:'Space Grotesk',-apple-system,sans-serif;font-size:17px;color:${completo?'var(--good)':'var(--magenta)'};">${completo?'✓ ':''}${m.nombre}</strong>
+        <span style="font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:13px;color:var(--cyan);">rollo ${m.width} cm · ${(res.totalLength/100).toFixed(2)} m · ${res.efficiency.toFixed(0)}%</span>
+      </div>
+      <div style="font-size:12px;color:var(--text-dim);margin-top:4px;">
+        <strong style="color:${completo?'var(--good)':'var(--text)'};">${impresos}/${m.items.length} impresos</strong> · sangrado ${sangrado} cm por lado${parts.length>1?` · ${parts.length} tiradas`:''}
+      </div>
+      ${res.unplaced.length ? `<div class="unplaced-box" style="margin-top:8px;">⚠ ${res.unplaced.length} aviso(s) no caben en un rollo de ${m.width} cm.</div>` : ''}
+      <div class="row-inline" style="margin-top:10px;">
+        <button class="preset-btn toggle-plano-impresor-btn" data-m="${m.id}">${planoAbierto?'ocultar plano ▾':'ver plano ▸'}</button>
+        <button class="preset-btn marcar-todos-impresos-btn" data-m="${m.id}" style="border-color:var(--good);color:var(--good);">${completo?'desmarcar todos':'✓ marcar todos como impresos'}</button>
+      </div>
+      ${planos}
+      <div style="overflow-x:auto;margin-top:12px;">
+        <table style="width:100%;border-collapse:collapse;font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:11.5px;">
+          <thead><tr style="border-bottom:1px solid var(--line);">
+            <th style="width:22px;padding:5px 2px;"></th>
+            <th style="text-align:left;padding:5px 4px;color:var(--text-dim);font-weight:500;">CÓDIGO</th>
+            <th style="text-align:left;padding:5px 4px;color:var(--text-dim);font-weight:500;">LOCAL</th>
+            <th style="text-align:right;padding:5px 4px;color:var(--text-dim);font-weight:500;">MEDIDA</th>
+            <th style="text-align:right;padding:5px 4px;color:var(--text-dim);font-weight:500;">C/SANGRADO</th>
+          </tr></thead><tbody>${filas}</tbody>
+        </table>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+        <button class="add-btn export-montaje-btn" data-m="${m.id}" style="margin:0;flex:1;min-width:140px;border-color:var(--good);color:var(--good);">⬇ CSV</button>
+        <button class="add-btn export-pdf-btn" data-m="${m.id}" style="margin:0;flex:1;min-width:140px;border-color:var(--cyan);color:var(--cyan);">🖶 PDF (hoja carta)</button>
+      </div>
+    </div>`;
+  });
+
+  cont.innerHTML = html;
+}
+
+// chulear un aviso como impreso (persiste)
+document.addEventListener('change', (e)=>{
+  const cb = e.target.closest('.marcar-impreso');
+  if(!cb) return;
+  const m = montajes.find(x=> x.id === parseInt(cb.dataset.m));
+  if(!m) return;
+  const it = m.items.find(x=> x.uid === cb.dataset.uid);
+  if(it){ it.impreso = cb.checked; }
+  saveEstado();
+  renderPrinterView();
+});
+
+// marcar/desmarcar todos los avisos de un montaje como impresos
+document.addEventListener('click', (e)=>{
+  const b = e.target.closest('.marcar-todos-impresos-btn');
+  if(!b) return;
+  const m = montajes.find(x=> x.id === parseInt(b.dataset.m));
+  if(!m) return;
+  const completo = m.items.every(it=> it.impreso);
+  m.items.forEach(it=> it.impreso = !completo);
+  saveEstado();
+  renderPrinterView();
+});
+
+// mostrar/ocultar el plano en el módulo Impresor — tampoco se dibuja solo
+document.addEventListener('click', (e)=>{
+  const b = e.target.closest('.toggle-plano-impresor-btn');
+  if(!b) return;
+  const id = parseInt(b.dataset.m);
+  if(planosAbiertosImpresor.has(id)) planosAbiertosImpresor.delete(id);
+  else planosAbiertosImpresor.add(id);
+  renderPrinterView();
+});
+
+
+// ---- Arranque ----
+(function init(){
+  const tenia = loadEstado();
+  refreshPieceCount();
+  renderMontajes();
+  updateSeleccionBar();
+  if(tenia) showInitialRecommendation();
+  actualizarConteoHome();
+  mostrarVista('home');
+})();
 </script>
 </body>
 </html>
