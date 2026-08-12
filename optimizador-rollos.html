@@ -425,19 +425,7 @@
       <button class="preset-btn sangrado-btn" data-s="5">5 cm</button>
       <button class="preset-btn sangrado-btn" data-s="10">10 cm</button>
     </div>
-    <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line);">
-      <p class="sub" style="margin-bottom:10px;">Largo máximo de cada tiraje. Si el montaje se pasa, el programa lo parte en varios montajes seguidos para que sean manejables.</p>
-      <div class="field">
-        <label for="maxTiraje">LARGO MÁXIMO POR MONTAJE (M)</label>
-        <input type="number" id="maxTiraje" value="15" min="1" step="1">
-      </div>
-      <div class="presets">
-        <button class="preset-btn tiraje-btn" data-t="10">10 m</button>
-        <button class="preset-btn tiraje-btn" data-t="15">15 m</button>
-        <button class="preset-btn tiraje-btn" data-t="20">20 m</button>
-        <button class="preset-btn tiraje-btn" data-t="30">30 m</button>
-      </div>
-    </div>
+
   </div>
 
   <div class="panel" style="border-color:var(--cyan);">
@@ -606,8 +594,26 @@ let lastIdealConfig = null;   // última recomendación de formatos calculada
 // incluido) — sin importar el orden en que el optimizador los calculó internamente.
 // Se ordena aquí, en la fuente, para que las listas, el detalle de cada rango y las
 // exportaciones queden siempre consistentes entre sí (todos leen el mismo arreglo).
+// Muestra la medida real de un aviso. Si es un aviso en L (2 tramos) o en U (3 tramos),
+// muestra debajo el desglose de cada tramo, porque el diseñador necesita saber cuál va a
+// la izquierda, al centro y a la derecha — no solo el ancho total sumado.
+function fmtMedidaReal(it, colorTramo){
+  const base = `${Math.round(it.origW)}×${Math.round(it.origH)}`;
+  if(!it.tramos) return base;
+  const partes = String(it.tramos).split('+');
+  const etiquetas = partes.length === 3 ? ['izq','centro','der'] : ['izq','der'];
+  const detalle = partes.map((p,i)=> `${p}<span style="opacity:.55;">${etiquetas[i]||''}</span>`).join('+');
+  const forma = partes.length === 3 ? 'U' : 'L';
+  return `${base}<div style="font-size:10px;color:${colorTramo||'var(--yellow)'};margin-top:2px;">${forma}: ${detalle}</div>`;
+}
+
 function sortGroupsByWidth(groups){
-  return groups.slice().sort((a,b)=> a.width - b.width);
+  const altoMin = g => {
+    const alturas = (g.items||[]).map(it=> it.origH).filter(v=> typeof v === 'number' && !isNaN(v));
+    return alturas.length ? Math.min(...alturas) : 0;
+  };
+  // primero por ancho de rollo (menor a mayor) y, a igual ancho, por alto (menor a mayor)
+  return groups.slice().sort((a,b)=> (a.width - b.width) || (altoMin(a) - altoMin(b)));
 }
 let lastLeftover = null;      // avisos que quedaron por fuera (modo "mis rollos")
 let selectedUids = new Set(); // avisos marcados para armar un montaje
@@ -616,11 +622,14 @@ let montajeSeq = 1;
 const pieceList = document.getElementById('pieceList');
 const CMYK_PALETTE = ['#00aeef','#ec008c','#f0c000','#5fd58a','#8b7fe8','#ff8a4c'];
 
-function addPieceRow(codigo, local, ancho, alto, cant){
+function addPieceRow(codigo, local, ancho, alto, cant, tramos){
   const id = 'p' + (pieceIdCounter++);
   const row = document.createElement('div');
   row.className = 'piece-row';
   row.dataset.id = id;
+  // "tramos" guarda la medida original compuesta de un aviso en L o en U (ej. "366+386"),
+  // para poder mostrarle al diseñador cada tramo por separado además del ancho total.
+  if(tramos) row.dataset.tramos = tramos;
   row.innerHTML = `
     <div class="field">
       <label>CÓDIGO</label>
@@ -674,11 +683,6 @@ document.querySelectorAll('.sangrado-btn').forEach(btn=>{
 document.querySelectorAll('.machine-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     document.getElementById('machineWidth').value = btn.dataset.m;
-  });
-});
-document.querySelectorAll('.tiraje-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    document.getElementById('maxTiraje').value = btn.dataset.t;
   });
 });
 document.querySelectorAll('.rango-btn').forEach(btn=>{
@@ -821,21 +825,18 @@ function importRowsFromMatrix(rows, clearFirst){
       .filter((c,i)=> i!==anchoIdx && i!==altoIdx && !pureIdx.includes(i) && c!==null && c!==undefined && String(c).trim()!=='')
       .map(c=>String(c).trim()).join(' ');
 
-    // aviso en L o en U: se deja constancia en el nombre para que el equipo de corte/
-    // instalación sepa que ese ancho es la suma de varios tramos (izquierda+derecha, o
-    // izquierda+centro+derecha), y no una sola pieza continua.
-    if(anchoM.compound){
-      const tag = anchoM.compound.shape === 'L' ? 'aviso en L' : 'aviso en U';
-      const detalle = anchoM.compound.parts.map(p=> p % 1 === 0 ? p : p.toFixed(1)).join('+');
-      label = (label || 'sin nombre') + ` (${tag}: ${detalle} cm)`;
-    }
+    // aviso en L o en U: se guarda el detalle de los tramos por separado para que el
+    // diseñador sepa cuál es izquierda / centro / derecha, además del ancho total.
+    const tramos = anchoM.compound
+      ? anchoM.compound.parts.map(p=> p % 1 === 0 ? p : p.toFixed(1)).join('+')
+      : '';
 
     // filas de continuación (segunda lona del mismo local): heredan código y nombre
     if(codigo) lastCodigo = codigo; else codigo = lastCodigo;
     if(label) lastLabel = label; else label = lastLabel;
     if(!label) label = 'sin nombre';
 
-    addPieceRow(codigo, label, ancho, alto, 1);
+    addPieceRow(codigo, label, ancho, alto, 1, tramos);
     imported++;
   });
   return { imported, ignored };
@@ -1073,11 +1074,12 @@ function readPieces(sangrado){
     const ancho = parseFloat(row.querySelector('.f-ancho').value);
     const alto = parseFloat(row.querySelector('.f-alto').value);
     const cant = parseInt(row.querySelector('.f-cant').value) || 1;
+    const tramos = row.dataset.tramos || '';
     if(!ancho || !alto || ancho<=0 || alto<=0) return;
     const bledW = ancho + sangrado*2;
     const bledH = alto + sangrado*2;
     for(let i=0;i<cant;i++){
-      items.push({uid:`r${ri}c${i}`, codigo, nombre, w:bledW, h:bledH, origW:ancho, origH:alto});
+      items.push({uid:`r${ri}c${i}`, codigo, nombre, w:bledW, h:bledH, origW:ancho, origH:alto, tramos});
     }
   });
   return items;
@@ -1516,7 +1518,13 @@ function suggestIdealWidths(items, machineWidth, allowRotation, maxFormats){
 
 // Parte un montaje largo en varias tiradas, cada una de máximo maxLenCm de largo.
 // Las filas (shelves) se reparten enteras: nunca se corta una fila por la mitad.
+// El montaje YA NO se parte por largo: cada montaje va completo, del largo que sea.
+// La función se conserva devolviendo siempre una sola parte para no tener que tocar
+// todos los puntos que la llaman.
 function splitResultByMaxLength(result, maxLenCm){
+  return [result];
+}
+function splitResultByMaxLength_DESACTIVADA(result, maxLenCm){
   if(!maxLenCm || maxLenCm <= 0 || result.totalLength <= maxLenCm) return [result];
   const chunks = [];
   let current = [];
@@ -1620,7 +1628,7 @@ function renderAvailableRollsHtml(data, minEffPct, machineWidth){
     html += `<div class="unplaced-box">Ningún rollo alcanza el ${minEffPct}% de aprovechamiento con estos avisos. Baja el mínimo exigido o agrega otros anchos.</div>`;
   }
 
-  const maxTirajeM = parseFloat(document.getElementById('maxTiraje').value) || 0;
+  const maxTirajeM = 0;
   rolls.forEach((r,i)=>{
     const parts = splitResultByMaxLength(r.result, maxTirajeM*100);
     const altosReales = r.items.map(it=> it.origH);
@@ -1651,11 +1659,11 @@ function renderAvailableRollsHtml(data, minEffPct, machineWidth){
   if(leftover.length){
     const rowsHtml = leftover
       .slice()
-      .sort((a,b)=> a.nombre.localeCompare(b.nombre))
+      .sort((a,b)=> (a.origH-b.origH) || (a.origW-b.origW) || a.nombre.localeCompare(b.nombre))
       .map(it=>`<tr style="border-bottom:1px solid var(--line);">
         <td style="padding:6px 4px;color:var(--yellow);white-space:nowrap;">${it.codigo||"—"}</td>
         <td style="padding:6px 4px;color:var(--text);">${it.nombre}</td>
-        <td style="padding:6px 4px;text-align:right;color:var(--text-dim);white-space:nowrap;">${it.origW}×${it.origH}</td>
+        <td style="padding:6px 4px;text-align:right;color:var(--text-dim);">${fmtMedidaReal(it)}</td>
         <td style="padding:6px 4px;text-align:right;color:var(--danger);white-space:nowrap;">${Math.round(Math.max(it.w,it.h))}×${Math.round(Math.min(it.w,it.h))}</td>
       </tr>`).join('');
 
@@ -1696,7 +1704,7 @@ function renderIdealWidthsHtml(config, machineWidth){
     const minA = Math.round(Math.min(...altos)), maxA = Math.round(Math.max(...altos));
     const altosReales = g.items.map(it=> it.origH);
     const minR = Math.round(Math.min(...altosReales)), maxR = Math.round(Math.max(...altosReales));
-    const maxTirajeM = parseFloat(document.getElementById('maxTiraje').value) || 0;
+    const maxTirajeM = 0;
     const parts = splitResultByMaxLength(g.result, maxTirajeM*100);
     html += `<div class="format-card" data-fmt="${i}" style="padding:11px 13px;background:var(--panel-2);border-radius:8px;border-left:3px solid var(--yellow);cursor:pointer;">
       <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;">
@@ -1829,7 +1837,7 @@ function renderRangeGroups(ranges, candidateWidths, items, allowRotation, sangra
   groups.forEach((g, gi)=>{
     const lengthM = parseFloat((g.result.totalLength/100).toFixed(2));
     usageByWidth[g.width] = (usageByWidth[g.width] || 0) + lengthM;
-    const maxTirajeM = parseFloat(document.getElementById('maxTiraje').value) || 0;
+    const maxTirajeM = 0;
     const parts = splitResultByMaxLength(g.result, maxTirajeM*100);
 
     const counts = {};
@@ -2126,7 +2134,7 @@ document.addEventListener('click', (e)=>{
   const groups = currentGroups();
   if(!groups || !groups[idx]) return;
   const g = groups[idx];
-  const maxTirajeM = parseFloat(document.getElementById('maxTiraje').value) || 0;
+  const maxTirajeM = 0;
   const parts = splitResultByMaxLength(g.result, maxTirajeM*100);
 
   const usados = uidsUsados();
@@ -2134,7 +2142,7 @@ document.addEventListener('click', (e)=>{
   parts.forEach((p, pi)=>{
     const rows = [];
     p.shelves.forEach(sh=> sh.items.forEach(it=> rows.push(it)));
-    rows.sort((a,b)=> a.nombre.localeCompare(b.nombre));
+    rows.sort((a,b)=> (a.origH-b.origH) || (a.origW-b.origW) || a.nombre.localeCompare(b.nombre));
     const libres = rows.filter(it=> !usados.has(it.uid));
     const rowsHtml = rows.map(it=>{
       const yaUsado = usados.has(it.uid);
@@ -2146,7 +2154,7 @@ document.addEventListener('click', (e)=>{
           : `<input type="checkbox" class="sel-aviso" data-uid="${it.uid}" ${selectedUids.has(it.uid)?'checked':''} style="width:16px;height:16px;">`}</td>
         <td style="padding:6px 4px;color:var(--yellow);white-space:nowrap;">${it.codigo||"—"}</td>
         <td style="padding:6px 4px;color:var(--text);">${it.nombre}${yaUsado&&cual?`<br><span style="font-size:10px;color:var(--good);">en ${cual.nombre}</span>`:''}</td>
-        <td style="padding:6px 4px;text-align:right;color:var(--text-dim);white-space:nowrap;">${it.origW}×${it.origH}</td>
+        <td style="padding:6px 4px;text-align:right;color:var(--text-dim);">${fmtMedidaReal(it)}</td>
         <td style="padding:6px 4px;text-align:right;color:var(--cyan);white-space:nowrap;">${(it.origW+sangradoActual()*2).toFixed(0)}×${(it.origH+sangradoActual()*2).toFixed(0)}</td>
       </tr>`;}).join('');
 
@@ -2221,7 +2229,7 @@ function exportMontajePDF(m){
   const allowRotation = document.getElementById('allowRotation').checked;
   if(!m.items.length){ alert('Este montaje todavía no tiene avisos.'); return; }
   const res = packRoll(m.width, m.items, allowRotation);
-  const maxTirajeM = parseFloat(document.getElementById('maxTiraje').value) || 0;
+  const maxTirajeM = 0;
   const parts = splitResultByMaxLength(res, maxTirajeM*100);
   const proy = proyectoActual();
   const sangrado = sangradoActual();
@@ -2260,7 +2268,7 @@ function exportMontajePDF(m){
   // ---- columna derecha: resumen de medidas y locales de todos los avisos ----
   const allItems = [];
   parts.forEach((p, pi)=> p.shelves.forEach(sh=> sh.items.forEach(it=> allItems.push({...it, _tirada: pi+1}))));
-  allItems.sort((a,b)=> a.nombre.localeCompare(b.nombre));
+  allItems.sort((a,b)=> (a.origH-b.origH) || (a.origW-b.origW) || a.nombre.localeCompare(b.nombre));
   const n = allItems.length;
   // la letra se achica automáticamente si hay muchos avisos, para que la lista completa
   // quepa siempre dentro de la misma hoja.
@@ -2272,7 +2280,7 @@ function exportMontajePDF(m){
     return `<tr>
       <td style="padding:${rowPad}mm 1mm;color:#a05a00;white-space:nowrap;">${it.codigo||'—'}</td>
       <td style="padding:${rowPad}mm 1mm;">${it.nombre}${parts.length>1?` <span style="color:#999;">(T${it._tirada})</span>`:''}</td>
-      <td style="padding:${rowPad}mm 1mm;text-align:right;white-space:nowrap;color:#555;">${Math.round(it.origW)}×${Math.round(it.origH)}</td>
+      <td style="padding:${rowPad}mm 1mm;text-align:right;color:#555;">${fmtMedidaReal(it, '#a05a00')}</td>
       <td style="padding:${rowPad}mm 1mm;text-align:right;white-space:nowrap;color:#0a6ea6;">${msW}×${msH}</td>
     </tr>`;
   }).join('');
@@ -2325,7 +2333,7 @@ function downloadCsv(filename, rows){
 }
 
 function buildExportRows(groups, onlyIdx){
-  const maxTirajeM = parseFloat(document.getElementById('maxTiraje').value) || 0;
+  const maxTirajeM = 0;
   const sangrado = parseFloat(document.getElementById('sangrado').value) || 0;
   const rows = [['RANGO','ROLLO (CM)','TIRADA','CODIGO','LOCAL','ANCHO (CM)','ALTO (CM)','ANCHO C/SANGRADO','ALTO C/SANGRADO']];
   groups.forEach((g, gi)=>{
@@ -2334,7 +2342,7 @@ function buildExportRows(groups, onlyIdx){
     parts.forEach((p, pi)=>{
       const items = [];
       p.shelves.forEach(sh=> sh.items.forEach(it=> items.push(it)));
-      items.sort((a,b)=> a.nombre.localeCompare(b.nombre));
+      items.sort((a,b)=> (a.origH-b.origH) || (a.origW-b.origW) || a.nombre.localeCompare(b.nombre));
       items.forEach(it=>{
         rows.push([
           'Rango '+(gi+1),
@@ -2516,7 +2524,7 @@ function renderMontajes(){
   }
   const allowRotation = document.getElementById('allowRotation').checked;
   const maquina = parseFloat(document.getElementById('machineWidth').value) || 160;
-  const maxTirajeM = parseFloat(document.getElementById('maxTiraje').value) || 0;
+  const maxTirajeM = 0;
 
   // la lista de montajes se muestra siempre ordenada de menor a mayor por el ancho
   // del rollo (m.width), sin importar el orden en que se hayan creado.
@@ -2541,7 +2549,7 @@ function renderMontajes(){
       });
     }
 
-    const lista = m.items.map(it=>`<li>${it.codigo?`<span style="color:var(--yellow);">${it.codigo}</span> · `:''}${it.nombre} — ${it.origW}×${it.origH} cm
+    const lista = m.items.map(it=>`<li>${it.codigo?`<span style="color:var(--yellow);">${it.codigo}</span> · `:''}${it.nombre} — ${it.origW}×${it.origH} cm${it.tramos?` <span style="color:var(--yellow);">(${String(it.tramos).split('+').length===3?'U':'L'}: ${it.tramos})</span>`:''}
       <button class="preset-btn quitar-aviso-btn" data-m="${m.id}" data-uid="${it.uid}" style="padding:1px 6px;font-size:10px;border-color:var(--danger);color:var(--danger);margin-left:4px;">quitar</button></li>`).join('');
 
     // ---- Selector de avisos por rango, dentro del propio montaje ----
@@ -2578,7 +2586,7 @@ function renderMontajes(){
                     <td style="padding:5px 2px;width:22px;"><input type="checkbox" class="pick-aviso" data-m="${m.id}" data-uid="${it.uid}" style="width:16px;height:16px;"></td>
                     <td style="padding:5px 4px;color:var(--yellow);white-space:nowrap;">${it.codigo||'—'}</td>
                     <td style="padding:5px 4px;color:var(--text);">${it.nombre}</td>
-                    <td style="padding:5px 4px;text-align:right;color:var(--text-dim);white-space:nowrap;">${it.origW}×${it.origH}</td>
+                    <td style="padding:5px 4px;text-align:right;color:var(--text-dim);">${fmtMedidaReal(it)}</td>
                     <td style="padding:5px 4px;text-align:right;color:var(--cyan);white-space:nowrap;">${Math.round(it.w)}×${Math.round(it.h)}</td>
                   </tr>`).join('')}</tbody>
               </table></div>`
@@ -2744,14 +2752,14 @@ function buildEstadoSnapshot(){
     nombre: r.querySelector('.f-nombre').value,
     ancho: r.querySelector('.f-ancho').value,
     alto: r.querySelector('.f-alto').value,
-    cant: r.querySelector('.f-cant').value
+    cant: r.querySelector('.f-cant').value,
+    tramos: r.dataset.tramos || ''
   }));
   return {
     piezas, montajes, montajeSeq,
     config: {
       machineWidth: document.getElementById('machineWidth').value,
       sangrado: document.getElementById('sangrado').value,
-      maxTiraje: document.getElementById('maxTiraje').value,
       numRanges: document.getElementById('numRanges').value,
       rollosDisponibles: document.getElementById('rollosDisponibles').value,
       minAprov: document.getElementById('minAprov').value,
@@ -2770,7 +2778,7 @@ function aplicarEstadoSnapshot(st){
     syncOrganizarPor();
   }
   pieceList.innerHTML = '';
-  (st.piezas||[]).forEach(p=> addPieceRow(p.codigo, p.nombre, p.ancho, p.alto, p.cant));
+  (st.piezas||[]).forEach(p=> addPieceRow(p.codigo, p.nombre, p.ancho, p.alto, p.cant, p.tramos));
   montajes = st.montajes || [];
   montajeSeq = st.montajeSeq || (montajes.length+1);
 }
@@ -3001,7 +3009,7 @@ function renderPrinterView(){
     return;
   }
   const allowRotation = true;
-  const maxTirajeM = parseFloat(document.getElementById('maxTiraje').value) || 0;
+  const maxTirajeM = 0;
   const sangrado = sangradoActual();
 
   let html = '';
@@ -3055,7 +3063,7 @@ function renderPrinterView(){
         <td style="padding:6px 2px;width:22px;"><input type="checkbox" class="marcar-impreso" data-m="${m.id}" data-uid="${it.uid}" ${it.impreso?'checked':''} style="width:17px;height:17px;"></td>
         <td style="padding:6px 4px;color:var(--yellow);white-space:nowrap;${it.impreso?'text-decoration:line-through;':''}">${it.codigo||'—'}</td>
         <td style="padding:6px 4px;color:var(--text);${it.impreso?'text-decoration:line-through;':''}">${it.nombre}</td>
-        <td style="padding:6px 4px;text-align:right;color:var(--text-dim);white-space:nowrap;">${it.origW}×${it.origH}</td>
+        <td style="padding:6px 4px;text-align:right;color:var(--text-dim);">${fmtMedidaReal(it)}</td>
         <td style="padding:6px 4px;text-align:right;color:var(--cyan);white-space:nowrap;">${(it.origW+sangrado*2).toFixed(0)}×${(it.origH+sangrado*2).toFixed(0)}</td>
       </tr>`).join('');
 
