@@ -318,6 +318,12 @@
       background:#fff;
     }
     .print-page *{ color:#111 !important; }
+    /* sin esto el navegador descarta los fondos al imprimir y se perderia el
+       resaltado de los avisos en L y en U */
+    .print-page, .print-page *{
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
     @page{ size: letter; margin: 10mm; }
   }
 </style>
@@ -594,6 +600,30 @@ let lastIdealConfig = null;   // última recomendación de formatos calculada
 // incluido) — sin importar el orden en que el optimizador los calculó internamente.
 // Se ordena aquí, en la fuente, para que las listas, el detalle de cada rango y las
 // exportaciones queden siempre consistentes entre sí (todos leen el mismo arreglo).
+// Resaltado de fila según la forma del aviso: los avisos en L y en U se destacan con un
+// color propio para que el diseñador los identifique de un vistazo entre los rectos.
+// L = ámbar, U = violeta.
+function estiloFilaForma(it){
+  if(!it || !it.tramos) return '';
+  const esU = String(it.tramos).split('+').length === 3;
+  return esU
+    ? 'background:rgba(167,110,255,0.14);border-left:3px solid #a76eff;'
+    : 'background:rgba(240,192,0,0.13);border-left:3px solid var(--yellow);';
+}
+// Misma idea pero con colores sólidos, para el PDF impreso (fondos claros).
+function estiloFilaFormaPrint(it){
+  if(!it || !it.tramos) return '';
+  const esU = String(it.tramos).split('+').length === 3;
+  return esU ? 'background:#efe4ff;' : 'background:#fff3cc;';
+}
+// Etiqueta corta para marcar visualmente la fila.
+function badgeForma(it){
+  if(!it || !it.tramos) return '';
+  const esU = String(it.tramos).split('+').length === 3;
+  const color = esU ? '#a76eff' : 'var(--yellow)';
+  return `<span style="display:inline-block;padding:0 5px;border-radius:4px;border:1px solid ${color};color:${color};font-size:9.5px;font-weight:700;margin-right:4px;">${esU?'U':'L'}</span>`;
+}
+
 // "recta" si el aviso es una sola pieza continua; "L" si son 2 tramos; "U" si son 3.
 function formaAviso(it){
   if(!it.tramos) return 'recta';
@@ -636,6 +666,18 @@ const pieceList = document.getElementById('pieceList');
 const CMYK_PALETTE = ['#00aeef','#ec008c','#f0c000','#5fd58a','#8b7fe8','#ff8a4c'];
 
 function addPieceRow(codigo, local, ancho, alto, cant, tramos){
+  // Compatibilidad con listas guardadas por versiones anteriores: antes el dato de
+  // "aviso en L/U" se pegaba al final del NOMBRE (ej. "... (aviso en L: 366+386 cm)").
+  // Si llega una fila así, se recupera el detalle de los tramos y se limpia el nombre,
+  // para que las listas viejas también muestren FORMA y TRAMOS sin tener que volver
+  // a subir la planilla.
+  if(local){
+    const legacy = String(local).match(/\s*\(aviso en [LU]:\s*([\d.,+\s]+?)\s*cm\)\s*$/i);
+    if(legacy){
+      if(!tramos) tramos = legacy[1].replace(/\s+/g,'');
+      local = String(local).replace(legacy[0], '').trim();
+    }
+  }
   const id = 'p' + (pieceIdCounter++);
   const row = document.createElement('div');
   row.className = 'piece-row';
@@ -1673,8 +1715,8 @@ function renderAvailableRollsHtml(data, minEffPct, machineWidth){
     const rowsHtml = leftover
       .slice()
       .sort((a,b)=> (a.origH-b.origH) || (a.origW-b.origW) || a.nombre.localeCompare(b.nombre))
-      .map(it=>`<tr style="border-bottom:1px solid var(--line);">
-        <td style="padding:6px 4px;color:var(--yellow);white-space:nowrap;">${it.codigo||"—"}</td>
+      .map(it=>`<tr style="border-bottom:1px solid var(--line);${estiloFilaForma(it)}">
+        <td style="padding:6px 4px;color:var(--yellow);white-space:nowrap;">${badgeForma(it)}${it.codigo||"—"}</td>
         <td style="padding:6px 4px;color:var(--text);">${it.nombre}</td>
         <td style="padding:6px 4px;text-align:right;color:var(--text-dim);">${fmtMedidaReal(it)}</td>
         <td style="padding:6px 4px;text-align:right;color:var(--danger);white-space:nowrap;">${Math.round(Math.max(it.w,it.h))}×${Math.round(Math.min(it.w,it.h))}</td>
@@ -2161,11 +2203,11 @@ document.addEventListener('click', (e)=>{
       const yaUsado = usados.has(it.uid);
       const cual = yaUsado ? montajes.find(m=> m.items.some(x=>x.uid===it.uid)) : null;
       return `
-      <tr style="border-bottom:1px solid var(--line);${yaUsado?'opacity:.45;':''}">
+      <tr style="border-bottom:1px solid var(--line);${estiloFilaForma(it)}${yaUsado?'opacity:.45;':''}">
         <td style="padding:6px 2px;">${yaUsado
           ? '<span title="ya está en un montaje" style="color:var(--good);font-size:13px;">✓</span>'
           : `<input type="checkbox" class="sel-aviso" data-uid="${it.uid}" ${selectedUids.has(it.uid)?'checked':''} style="width:16px;height:16px;">`}</td>
-        <td style="padding:6px 4px;color:var(--yellow);white-space:nowrap;">${it.codigo||"—"}</td>
+        <td style="padding:6px 4px;color:var(--yellow);white-space:nowrap;">${badgeForma(it)}${it.codigo||"—"}</td>
         <td style="padding:6px 4px;color:var(--text);">${it.nombre}${yaUsado&&cual?`<br><span style="font-size:10px;color:var(--good);">en ${cual.nombre}</span>`:''}</td>
         <td style="padding:6px 4px;text-align:right;color:var(--text-dim);">${fmtMedidaReal(it)}</td>
         <td style="padding:6px 4px;text-align:right;color:var(--cyan);white-space:nowrap;">${(it.origW+sangradoActual()*2).toFixed(0)}×${(it.origH+sangradoActual()*2).toFixed(0)}</td>
@@ -2290,8 +2332,8 @@ function exportMontajePDF(m){
 
   const rowsHtml = allItems.map(it=>{
     const msW = Math.round(it.origW + sangrado*2), msH = Math.round(it.origH + sangrado*2);
-    return `<tr>
-      <td style="padding:${rowPad}mm 1mm;color:#a05a00;white-space:nowrap;">${it.codigo||'—'}</td>
+    return `<tr style="${estiloFilaFormaPrint(it)}">
+      <td style="padding:${rowPad}mm 1mm;color:#a05a00;white-space:nowrap;">${it.tramos?`<strong>${String(it.tramos).split('+').length===3?'U':'L'}</strong> `:''}${it.codigo||'—'}</td>
       <td style="padding:${rowPad}mm 1mm;">${it.nombre}${parts.length>1?` <span style="color:#999;">(T${it._tirada})</span>`:''}</td>
       <td style="padding:${rowPad}mm 1mm;text-align:right;color:#555;">${fmtMedidaReal(it, '#a05a00')}</td>
       <td style="padding:${rowPad}mm 1mm;text-align:right;white-space:nowrap;color:#0a6ea6;">${msW}×${msH}</td>
@@ -2315,6 +2357,10 @@ function exportMontajePDF(m){
       ${proy ? `<div style="font-size:8pt;color:#666;letter-spacing:.05em;text-transform:uppercase;">${proy}</div>` : ''}
       <div style="font-size:14pt;font-weight:700;">${m.nombre}</div>
       <div style="font-size:8pt;color:#666;margin-top:0.5mm;">Rollo ${m.width} cm · ${totalM} m total · ${n} aviso${n!==1?'s':''}${parts.length>1?` · ${parts.length} tiradas`:''} · sangrado ${sangrado} cm/lado · MR = medida real · MS = medida con sangrado</div>
+      ${allItems.some(it=> it.tramos) ? `<div style="font-size:7.5pt;margin-top:1mm;">
+        <span style="background:#fff3cc;padding:0 4px;border:0.2mm solid #d9a600;"><strong>L</strong> = aviso en L (2 tramos)</span>
+        <span style="background:#efe4ff;padding:0 4px;border:0.2mm solid #8a52e0;margin-left:4mm;"><strong>U</strong> = aviso en U (3 tramos)</span>
+      </div>` : ''}
     </div>
     <div style="display:flex;gap:${gap}mm;height:${bodyH}mm;overflow:hidden;">
       <div style="width:${leftW}mm;flex-shrink:0;overflow:hidden;">${leftHtml}</div>
@@ -2597,9 +2643,9 @@ function renderMontajes(){
                   <th style="text-align:right;padding:4px 4px;color:var(--text-dim);font-weight:500;">C/SANGRADO</th>
                 </tr></thead>
                 <tbody>${libres.map(it=>`
-                  <tr style="border-bottom:1px solid var(--line);">
+                  <tr style="border-bottom:1px solid var(--line);${estiloFilaForma(it)}">
                     <td style="padding:5px 2px;width:22px;"><input type="checkbox" class="pick-aviso" data-m="${m.id}" data-uid="${it.uid}" style="width:16px;height:16px;"></td>
-                    <td style="padding:5px 4px;color:var(--yellow);white-space:nowrap;">${it.codigo||'—'}</td>
+                    <td style="padding:5px 4px;color:var(--yellow);white-space:nowrap;">${badgeForma(it)}${it.codigo||'—'}</td>
                     <td style="padding:5px 4px;color:var(--text);">${it.nombre}</td>
                     <td style="padding:5px 4px;text-align:right;color:var(--text-dim);">${fmtMedidaReal(it)}</td>
                     <td style="padding:5px 4px;text-align:right;color:var(--cyan);white-space:nowrap;">${Math.round(it.w)}×${Math.round(it.h)}</td>
@@ -3075,9 +3121,9 @@ function renderPrinterView(){
     }
 
     const filas = m.items.slice().sort((a,b)=>(a.codigo||'').localeCompare(b.codigo||'')).map(it=>`
-      <tr style="border-bottom:1px solid var(--line);${it.impreso?'opacity:.5;':''}">
+      <tr style="border-bottom:1px solid var(--line);${estiloFilaForma(it)}${it.impreso?'opacity:.5;':''}">
         <td style="padding:6px 2px;width:22px;"><input type="checkbox" class="marcar-impreso" data-m="${m.id}" data-uid="${it.uid}" ${it.impreso?'checked':''} style="width:17px;height:17px;"></td>
-        <td style="padding:6px 4px;color:var(--yellow);white-space:nowrap;${it.impreso?'text-decoration:line-through;':''}">${it.codigo||'—'}</td>
+        <td style="padding:6px 4px;color:var(--yellow);white-space:nowrap;${it.impreso?'text-decoration:line-through;':''}">${badgeForma(it)}${it.codigo||'—'}</td>
         <td style="padding:6px 4px;color:var(--text);${it.impreso?'text-decoration:line-through;':''}">${it.nombre}</td>
         <td style="padding:6px 4px;text-align:right;color:var(--text-dim);">${fmtMedidaReal(it)}</td>
         <td style="padding:6px 4px;text-align:right;color:var(--cyan);white-space:nowrap;">${(it.origW+sangrado*2).toFixed(0)}×${(it.origH+sangrado*2).toFixed(0)}</td>
