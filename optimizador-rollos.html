@@ -594,6 +594,19 @@ let lastIdealConfig = null;   // última recomendación de formatos calculada
 // incluido) — sin importar el orden en que el optimizador los calculó internamente.
 // Se ordena aquí, en la fuente, para que las listas, el detalle de cada rango y las
 // exportaciones queden siempre consistentes entre sí (todos leen el mismo arreglo).
+// "recta" si el aviso es una sola pieza continua; "L" si son 2 tramos; "U" si son 3.
+function formaAviso(it){
+  if(!it.tramos) return 'recta';
+  return String(it.tramos).split('+').length === 3 ? 'U' : 'L';
+}
+// Detalle de los tramos con su posición, ej. "366 izq + 386 der" o "120 izq + 122 centro + 90 der"
+function tramosDetalle(it){
+  if(!it.tramos) return '';
+  const partes = String(it.tramos).split('+');
+  const etiquetas = partes.length === 3 ? ['izq','centro','der'] : ['izq','der'];
+  return partes.map((p,i)=> `${p} ${etiquetas[i]||''}`.trim()).join(' + ');
+}
+
 // Muestra la medida real de un aviso. Si es un aviso en L (2 tramos) o en U (3 tramos),
 // muestra debajo el desglose de cada tramo, porque el diseñador necesita saber cuál va a
 // la izquierda, al centro y a la derecha — no solo el ancho total sumado.
@@ -2335,7 +2348,7 @@ function downloadCsv(filename, rows){
 function buildExportRows(groups, onlyIdx){
   const maxTirajeM = 0;
   const sangrado = parseFloat(document.getElementById('sangrado').value) || 0;
-  const rows = [['RANGO','ROLLO (CM)','TIRADA','CODIGO','LOCAL','ANCHO (CM)','ALTO (CM)','ANCHO C/SANGRADO','ALTO C/SANGRADO']];
+  const rows = [['RANGO','ROLLO (CM)','TIRADA','CODIGO','LOCAL','FORMA','TRAMOS','ANCHO (CM)','ALTO (CM)','ANCHO C/SANGRADO','ALTO C/SANGRADO']];
   groups.forEach((g, gi)=>{
     if(onlyIdx !== undefined && onlyIdx !== null && gi !== onlyIdx) return;
     const parts = splitResultByMaxLength(g.result, maxTirajeM*100);
@@ -2350,6 +2363,8 @@ function buildExportRows(groups, onlyIdx){
           parts.length>1 ? `${pi+1} de ${parts.length}` : 'única',
           it.codigo || '',
           it.nombre,
+          formaAviso(it),
+          tramosDetalle(it),
           it.origW,
           it.origH,
           (it.origW + sangrado*2).toFixed(1),
@@ -2737,8 +2752,9 @@ document.addEventListener('click', (e)=>{
     if(!m) return;
     const sangrado = sangradoActual();
     const proy = proyectoActual();
-    const rows = [['PROYECTO','MONTAJE','ROLLO (CM)','CODIGO','LOCAL','ANCHO (CM)','ALTO (CM)','ANCHO C/SANGRADO','ALTO C/SANGRADO']];
-    m.items.forEach(it=> rows.push([proy, m.nombre, m.width, it.codigo||'', it.nombre, it.origW, it.origH,
+    const rows = [['PROYECTO','MONTAJE','ROLLO (CM)','CODIGO','LOCAL','FORMA','TRAMOS','ANCHO (CM)','ALTO (CM)','ANCHO C/SANGRADO','ALTO C/SANGRADO']];
+    m.items.forEach(it=> rows.push([proy, m.nombre, m.width, it.codigo||'', it.nombre,
+      formaAviso(it), tramosDetalle(it), it.origW, it.origH,
       (it.origW+sangrado*2).toFixed(1), (it.origH+sangrado*2).toFixed(1)]));
     const base = (proy? proy+'-' : '') + m.nombre;
     downloadCsv(`${base.replace(/[^\w\-]+/g,'_')}.csv`, rows);
@@ -2939,9 +2955,9 @@ document.addEventListener('click', (e)=>{
   if(!btn) return;
   if(!lastLeftover || !lastLeftover.length) return;
   const sangrado = sangradoActual();
-  const rows = [['CODIGO','LOCAL','ANCHO (CM)','ALTO (CM)','ANCHO C/SANGRADO','ALTO C/SANGRADO','MOTIVO']];
+  const rows = [['CODIGO','LOCAL','FORMA','TRAMOS','ANCHO (CM)','ALTO (CM)','ANCHO C/SANGRADO','ALTO C/SANGRADO','MOTIVO']];
   lastLeftover.slice().sort((a,b)=> a.nombre.localeCompare(b.nombre)).forEach(it=>{
-    rows.push([it.codigo || '', it.nombre, it.origW, it.origH,
+    rows.push([it.codigo || '', it.nombre, formaAviso(it), tramosDetalle(it), it.origW, it.origH,
                (it.origW+sangrado*2).toFixed(1), (it.origH+sangrado*2).toFixed(1),
                'No alcanza el aprovechamiento minimo o no cabe en los rollos disponibles']);
   });
