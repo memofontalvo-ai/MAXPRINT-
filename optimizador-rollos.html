@@ -2120,9 +2120,13 @@ function exportMontajePDF(m){
   // Todo el montaje va en UNA sola hoja carta: el plano a la izquierda (una tira por
   // cada tirada si hay más de una) y a la derecha el resumen de locales/medidas.
   // hoja carta = 215.9 x 279.4 mm; @page margin 10mm por lado -> usable 195.9 x 259.4mm.
+  // Se deja además un colchón de seguridad real (no solo teórico) para que la suma
+  // encabezado + cuerpo NUNCA alcance el borde de la hoja y dispare una 2da página.
   const usableW = 195.9, usableH = 259.4;
-  const headerH = 20;
-  const bodyH = usableH - headerH;
+  const safety = 6; // mm de colchón
+  const headerH = 18;
+  const headerGap = 2; // separación entre encabezado y cuerpo
+  const bodyH = usableH - headerH - headerGap - safety;
   const gap = 4;
   const leftW = usableW * 0.42;
   const rightW = usableW - leftW - gap;
@@ -2176,14 +2180,14 @@ function exportMontajePDF(m){
 
   const totalM = (parts.reduce((s,p)=> s+p.totalLength, 0)/100).toFixed(2);
 
-  const pageHtml = `<div class="print-page">
-    <div style="font-family:-apple-system,Arial,sans-serif;height:${headerH}mm;box-sizing:border-box;margin-bottom:2mm;">
+  const pageHtml = `<div class="print-page" style="height:${usableH}mm;overflow:hidden;box-sizing:border-box;">
+    <div style="font-family:-apple-system,Arial,sans-serif;height:${headerH}mm;box-sizing:border-box;margin-bottom:${headerGap}mm;overflow:hidden;">
       ${proy ? `<div style="font-size:8pt;color:#666;letter-spacing:.05em;text-transform:uppercase;">${proy}</div>` : ''}
       <div style="font-size:14pt;font-weight:700;">${m.nombre}</div>
       <div style="font-size:8pt;color:#666;margin-top:0.5mm;">Rollo ${m.width} cm · ${totalM} m total · ${n} aviso${n!==1?'s':''}${parts.length>1?` · ${parts.length} tiradas`:''} · sangrado ${sangrado} cm/lado · MR = medida real · MS = medida con sangrado</div>
     </div>
-    <div style="display:flex;gap:${gap}mm;height:${bodyH}mm;">
-      <div style="width:${leftW}mm;flex-shrink:0;">${leftHtml}</div>
+    <div style="display:flex;gap:${gap}mm;height:${bodyH}mm;overflow:hidden;">
+      <div style="width:${leftW}mm;flex-shrink:0;overflow:hidden;">${leftHtml}</div>
       <div style="width:${rightW}mm;overflow:hidden;">${rightHtml}</div>
     </div>
   </div>`;
@@ -2877,9 +2881,17 @@ document.addEventListener('click', (e)=>{
   refreshPieceCount();
   renderMontajes();
   updateSeleccionBar();
-  if(tenia) showInitialRecommendation();
   actualizarConteoHome();
   mostrarVista('home');
+  // El cálculo de la recomendación ideal (DP sobre anchos candidatos) puede ser pesado
+  // cuando ya hay muchos avisos guardados de una sesión anterior. Se difiere un tick para
+  // que la pantalla de inicio pinte primero — así la app se siente instantánea al abrir,
+  // y el cálculo pesado corre después, en segundo plano, sin bloquear la apertura.
+  if(tenia){
+    const resultsEl = document.getElementById('results');
+    if(resultsEl) resultsEl.innerHTML = '<p class="sub">Calculando recomendación…</p>';
+    setTimeout(showInitialRecommendation, 30);
+  }
 })();
 </script>
 </body>
