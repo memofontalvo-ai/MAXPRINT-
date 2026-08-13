@@ -479,9 +479,12 @@ main{padding:12px;max-width:700px;margin:0 auto;}
       <p style="font-size:12px;color:var(--tm);margin-bottom:20px;">Ingresa tus credenciales para continuar</p>
       <input id="login-user" type="text" placeholder="Usuario" autocomplete="username"
         style="width:100%;background:var(--s2);border:1.5px solid var(--b);border-radius:10px;color:var(--t);font-size:15px;padding:11px 13px;outline:none;margin-bottom:10px;font-family:'DM Sans',sans-serif;">
-      <input id="login-pass" type="password" placeholder="Contraseña" autocomplete="current-password"
-        style="width:100%;background:var(--s2);border:1.5px solid var(--b);border-radius:10px;color:var(--t);font-size:15px;padding:11px 13px;outline:none;margin-bottom:10px;font-family:'DM Sans',sans-serif;"
-        onkeydown="if(event.key==='Enter')doLogin()">
+      <div style="position:relative;margin-bottom:10px;">
+        <input id="login-pass" type="password" placeholder="Contraseña" autocomplete="current-password"
+          style="width:100%;background:var(--s2);border:1.5px solid var(--b);border-radius:10px;color:var(--t);font-size:15px;padding:11px 42px 11px 13px;outline:none;font-family:'DM Sans',sans-serif;"
+          onkeydown="if(event.key==='Enter')doLogin()">
+        <span onclick="toggleEye('login-pass','eye-lp')" id="eye-lp" style="position:absolute;right:13px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:18px;user-select:none;">👁️</span>
+      </div>
       <div id="login-err" style="font-size:11px;color:var(--r);min-height:16px;margin-bottom:8px;"></div>
       <button onclick="doLogin()" style="width:100%;background:var(--a);color:#000;border:none;border-radius:10px;padding:12px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1.5px;cursor:pointer;margin-bottom:12px;">INGRESAR</button>
       <button onclick="openChangePass()" style="background:transparent;border:none;color:var(--tm);font-size:12px;cursor:pointer;text-decoration:underline;">Cambiar contraseña</button>
@@ -495,9 +498,18 @@ main{padding:12px;max-width:700px;margin:0 auto;}
     <span class="mc-ico">🔑</span>
     <h2>CAMBIAR CONTRASEÑA</h2>
     <p>Ingresa la contraseña actual y la nueva</p>
-    <input id="cp-old" type="password" placeholder="Contraseña actual" style="width:100%;background:var(--s2);border:1.5px solid var(--b);border-radius:10px;color:var(--t);font-size:15px;padding:10px 13px;outline:none;margin-bottom:10px;font-family:'DM Sans',sans-serif;">
-    <input id="cp-new1" type="password" placeholder="Nueva contraseña" style="width:100%;background:var(--s2);border:1.5px solid var(--b);border-radius:10px;color:var(--t);font-size:15px;padding:10px 13px;outline:none;margin-bottom:10px;font-family:'DM Sans',sans-serif;">
-    <input id="cp-new2" type="password" placeholder="Confirmar nueva contraseña" style="width:100%;background:var(--s2);border:1.5px solid var(--b);border-radius:10px;color:var(--t);font-size:15px;padding:10px 13px;outline:none;margin-bottom:10px;font-family:'DM Sans',sans-serif;">
+    <div style="position:relative;margin-bottom:10px;">
+      <input id="cp-old" type="password" placeholder="Contraseña actual" style="width:100%;background:var(--s2);border:1.5px solid var(--b);border-radius:10px;color:var(--t);font-size:15px;padding:10px 42px 10px 13px;outline:none;font-family:'DM Sans',sans-serif;">
+      <span onclick="toggleEye('cp-old','eye-co')" id="eye-co" style="position:absolute;right:13px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:18px;user-select:none;">👁️</span>
+    </div>
+    <div style="position:relative;margin-bottom:10px;">
+      <input id="cp-new1" type="password" placeholder="Nueva contraseña" style="width:100%;background:var(--s2);border:1.5px solid var(--b);border-radius:10px;color:var(--t);font-size:15px;padding:10px 42px 10px 13px;outline:none;font-family:'DM Sans',sans-serif;">
+      <span onclick="toggleEye('cp-new1','eye-cn1')" id="eye-cn1" style="position:absolute;right:13px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:18px;user-select:none;">👁️</span>
+    </div>
+    <div style="position:relative;margin-bottom:10px;">
+      <input id="cp-new2" type="password" placeholder="Confirmar nueva contraseña" style="width:100%;background:var(--s2);border:1.5px solid var(--b);border-radius:10px;color:var(--t);font-size:15px;padding:10px 42px 10px 13px;outline:none;font-family:'DM Sans',sans-serif;">
+      <span onclick="toggleEye('cp-new2','eye-cn2')" id="eye-cn2" style="position:absolute;right:13px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:18px;user-select:none;">👁️</span>
+    </div>
     <div id="cp-err" style="font-size:11px;color:var(--r);min-height:16px;margin-bottom:8px;"></div>
     <button class="btn-lo" onclick="doChangePass()">GUARDAR</button>
     <button class="btn-can" onclick="document.getElementById('chpass-mod').classList.remove('open')">Cancelar</button>
@@ -1178,7 +1190,7 @@ clk(); setInterval(clk, 1000);
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 var cfg = { apiKey:"AIzaSyC_89LSZSiuKAqIp_JUnaRRuMwALGCt_8o", authDomain:"tareas-empresa-2911f.firebaseapp.com", projectId:"tareas-empresa-2911f", storageBucket:"tareas-empresa-2911f.firebasestorage.app", messagingSenderId:"686763477486", appId:"1:686763477486:web:b65ee267900d9f49cf3a7f" };
 var PASS = "3942";
@@ -1455,7 +1467,33 @@ window.goPDF = function(){
 };
 /* ── LOGIN ── */
 var SYS_USER = 'admin';
-var SYS_PASS = localStorage.getItem('mp_pass') || 'MaxPrint2026';
+var SYS_PASS = 'MaxPrint2026';
+
+/* Cargar credenciales desde Firebase al iniciar */
+async function loadCredentials(){
+  try {
+    var snap = await getDoc(doc(db,'config','credentials'));
+    if(snap.exists()){
+      var d = snap.data();
+      if(d.user) SYS_USER = d.user;
+      if(d.pass) SYS_PASS = d.pass;
+    }
+  } catch(e){ console.warn('No se pudieron cargar credenciales:', e); }
+}
+loadCredentials();
+
+/* Mostrar/ocultar contraseña */
+window.toggleEye = function(inputId, eyeId){
+  var inp = document.getElementById(inputId);
+  var eye = document.getElementById(eyeId);
+  if(inp.type === 'password'){
+    inp.type = 'text';
+    eye.textContent = '🙈';
+  } else {
+    inp.type = 'password';
+    eye.textContent = '👁️';
+  }
+};
 
 window.doLogin = function(){
   var u = document.getElementById('login-user').value.trim();
@@ -1478,7 +1516,7 @@ window.openChangePass = function(){
   document.getElementById('chpass-mod').classList.add('open');
 };
 
-window.doChangePass = function(){
+window.doChangePass = async function(){
   var old = document.getElementById('cp-old').value;
   var n1  = document.getElementById('cp-new1').value;
   var n2  = document.getElementById('cp-new2').value;
@@ -1486,10 +1524,14 @@ window.doChangePass = function(){
   if(old !== SYS_PASS){ err.textContent='⚠️ Contraseña actual incorrecta'; return; }
   if(n1.length < 6){ err.textContent='⚠️ La nueva contraseña debe tener al menos 6 caracteres'; return; }
   if(n1 !== n2){ err.textContent='⚠️ Las contraseñas no coinciden'; return; }
-  SYS_PASS = n1;
-  localStorage.setItem('mp_pass', n1);
-  document.getElementById('chpass-mod').classList.remove('open');
-  toast('✅ Contraseña actualizada');
+  try {
+    await setDoc(doc(db,'config','credentials'), { user: SYS_USER, pass: n1 });
+    SYS_PASS = n1;
+    document.getElementById('chpass-mod').classList.remove('open');
+    toast('✅ Contraseña actualizada');
+  } catch(e){
+    err.textContent='⚠️ Error al guardar. Verifica tu conexión.';
+  }
 };
 
 /* Start */
