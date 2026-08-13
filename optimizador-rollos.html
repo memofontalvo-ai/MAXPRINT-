@@ -557,6 +557,7 @@
     <div class="row-inline" style="margin-bottom:6px;">
       <button class="preset-btn" id="guardarProyectoBtn" style="border-color:var(--good);color:var(--good);">💾 guardar como proyecto</button>
       <button class="preset-btn" id="verProyectosBtn">📂 proyectos guardados</button>
+      <button class="preset-btn" id="nuevoProyectoBtn" style="border-color:var(--danger);color:var(--danger);">🔄 empezar de cero</button>
     </div>
     <div id="estadoNube" class="sub" style="margin-bottom:6px;">conectando a la base de datos…</div>
     <div id="proyectoGuardadoInfo" class="sub" style="margin-bottom:10px;"></div>
@@ -2913,6 +2914,62 @@ function loadEstado(){
 // independiente, separado del autoguardado normal — así puedes tener varias listas
 // distintas guardadas al mismo tiempo y volver a abrir cualquiera para seguir
 // trabajando sobre ella, sin que se pisen entre sí.
+// Deja el módulo completamente en blanco, como recién abierto, para empezar un proyecto
+// nuevo desde cero. NO borra nada de la base de datos: los proyectos guardados siguen
+// ahí y se pueden volver a abrir cuando se quiera.
+const CONFIG_POR_DEFECTO = {
+  machineWidth: '320',
+  sangrado: '5',
+  numRanges: '4',
+  rollosDisponibles: '100, 120, 160',
+  minAprov: '90',
+  organizarPor: 'rangos',
+  proyectoNombre: ''
+};
+
+function empezarDeCero(){
+  if(!confirm('¿Empezar de cero?\n\nSe borra de la pantalla la lista de avisos, los montajes y la configuración, y todo vuelve a los valores por defecto.\n\nLos proyectos que ya guardaste NO se borran: siguen disponibles en "proyectos guardados".')) return;
+
+  // configuración a valores de fábrica
+  Object.entries(CONFIG_POR_DEFECTO).forEach(([k,v])=>{
+    const el = document.getElementById(k);
+    if(el) el.value = v;
+  });
+  const rot = document.getElementById('allowRotation');
+  if(rot) rot.checked = true;
+  syncOrganizarPor();
+  syncRollWidthVisibility();
+
+  // datos de trabajo en blanco
+  pieceList.innerHTML = '';
+  montajes = [];
+  montajeSeq = 1;
+  selectedUids.clear();
+  forcedGroups = null;
+  lastIdealConfig = null;
+  lastLeftover = null;
+  planosAbiertosDisenador.clear();
+
+  // resultados en pantalla
+  ['results','compareResults'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.innerHTML = '';
+  });
+  const msg = document.getElementById('importMsg');
+  if(msg) msg.textContent = '';
+  const info = document.getElementById('proyectoGuardadoInfo');
+  if(info) info.textContent = '';
+
+  refreshPieceCount();
+  renderMontajes();
+  updateSeleccionBar();
+  actualizarConteoHome();
+  saveEstado();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+document.getElementById('nuevoProyectoBtn').addEventListener('click', empezarDeCero);
+
 const PROYECTOS_KEY = 'optimizador_proyectos_guardados';
 
 // La lista local funciona ahora como CACHÉ: siempre se guarda una copia local de lo que
