@@ -558,6 +558,7 @@
       <button class="preset-btn" id="guardarProyectoBtn" style="border-color:var(--good);color:var(--good);">💾 guardar como proyecto</button>
       <button class="preset-btn" id="verProyectosBtn">📂 proyectos guardados</button>
     </div>
+    <div id="estadoNube" class="sub" style="margin-bottom:6px;">conectando a la base de datos…</div>
     <div id="proyectoGuardadoInfo" class="sub" style="margin-bottom:10px;"></div>
     <p class="sub" style="margin-bottom:10px;">Marca los avisos en las listas de arriba — puedes entrar a un rango, chulear los que quieras, luego entrar a otro rango y seguir chuleando. Al agregarlos al montaje se descuentan de los rangos para que no los repitas.</p>
     <div id="seleccionBar" style="display:none;margin-bottom:12px;padding:10px 12px;background:var(--panel-2);border:1px solid var(--magenta);border-radius:8px;">
@@ -576,6 +577,52 @@
   <div id="printArea"></div>
 
   <!-- MODAL: proyectos guardados -->
+
+<!-- ============ CONEXIÓN A LA BASE DE DATOS (Firestore) ============
+     Se usa la MISMA base de datos del programa "Control de Tareas" (proyecto
+     tareas-empresa-2911f), en una colección aparte llamada "optimizador_proyectos".
+     Así los proyectos quedan guardados en la nube y se ven desde cualquier equipo
+     (computador, celular), no solo en el navegador donde se crearon.
+     Si no hay internet o falla la conexión, el programa sigue funcionando y guarda
+     localmente, para no dejar al usuario bloqueado. -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, getDocs, setDoc, deleteDoc, doc, query, orderBy }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const cfg = {
+  apiKey:"AIzaSyC_89LSZSiuKAqIp_JUnaRRuMwALGCt_8o",
+  authDomain:"tareas-empresa-2911f.firebaseapp.com",
+  projectId:"tareas-empresa-2911f",
+  storageBucket:"tareas-empresa-2911f.firebasestorage.app",
+  messagingSenderId:"686763477486",
+  appId:"1:686763477486:web:b65ee267900d9f49cf3a7f"
+};
+const COL = "optimizador_proyectos";
+
+let db = null;
+try{ db = getFirestore(initializeApp(cfg)); }catch(e){ console.warn('Firestore no disponible:', e); }
+
+window.MPCloud = {
+  disponible: !!db,
+  async listar(){
+    if(!db) throw new Error('sin conexión a la base de datos');
+    const snap = await getDocs(query(collection(db, COL), orderBy('fechaActualizacion','desc')));
+    return snap.docs.map(d=> Object.assign({id:d.id}, d.data()));
+  },
+  async guardar(p){
+    if(!db) throw new Error('sin conexión a la base de datos');
+    // se usa setDoc con el id del proyecto para que actualizar no cree duplicados
+    await setDoc(doc(db, COL, p.id), p);
+    return p;
+  },
+  async eliminar(id){
+    if(!db) throw new Error('sin conexión a la base de datos');
+    await deleteDoc(doc(db, COL, id));
+  }
+};
+window.dispatchEvent(new Event('mpcloud-listo'));
+</script>
   <div id="proyectosOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;padding:16px;box-sizing:border-box;overflow-y:auto;">
     <div style="max-width:560px;margin:30px auto;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
@@ -2868,14 +2915,51 @@ function loadEstado(){
 // trabajando sobre ella, sin que se pisen entre sí.
 const PROYECTOS_KEY = 'optimizador_proyectos_guardados';
 
-function cargarListaProyectos(){
+// La lista local funciona ahora como CACHÉ: siempre se guarda una copia local de lo que
+// hay en la nube, para que el programa siga usable sin internet y para no perder nada
+// si la base de datos falla.
+function cargarCacheProyectos(){
   try{ return JSON.parse(localStorage.getItem(PROYECTOS_KEY) || '[]'); }
   catch(e){ return []; }
 }
-function guardarListaProyectos(lista){
+function guardarCacheProyectos(lista){
   try{ localStorage.setItem(PROYECTOS_KEY, JSON.stringify(lista)); }
-  catch(e){ alert('No se pudo guardar: el almacenamiento del navegador está lleno o no disponible.'); }
+  catch(e){ /* almacenamiento lleno: la nube sigue siendo la fuente principal */ }
 }
+
+let proyectosEnMemoria = cargarCacheProyectos();
+let nubeActiva = false;
+
+function marcarEstadoNube(texto, ok){
+  const el = document.getElementById('estadoNube');
+  if(el){
+    el.textContent = texto;
+    el.style.color = ok ? 'var(--good)' : 'var(--text-dim)';
+  }
+}
+
+// Trae la lista desde la base de datos; si falla, se queda con la copia local.
+async function sincronizarProyectos(){
+  if(!window.MPCloud || !window.MPCloud.disponible){
+    nubeActiva = false;
+    marcarEstadoNube('⚠ sin conexión a la base de datos — guardando solo en este equipo', false);
+    return proyectosEnMemoria;
+  }
+  try{
+    const remota = await window.MPCloud.listar();
+    proyectosEnMemoria = remota;
+    guardarCacheProyectos(remota);
+    nubeActiva = true;
+    marcarEstadoNube('🟢 conectado a la base de datos MAXPRINT', true);
+  }catch(e){
+    nubeActiva = false;
+    marcarEstadoNube('⚠ sin conexión — guardando solo en este equipo', false);
+  }
+  return proyectosEnMemoria;
+}
+
+function cargarListaProyectos(){ return proyectosEnMemoria; }
+
 function fmtFechaHora(iso){
   try{
     const d = new Date(iso);
@@ -2884,39 +2968,50 @@ function fmtFechaHora(iso){
   }catch(e){ return iso; }
 }
 
-function guardarProyectoActual(){
+async function guardarProyectoActual(){
   const nombreActual = (document.getElementById('proyectoNombre').value || '').trim();
   const titulo = prompt('Nombre del proyecto (título de esta lista de avisos):', nombreActual);
-  if(titulo === null) return; // canceló
+  if(titulo === null) return;
   const tituloFinal = titulo.trim() || 'Proyecto sin nombre';
   document.getElementById('proyectoNombre').value = tituloFinal;
 
-  const lista = cargarListaProyectos();
+  await sincronizarProyectos();
   const snapshot = buildEstadoSnapshot();
-  const existente = lista.find(p=> p.titulo.trim().toLowerCase() === tituloFinal.toLowerCase());
+  const existente = proyectosEnMemoria.find(p=> (p.titulo||'').trim().toLowerCase() === tituloFinal.toLowerCase());
 
+  let registro;
   if(existente){
-    const confirmar = confirm(`Ya existe un proyecto guardado con el nombre "${tituloFinal}".\n\n¿Quieres actualizarlo con lo que tienes ahora? (Aceptar = actualizar / Cancelar = guardar como uno nuevo)`);
-    if(confirmar){
-      existente.titulo = tituloFinal;
-      existente.fechaActualizacion = new Date().toISOString();
-      existente.snapshot = snapshot;
-      guardarListaProyectos(lista);
-      mostrarInfoProyectoGuardado(`Proyecto "${tituloFinal}" actualizado — ${fmtFechaHora(existente.fechaActualizacion)}`);
-      return;
+    const actualizar = confirm(`Ya existe un proyecto guardado con el nombre "${tituloFinal}".\n\n¿Quieres actualizarlo con lo que tienes ahora? (Aceptar = actualizar / Cancelar = guardar como uno nuevo)`);
+    if(actualizar){
+      registro = Object.assign({}, existente, {
+        titulo: tituloFinal,
+        fechaActualizacion: new Date().toISOString(),
+        snapshot
+      });
     }
   }
+  if(!registro){
+    registro = {
+      id: 'p' + Date.now() + Math.random().toString(36).slice(2,7),
+      titulo: tituloFinal,
+      fechaCreacion: new Date().toISOString(),
+      fechaActualizacion: new Date().toISOString(),
+      snapshot
+    };
+  }
 
-  const nuevo = {
-    id: 'p' + Date.now() + Math.random().toString(36).slice(2,7),
-    titulo: tituloFinal,
-    fechaCreacion: new Date().toISOString(),
-    fechaActualizacion: new Date().toISOString(),
-    snapshot
-  };
-  lista.push(nuevo);
-  guardarListaProyectos(lista);
-  mostrarInfoProyectoGuardado(`Proyecto "${tituloFinal}" guardado — ${fmtFechaHora(nuevo.fechaCreacion)}`);
+  mostrarInfoProyectoGuardado(`Guardando "${tituloFinal}"…`);
+  let guardadoEnNube = false;
+  if(window.MPCloud && window.MPCloud.disponible){
+    try{ await window.MPCloud.guardar(registro); guardadoEnNube = true; }
+    catch(e){ guardadoEnNube = false; }
+  }
+  proyectosEnMemoria = proyectosEnMemoria.filter(p=> p.id !== registro.id).concat([registro]);
+  guardarCacheProyectos(proyectosEnMemoria);
+
+  mostrarInfoProyectoGuardado(guardadoEnNube
+    ? `Proyecto "${tituloFinal}" guardado en la base de datos — ${fmtFechaHora(registro.fechaActualizacion)}`
+    : `Proyecto "${tituloFinal}" guardado solo en este equipo (sin conexión) — ${fmtFechaHora(registro.fechaActualizacion)}`);
 }
 
 function mostrarInfoProyectoGuardado(texto){
@@ -2925,8 +3020,7 @@ function mostrarInfoProyectoGuardado(texto){
 }
 
 function abrirProyecto(id){
-  const lista = cargarListaProyectos();
-  const p = lista.find(x=> x.id === id);
+  const p = proyectosEnMemoria.find(x=> x.id === id);
   if(!p) return;
   if(!confirm(`¿Abrir el proyecto "${p.titulo}"?\n\nEsto reemplaza los avisos y montajes que tienes en pantalla ahora (si no los has guardado, se pierden).`)) return;
   aplicarEstadoSnapshot(p.snapshot);
@@ -2940,29 +3034,33 @@ function abrirProyecto(id){
   cerrarProyectos();
 }
 
-function eliminarProyecto(id){
-  const lista = cargarListaProyectos();
-  const p = lista.find(x=> x.id === id);
+async function eliminarProyecto(id){
+  const p = proyectosEnMemoria.find(x=> x.id === id);
   if(!p) return;
   if(!confirm(`¿Eliminar el proyecto "${p.titulo}"? Esta acción no se puede deshacer.`)) return;
-  guardarListaProyectos(lista.filter(x=> x.id !== id));
+  if(window.MPCloud && window.MPCloud.disponible){
+    try{ await window.MPCloud.eliminar(id); }
+    catch(e){ alert('No se pudo eliminar de la base de datos. Revisa tu conexión e intenta de nuevo.'); return; }
+  }
+  proyectosEnMemoria = proyectosEnMemoria.filter(x=> x.id !== id);
+  guardarCacheProyectos(proyectosEnMemoria);
   renderListaProyectos(document.getElementById('buscarProyectoInput').value);
 }
 
 function renderListaProyectos(filtro){
   const cont = document.getElementById('proyectosLista');
-  let lista = cargarListaProyectos().sort((a,b)=> new Date(b.fechaActualizacion) - new Date(a.fechaActualizacion));
+  let lista = proyectosEnMemoria.slice().sort((a,b)=> new Date(b.fechaActualizacion) - new Date(a.fechaActualizacion));
   if(filtro && filtro.trim()){
     const f = filtro.trim().toLowerCase();
-    lista = lista.filter(p=> p.titulo.toLowerCase().includes(f));
+    lista = lista.filter(p=> (p.titulo||'').toLowerCase().includes(f));
   }
   if(!lista.length){
     cont.innerHTML = '<p class="sub">No hay proyectos guardados todavía. Arma tu lista de avisos y toca "guardar como proyecto".</p>';
     return;
   }
   cont.innerHTML = lista.map(p=>{
-    const nAvisos = (p.snapshot.piezas||[]).reduce((s,pz)=> s + (parseInt(pz.cant)||1), 0);
-    const nMontajes = (p.snapshot.montajes||[]).length;
+    const nAvisos = ((p.snapshot&&p.snapshot.piezas)||[]).reduce((s,pz)=> s + (parseInt(pz.cant)||1), 0);
+    const nMontajes = ((p.snapshot&&p.snapshot.montajes)||[]).length;
     return `<div style="padding:11px 12px;background:var(--panel-2);border-radius:8px;margin-bottom:8px;">
       <div style="font-weight:700;font-size:14px;margin-bottom:2px;">${p.titulo}</div>
       <div class="sub" style="margin-bottom:8px;">${fmtFechaHora(p.fechaActualizacion)} · ${nAvisos} aviso${nAvisos!==1?'s':''} · ${nMontajes} montaje${nMontajes!==1?'s':''}</div>
@@ -2974,9 +3072,11 @@ function renderListaProyectos(filtro){
   }).join('');
 }
 
-function abrirProyectos(){
+async function abrirProyectos(){
   document.getElementById('proyectosOverlay').style.display = 'block';
   document.getElementById('buscarProyectoInput').value = '';
+  document.getElementById('proyectosLista').innerHTML = '<p class="sub">Consultando la base de datos…</p>';
+  await sincronizarProyectos();
   renderListaProyectos('');
 }
 function cerrarProyectos(){
@@ -2994,6 +3094,9 @@ document.getElementById('proyectosLista').addEventListener('click', (e)=>{
   const delBtn = e.target.closest('.eliminar-proyecto-btn');
   if(delBtn){ eliminarProyecto(delBtn.dataset.id); return; }
 });
+
+// al terminar de cargar el módulo de la base de datos, se comprueba la conexión
+window.addEventListener('mpcloud-listo', ()=>{ sincronizarProyectos(); });
 
 // Exportar los avisos que quedaron por fuera (modo "mis rollos")
 document.addEventListener('click', (e)=>{
