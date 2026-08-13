@@ -380,6 +380,16 @@
   <div id="designerView" style="display:none;">
   <button class="add-btn volver-btn" style="margin-bottom:16px;border-style:solid;border-color:var(--line);color:var(--text-dim);letter-spacing:.08em;text-transform:uppercase;font-size:11.5px;">← Volver a módulos</button>
 
+  <!-- BARRA DE PROYECTO: lo primero que se ve al entrar, porque abrir un proyecto
+       guardado o empezar de cero es la decisión con la que arranca el trabajo. -->
+  <div class="panel" style="border-color:var(--good);margin-bottom:16px;">
+    <div id="estadoNube" class="sub" style="margin-bottom:10px;">conectando a la base de datos…</div>
+    <div class="row-inline">
+      <button class="preset-btn" id="verProyectosBtn" style="border-color:var(--cyan);color:var(--cyan);">📂 abrir proyecto guardado</button>
+      <button class="preset-btn" id="nuevoProyectoBtn" style="border-color:var(--danger);color:var(--danger);">🔄 empezar de cero</button>
+    </div>
+  </div>
+
   <div class="panel" style="border-color:var(--magenta);">
     <h2><span class="tag" style="background:var(--magenta);">01</span> Máquina de impresión</h2>
     <p class="sub" style="margin-bottom:10px;">El ancho máximo que soporta tu plotter. Este es el límite real: ningún rollo más ancho que esto se puede usar, sin importar lo que tengas en bodega.</p>
@@ -556,10 +566,7 @@
     </div>
     <div class="row-inline" style="margin-bottom:6px;">
       <button class="preset-btn" id="guardarProyectoBtn" style="border-color:var(--good);color:var(--good);">💾 guardar como proyecto</button>
-      <button class="preset-btn" id="verProyectosBtn">📂 proyectos guardados</button>
-      <button class="preset-btn" id="nuevoProyectoBtn" style="border-color:var(--danger);color:var(--danger);">🔄 empezar de cero</button>
     </div>
-    <div id="estadoNube" class="sub" style="margin-bottom:6px;">conectando a la base de datos…</div>
     <div id="proyectoGuardadoInfo" class="sub" style="margin-bottom:10px;"></div>
     <p class="sub" style="margin-bottom:10px;">Marca los avisos en las listas de arriba — puedes entrar a un rango, chulear los que quieras, luego entrar a otro rango y seguir chuleando. Al agregarlos al montaje se descuentan de los rangos para que no los repitas.</p>
     <div id="seleccionBar" style="display:none;margin-bottom:12px;padding:10px 12px;background:var(--panel-2);border:1px solid var(--magenta);border-radius:8px;">
