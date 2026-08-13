@@ -357,7 +357,7 @@
     <!-- Regresa al menú principal de MAXPRINT (el hub con todos los módulos de la
          empresa). Es un enlace relativo a la carpeta raíz del sitio, así que sigue
          funcionando aunque cambie el dominio o el hosting. -->
-    <a onclick="history.back()" class="add-btn" style="display:block;text-align:center;text-decoration:none;margin-bottom:18px;border-style:solid;border-color:rgba(245,166,35,.45);color:var(--brand);letter-spacing:.08em;text-transform:uppercase;font-size:11.5px;cursor:pointer;">← Volver al menú MAXPRINT</a>
+    <a href="./" id="volverMenuBtn" class="add-btn" style="display:block;text-align:center;text-decoration:none;margin-bottom:18px;border-style:solid;border-color:rgba(245,166,35,.45);color:var(--brand);letter-spacing:.08em;text-transform:uppercase;font-size:11.5px;cursor:pointer;">← Volver al menú MAXPRINT</a>
     <div class="rule"></div>
     <p class="section-label">Seleccioná tu módulo</p>
     <div style="display:flex;flex-direction:column;gap:14px;">
@@ -3234,6 +3234,23 @@ function mostrarVista(v){
 document.querySelectorAll('.modulo-btn').forEach(b=>{
   b.addEventListener('click', ()=> mostrarVista(b.dataset.vista));
 });
+// Botón "Volver al menú MAXPRINT".
+// Si el usuario llegó aquí desde el menú (hub), lo mejor es RETROCEDER en el historial:
+// así el navegador restaura esa página tal como estaba, con la sesión ya iniciada, y no
+// le vuelve a pedir la contraseña.
+// Pero si abrió el Optimizador directo (favorito, link compartido, pestaña nueva), no hay
+// historial al que volver — en ese caso se navega al menú por el enlace normal (href="./").
+// El href queda siempre puesto, así que si el JavaScript fallara, el botón igual funciona.
+document.getElementById('volverMenuBtn').addEventListener('click', function(e){
+  const vengoDelMenu = document.referrer && document.referrer.indexOf(location.origin) === 0
+                       && document.referrer !== location.href;
+  if(vengoDelMenu && history.length > 1){
+    e.preventDefault();
+    history.back();
+  }
+  // si no, se deja pasar el click y el href="./" lleva al menú
+});
+
 document.querySelectorAll('.volver-btn').forEach(b=>{
   b.addEventListener('click', ()=> mostrarVista('home'));
 });
