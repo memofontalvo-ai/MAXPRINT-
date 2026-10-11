@@ -1555,6 +1555,13 @@ _gs('login-screen');
 </script>
 
 <!-- OVERLAY PROYECTOS -->
+<style>
+#proy-overlay input::placeholder,
+#proy-overlay textarea::placeholder { color:#555; opacity:1; }
+#proy-overlay input::-webkit-input-placeholder,
+#proy-overlay textarea::-webkit-input-placeholder { color:#555; }
+#proy-overlay select option[value=""] { color:#555; }
+</style>
 <div id="proy-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#0d0d0d;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;">
   <div style="max-width:520px;margin:0 auto;padding:0 0 80px;">
     <div style="display:flex;align-items:center;gap:12px;padding:16px;border-bottom:1px solid #2a2a2a;position:sticky;top:0;background:#0d0d0d;z-index:10;">
@@ -1569,10 +1576,13 @@ _gs('login-screen');
     <div id="pv-list" style="padding:16px;"><div id="proy-lista" style="display:flex;flex-direction:column;gap:12px;"></div></div>
     <div id="pv-new" style="display:none;padding:16px;">
       <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px;">
-        <div id="pf-title" style="font-size:13px;color:#e83a2f;font-weight:700;">NUEVO PROYECTO</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div id="pf-title" style="font-size:13px;color:#e83a2f;font-weight:700;">NUEVO PROYECTO</div>
+          <div id="pf-code-badge" style="font-size:12px;color:#f5a623;font-weight:700;letter-spacing:.5px;background:#1e1e1e;border:1px solid #333;border-radius:6px;padding:4px 10px;"></div>
+        </div>
         <div style="display:flex;flex-direction:column;gap:4px;">
           <label style="font-size:11px;color:#888;font-weight:600;letter-spacing:.5px;">NOMBRE DEL PROYECTO *</label>
-          <input id="pf-nombre" placeholder="Ej: Aviso fachada principal" style="background:#111;border:1px solid #333;border-radius:8px;padding:11px 12px;color:#fff;font-size:14px;width:100%;"/>
+          <input id="pf-nombre" placeholder="Ej: Aviso fachada principal" style="background:#111;border:1px solid #333;border-radius:8px;padding:11px 12px;color:#fff;font-size:14px;width:100%;" autocomplete="off"/>
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;">
           <label style="font-size:11px;color:#888;font-weight:600;letter-spacing:.5px;">CLIENTE *</label>
@@ -1643,7 +1653,7 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v3.0 - 2026-10-11</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v3.1 - 2026-10-11</div>
 
 <!-- SheetJS for reading .xlsx in browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1904,7 +1914,8 @@ function pEditar(id){
   document.getElementById('pf-tipo').value=p.tipo||'';
   document.getElementById('pf-estado').value=p.estado||'';
   pfSetFecha(p.fecha||'');
-  document.getElementById('pf-title').textContent='EDITAR - '+p.code;
+  document.getElementById('pf-title').textContent='EDITAR PROYECTO';
+  var cb2=document.getElementById('pf-code-badge');if(cb2)cb2.textContent=p.code||'';
   var pl=document.getElementById('pf-parts');
   pl.innerHTML='';
   (p.participantes||[]).forEach(function(pt){pfAddPartRow(pt);});
@@ -1916,6 +1927,7 @@ function pfLimpiar(){
   ['pf-tipo','pf-estado','pf-fecha-d','pf-fecha-m','pf-fecha-y'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   var pl=document.getElementById('pf-parts');if(pl)pl.innerHTML='';
   var ft=document.getElementById('pf-title');if(ft)ft.textContent='NUEVO PROYECTO';
+  var cb=document.getElementById('pf-code-badge');if(cb)cb.textContent=pGenCode();
   var msg=document.getElementById('pf-xlsx-msg');if(msg)msg.textContent='';
 }
 
