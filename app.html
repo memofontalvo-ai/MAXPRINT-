@@ -1653,7 +1653,7 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v3.3 - 2026-10-11</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v3.4 - 2026-10-11</div>
 
 <!-- SheetJS for reading .xlsx in browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1749,22 +1749,12 @@ document.addEventListener('DOMContentLoaded',function(){
           if(hdrIdx>=0)break;
         }
         if(hdrIdx<0){msg.style.color='#e83a2f';msg.textContent='No se encontro la fila de cabeceras.';return;}
-        var hdrs=rows[hdrIdx].map(function(h){return String(h).toLowerCase().trim();});
-        function col(name){
-          var idx=hdrs.findIndex(function(h){return h.indexOf(name)>=0;});
-          return idx;
-        }
-        var iNom=col('nombres y apellidos');
-        var iTipoDoc=col('tipo de documento');
-        var iDoc=col('numero de documento');
-        var iFnac=col('fecha de nacimiento');
-        var iLnac=col('lugar de nacimiento');
-        var iGrupo=col('grupo');
-        var iCargo=col('cargo');
-        var iCel=col('celular');
-        var iEps=col('eps');
-        var iArl=col('arl');
-        var iObs=col('observaciones');
+        // Columnas fijas según estructura de Equipo_Instalacion_Avisos.xlsx:
+        // 0=N.º, 1=Nombres y apellidos, 2=Tipo doc, 3=Número de documento,
+        // 4=Fecha de nacimiento, 5=Lugar de nacimiento, 6=Grupo sanguíneo,
+        // 7=Cargo/función, 8=Celular, 9=EPS, 10=ARL, 11=Observaciones
+        var iNom=1, iTipoDoc=2, iDoc=3, iFnac=4, iLnac=5;
+        var iGrupo=6, iCargo=7, iCel=8, iEps=9, iArl=10, iObs=11;
 
         // Populate project fields from rows 4-7 (0-indexed: 3-6)
         function getCell(ri,ci){return rows[ri]&&rows[ri][ci]!=null?String(rows[ri][ci]).trim():'';}
@@ -1820,7 +1810,7 @@ document.addEventListener('DOMContentLoaded',function(){
           pfAddPartRow({
             nombre:nom,
             tipoDoc:String(row[iTipoDoc]||'CC').trim(),
-            numDoc:String(row[iDoc]!=null?Math.round(Number(row[iDoc]))||row[iDoc]:'').replace(/\.0+$/,'').trim(),
+            numDoc:(function(v){if(v==null||v==='')return '';var s=String(v).trim();if(/^[\d.]+e[+\-]?\d+$/i.test(s)){return String(Math.round(parseFloat(s)));}return s.replace(/\.0+$/,'');} )(row[iDoc]),
             fechaNac:fnac,
             lugarNac:String(row[iLnac]||'').trim(),
             grupoSang:iGrupo>=0?String(row[iGrupo]||'').trim():'',
