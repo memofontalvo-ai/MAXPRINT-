@@ -1608,7 +1608,7 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v2.6 - 2026-10-11</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v2.8 - 2026-10-11</div>
 
 <!-- SheetJS for reading .xlsx in browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1679,14 +1679,52 @@ document.addEventListener('DOMContentLoaded',function(){
         var iDoc=col('numero de documento');
         var iFnac=col('fecha de nacimiento');
         var iLnac=col('lugar de nacimiento');
+        var iGrupo=col('grupo');
         var iCargo=col('cargo');
         var iCel=col('celular');
         var iEps=col('eps');
         var iArl=col('arl');
-        var iCont=col('contacto de emergencia');
-        var iParent=col('parentesco');
-        var iTelEm=col('telefono de emergencia');
         var iObs=col('observaciones');
+
+        // Populate project fields from rows 4-7 (0-indexed: 3-6)
+        function getCell(ri,ci){return rows[ri]&&rows[ri][ci]!=null?String(rows[ri][ci]).trim():'';}
+        var nomProy=getCell(3,1)||getCell(3,2)||getCell(3,3);
+        if(!nomProy){for(var ci2=1;ci2<12;ci2++){if(rows[3]&&rows[3][ci2]&&String(rows[3][ci2]).trim()){nomProy=String(rows[3][ci2]).trim();break;}}}
+        var cliente=getCell(4,1)||getCell(4,2);
+        if(!cliente){for(var ci3=1;ci3<5;ci3++){if(rows[4]&&rows[4][ci3]&&String(rows[4][ci3]).trim()){cliente=String(rows[4][ci3]).trim();break;}}}
+        var tipo=getCell(4,6)||getCell(4,7);
+        if(!tipo){for(var ci4=6;ci4<12;ci4++){if(rows[4]&&rows[4][ci4]&&String(rows[4][ci4]).trim()){tipo=String(rows[4][ci4]).trim();break;}}}
+        var estado=getCell(5,1)||getCell(5,2);
+        if(!estado){for(var ci5=1;ci5<5;ci5++){if(rows[5]&&rows[5][ci5]&&String(rows[5][ci5]).trim()){estado=String(rows[5][ci5]).trim();break;}}}
+        var fechaRaw=getCell(5,6)||getCell(5,7);
+        if(!fechaRaw){for(var ci6=6;ci6<12;ci6++){if(rows[5]&&rows[5][ci6]&&String(rows[5][ci6]).trim()){fechaRaw=String(rows[5][ci6]).trim();break;}}}
+        var desc=getCell(6,1)||getCell(6,2);
+        if(!desc){for(var ci7=1;ci7<12;ci7++){if(rows[6]&&rows[6][ci7]&&String(rows[6][ci7]).trim()){desc=String(rows[6][ci7]).trim();break;}}}
+
+        // Format fecha
+        var fechaFmt='';
+        if(fechaRaw){
+          // Could be a Date object or a string like dd/mm/yyyy or yyyy-mm-dd
+          if(rows[5]&&rows[5][6]instanceof Date){fechaFmt=rows[5][6].toISOString().slice(0,10);}
+          else{
+            var parts=fechaRaw.split(/[\/\-]/);
+            if(parts.length===3){
+              if(parts[0].length===4){fechaFmt=fechaRaw.slice(0,10);}
+              else{fechaFmt=parts[2]+'-'+parts[1].padStart(2,'0')+'-'+parts[0].padStart(2,'0');}
+            } else {fechaFmt=fechaRaw;}
+          }
+        }
+
+        if(nomProy){var el=document.getElementById('pf-nombre');if(el)el.value=nomProy;}
+        if(cliente){var el2=document.getElementById('pf-cliente');if(el2)el2.value=cliente;}
+        if(tipo){var el3=document.getElementById('pf-tipo');if(el3)el3.value=tipo;}
+        if(estado){var el4=document.getElementById('pf-estado');if(el4)el4.value=estado;}
+        if(fechaFmt){var el5=document.getElementById('pf-fecha');if(el5)el5.value=fechaFmt;}
+        if(desc){var el6=document.getElementById('pf-desc');if(el6)el6.value=desc;}
+
+        // Clear existing participant rows before adding new ones
+        var partContainer=document.getElementById('pf-partic');
+        if(partContainer)partContainer.innerHTML='';
 
         var count=0;
         for(var r=hdrIdx+1;r<rows.length;r++){
@@ -1705,14 +1743,12 @@ document.addEventListener('DOMContentLoaded',function(){
             numDoc:String(row[iDoc]||'').trim(),
             fechaNac:fnac,
             lugarNac:String(row[iLnac]||'').trim(),
-            rol:String(row[iCargo]||'').trim(),
-            celular:String(row[iCel]||'').trim(),
-            eps:String(row[iEps]||'').trim(),
-            arl:String(row[iArl]||'').trim(),
-            contactoEmerg:String(row[iCont]||'').trim(),
-            parentesco:String(row[iParent]||'').trim(),
-            telEmerg:String(row[iTelEm]||'').trim(),
-            observaciones:String(row[iObs]||'').trim(),
+            grupoSang:iGrupo>=0?String(row[iGrupo]||'').trim():'',
+            rol:iCargo>=0?String(row[iCargo]||'').trim():'',
+            celular:iCel>=0?String(row[iCel]||'').trim():'',
+            eps:iEps>=0?String(row[iEps]||'').trim():'',
+            arl:iArl>=0?String(row[iArl]||'').trim():'',
+            observaciones:iObs>=0?String(row[iObs]||'').trim():'',
             foto:null,certificados:[]
           });
           count++;
@@ -1907,18 +1943,11 @@ function pfAddPartRow(pt){
   arlVIn.style.cssText='width:130px;background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:8px 10px;color:#fff;font-size:12px;flex-shrink:0;';
   arlRow.appendChild(arlIn);arlRow.appendChild(arlVIn);
 
-  /* Contacto emergencia */
-  var emergRow=document.createElement('div');
-  emergRow.style.cssText='display:flex;gap:8px;margin-bottom:8px;';
-  var contIn=mkInput('Contacto emergencia',pt.contactoEmerg,'ppart-cont');
-  var parentIn=mkInput('Parentesco',pt.parentesco,'ppart-parent','width:110px;flex-shrink:0;');
-  emergRow.appendChild(contIn);emergRow.appendChild(parentIn);
-
+  /* Observaciones */
   var telEmRow=document.createElement('div');
   telEmRow.style.cssText='display:flex;gap:8px;margin-bottom:8px;';
-  var telEmIn=mkInput('Tel. emergencia',pt.telEmerg,'ppart-telm');
   var obsIn=mkInput('Observaciones',pt.observaciones,'ppart-obs');
-  telEmRow.appendChild(telEmIn);telEmRow.appendChild(obsIn);
+  telEmRow.appendChild(obsIn);
 
   /* Certificados */
   var certLabel=document.createElement('div');
@@ -1944,7 +1973,6 @@ function pfAddPartRow(pt){
   wrap.appendChild(nacRow);
   wrap.appendChild(contactRow);
   wrap.appendChild(arlRow);
-  wrap.appendChild(emergRow);
   wrap.appendChild(telEmRow);
   wrap.appendChild(certLabel);
   wrap.appendChild(certGrid);
@@ -1977,9 +2005,6 @@ function pfGuardar(){
       eps:(row.querySelector('.ppart-eps')||{value:''}).value.trim(),
       arl:(row.querySelector('.ppart-arl')||{value:''}).value.trim(),
       arlVence:(row.querySelector('.ppart-arlv')||{value:''}).value,
-      contactoEmerg:(row.querySelector('.ppart-cont')||{value:''}).value.trim(),
-      parentesco:(row.querySelector('.ppart-parent')||{value:''}).value.trim(),
-      telEmerg:(row.querySelector('.ppart-telm')||{value:''}).value.trim(),
       observaciones:(row.querySelector('.ppart-obs')||{value:''}).value.trim(),
       certificados:certs,
       foto:fotoEl?fotoEl._fotoData:null
