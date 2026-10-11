@@ -1991,7 +1991,7 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v5.5 - 2026-10-11</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v5.6 - 2026-10-11</div>
 
 <!-- SheetJS for reading .xlsx in browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2797,77 +2797,224 @@ window.hvClose=function(){
 window.pdfClose=function(){document.getElementById('pdf-overlay').style.display='none';};
 window._pdfNombre='HojaDeVida.pdf';
 /* Helper: convert base64 string to Blob */
-function _b64toBlob(b64,mime){
+/* ---- Generador de PDF unificado con jsPDF + PDF.js ---- */
+function _b64toBytes(b64){
   var raw=b64.indexOf(',')>-1?b64.split(',')[1]:b64;
   var bin=atob(raw);
   var bytes=new Uint8Array(bin.length);
   for(var i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
-  return new Blob([bytes],{type:mime});
+  return bytes;
 }
+function _b64toBlob(b64,mime){
+  return new Blob([_b64toBytes(b64)],{type:mime});
+}
+
+/* Renderiza cada pagina de un PDF base64 como ImageData PNG usando PDF.js */
+function _pdfPagesToDataURLs(b64data){
+  return new Promise(function(resolve,reject){
+    var pdfjsLib=window['pdfjs-dist/build/pdf'];
+    if(!pdfjsLib){reject(new Error('pdfjs no disponible'));return;}
+    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    var bytes=_b64toBytes(b64data);
+    pdfjsLib.getDocument({data:bytes}).promise.then(function(pdf){
+      var pages=[];
+      var total=pdf.numPages;
+      function doPage(n){
+        if(n>total){resolve(pages);return;}
+        pdf.getPage(n).then(function(page){
+          var vp=page.getViewport({scale:2});
+          var canvas=document.createElement('canvas');
+          canvas.width=vp.width; canvas.height=vp.height;
+          var ctx=canvas.getContext('2d');
+          page.render({canvasContext:ctx,viewport:vp}).promise.then(function(){
+            pages.push({dataURL:canvas.toDataURL('image/jpeg',0.85),w:vp.width,h:vp.height});
+            doPage(n+1);
+          });
+        });
+      }
+      doPage(1);
+    }).catch(reject);
+  });
+}
+
+/* Carga jsPDF dinamicamente si no esta cargado */
+function _loadJsPDF(){
+  return new Promise(function(resolve,reject){
+    if(window.jspdf&&window.jspdf.jsPDF){resolve(window.jspdf.jsPDF);return;}
+    var s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.onload=function(){resolve(window.jspdf.jsPDF);};
+    s.onerror=reject;
+    document.head.appendChild(s);
+  });
+}
+
+/* Construye el PDF completo y devuelve un Blob */
+function _generarPDFCompleto(hv){
+  var nombre=hv.nombre||'Empleado';
+  var docs=hv.docsCerts||{};
+  var keys=Object.keys(docs);
+  return _loadJsPDF().then(function(JsPDF){
+    var doc=new JsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    var pw=doc.internal.pageSize.getWidth();
+    var ph=doc.internal.pageSize.getHeight();
+    var margin=15;
+    var usableW=pw-margin*2;
+
+    /* --- Pagina 1: datos del empleado --- */
+    /* Encabezado rojo */
+    doc.setFillColor(232,58,47);
+    doc.rect(0,0,pw,22,'F');
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(14);
+    doc.setFont('helvetica','bold');
+    doc.text('MAXPRINT S.A.S.',margin,10);
+    doc.setFontSize(10);
+    doc.setFont('helvetica','normal');
+    doc.text('Hoja de Vida Laboral',margin,17);
+
+    /* Datos personales */
+    var y=30;
+    doc.setTextColor(30,30,30);
+    var campos=[
+      ['Nombre completo',nombre],
+      ['Cargo',hv.rol||''],
+      ['Número de documento',hv.numDoc||''],
+      ['Fecha de nacimiento',hv.fechaNac||''],
+      ['Lugar de nacimiento',hv.lugarNac||''],
+      ['Celular',hv.celular||''],
+      ['Grupo sanguíneo',hv.grupoSang||''],
+      ['EPS',hv.eps||''],
+      ['ARL',hv.arl||''],
+      ['Vence ARL',hv.arlVence||'']
+    ];
+    campos.forEach(function(c){
+      if(!c[1])return;
+      doc.setFontSize(8);
+      doc.setFont('helvetica','bold');
+      doc.setTextColor(150,150,150);
+      doc.text(c[0].toUpperCase(),margin,y);
+      y+=5;
+      doc.setFontSize(11);
+      doc.setFont('helvetica','normal');
+      doc.setTextColor(30,30,30);
+      doc.text(c[1],margin,y);
+      y+=8;
+      if(y>ph-20){doc.addPage();y=20;}
+    });
+
+    /* Certificados listados */
+    if(keys.length){
+      if(y>ph-30){doc.addPage();y=20;}
+      doc.setFillColor(240,240,240);
+      doc.rect(margin,y,usableW,8,'F');
+      doc.setFontSize(9);
+      doc.setFont('helvetica','bold');
+      doc.setTextColor(50,50,50);
+      doc.text('DOCUMENTOS ADJUNTOS ('+keys.length+')',margin+2,y+5.5);
+      y+=12;
+      keys.forEach(function(k,i){
+        var d=docs[k];
+        if(!d)return;
+        doc.setFontSize(9);
+        doc.setFont('helvetica','normal');
+        doc.setTextColor(60,60,60);
+        doc.text((i+1)+'. '+(d.nombre||k)+' ('+(d.tipo||'')+')',margin,y);
+        y+=6;
+      });
+    }
+
+    /* Pie pagina 1 */
+    doc.setFontSize(7);
+    doc.setTextColor(180,180,180);
+    doc.text('Documento generado por sistema MAXPRINT S.A.S.',margin,ph-8);
+    doc.text(new Date().toLocaleDateString('es-CO'),pw-margin,ph-8,'right');
+
+    /* --- Paginas siguientes: documentos --- */
+    var chain=Promise.resolve();
+    keys.forEach(function(k){
+      var d=docs[k];
+      if(!d||!d.data)return;
+      chain=chain.then(function(){
+        if(d.tipo==='imagen'){
+          /* Imagen directa */
+          return new Promise(function(res){
+            var img=new Image();
+            img.onload=function(){
+              doc.addPage();
+              var iw=img.naturalWidth||img.width;
+              var ih=img.naturalHeight||img.height;
+              var ratio=Math.min(usableW/(iw||1),(ph-30)/(ih||1));
+              var rw=iw*ratio; var rh=ih*ratio;
+              doc.setFillColor(232,58,47);
+              doc.rect(0,0,pw,14,'F');
+              doc.setFontSize(9);
+              doc.setFont('helvetica','bold');
+              doc.setTextColor(255,255,255);
+              doc.text(d.nombre||k,margin,10);
+              var raw=d.data.indexOf(',')>-1?d.data:('data:image/jpeg;base64,'+d.data);
+              doc.addImage(raw,'JPEG',margin,18,rw,rh);
+              res();
+            };
+            img.onerror=function(){res();};
+            img.src=d.data.indexOf(',')>-1?d.data:('data:image/jpeg;base64,'+d.data);
+          });
+        } else {
+          /* PDF: convertir paginas con PDF.js */
+          return _pdfPagesToDataURLs(d.data).then(function(pages){
+            pages.forEach(function(pg,pi){
+              doc.addPage();
+              var ratio=Math.min(usableW/(pg.w||1),(ph-22)/(pg.h||1));
+              var rw=pg.w*ratio; var rh=pg.h*ratio;
+              doc.setFillColor(232,58,47);
+              doc.rect(0,0,pw,14,'F');
+              doc.setFontSize(9);
+              doc.setFont('helvetica','bold');
+              doc.setTextColor(255,255,255);
+              doc.text((d.nombre||k)+' - pag.'+(pi+1),margin,10);
+              doc.addImage(pg.dataURL,'JPEG',margin,18,rw,rh);
+            });
+          }).catch(function(){});
+        }
+      });
+    });
+    return chain.then(function(){
+      return doc.output('blob');
+    });
+  });
+}
+
 window.pdfDescargar=function(){
   var hv=window._hvData||{};
   var nombre=(hv.nombre||'empleado');
   var safeName=nombre.replace(/\s+/g,'-');
-  var docs=hv.docsCerts||{};
-  var keys=Object.keys(docs);
-  if(keys.length){
-    keys.forEach(function(k){
-      var d=docs[k];
-      if(!d||!d.data)return;
-      var mime=d.tipo==='pdf'?'application/pdf':(d.tipo==='imagen'?'image/jpeg':'application/octet-stream');
-      var ext=d.tipo==='pdf'?'.pdf':(d.tipo==='imagen'?'.jpg':'');
-      var blob=_b64toBlob(d.data,mime);
-      var url=URL.createObjectURL(blob);
-      var a=document.createElement('a');
-      a.href=url;
-      a.download=safeName+'-'+(d.nombre||k)+ext;
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},1500);
-    });
-    toast('✅ Descargando '+keys.length+' archivo(s)...');
-    return;
-  }
-  var txt='HOJA DE VIDA - MAXPRINT S.A.S.\n\nNombre: '+(hv.nombre||'')+'\nCargo: '+(hv.rol||'')+'\nCédula: '+(hv.numDoc||'')+'\nFecha Nac: '+(hv.fechaNac||'')+'\nCelular: '+(hv.celular||'')+'\nEPS: '+(hv.eps||'')+'\nARL: '+(hv.arl||'')+'\nGrupo Sang: '+(hv.grupoSang||'')+'\n';
-  var blob=new Blob([txt],{type:'text/plain'});
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement('a');
-  a.href=url; a.download='HojaDeVida-'+safeName+'.txt';
-  document.body.appendChild(a); a.click();
-  setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},1000);
-  toast('✅ Descargando resumen...');
+  toast('⏳ Generando PDF...');
+  _generarPDFCompleto(hv).then(function(blob){
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url;
+    a.download='HojaDeVida-'+safeName+'.pdf';
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},2000);
+    toast('✅ PDF descargado');
+  }).catch(function(e){toast('❌ Error al generar PDF');console.error(e);});
 };
 window.pdfCompartirWA=function(){
   var hv=window._hvData||{};
   var nombre=(hv.nombre||'empleado');
   var safeName=nombre.replace(/\s+/g,'-');
-  var docs=hv.docsCerts||{};
-  var keys=Object.keys(docs);
-  if(keys.length&&navigator.share&&navigator.canShare){
-    var files=[];
-    keys.forEach(function(k){
-      var d=docs[k];
-      if(!d||!d.data)return;
-      var mime=d.tipo==='pdf'?'application/pdf':(d.tipo==='imagen'?'image/jpeg':'application/octet-stream');
-      var ext=d.tipo==='pdf'?'.pdf':(d.tipo==='imagen'?'.jpg':'');
-      var blob=_b64toBlob(d.data,mime);
-      files.push(new File([blob],safeName+'-'+(d.nombre||k)+ext,{type:mime}));
-    });
-    if(files.length&&navigator.canShare({files:files})){
-      navigator.share({title:'Hoja de Vida - '+nombre,text:'Hoja de Vida Laboral MAXPRINT S.A.S.',files:files}).catch(function(){});
-      return;
+  toast('⏳ Preparando PDF...');
+  _generarPDFCompleto(hv).then(function(blob){
+    var file=new File([blob],'HojaDeVida-'+safeName+'.pdf',{type:'application/pdf'});
+    if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+      navigator.share({title:'Hoja de Vida - '+nombre,text:'Hoja de Vida Laboral MAXPRINT S.A.S.',files:[file]}).catch(function(){});
+    } else if(navigator.share){
+      navigator.share({title:'Hoja de Vida - '+nombre,text:'Hoja de Vida Laboral: '+nombre+' - MAXPRINT S.A.S.'}).catch(function(){});
+    } else {
+      var txt=encodeURIComponent('Hoja de Vida: '+nombre+' - MAXPRINT S.A.S.');
+      window.open('https://wa.me/?text='+txt,'_blank');
     }
-  }
-  var txt='📋 *Hoja de Vida Laboral*\n*'+nombre+'*\n'
-    +(hv.rol?'Cargo: '+hv.rol+'\n':'')
-    +(hv.numDoc?'CC: '+hv.numDoc+'\n':'')
-    +(hv.celular?'Tel: '+hv.celular+'\n':'')
-    +'\nMAXPRINT S.A.S.';
-  if(navigator.share){
-    navigator.share({title:'Hoja de Vida - '+nombre,text:txt}).catch(function(){});
-  } else {
-    window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');
-  }
+  }).catch(function(e){toast('❌ Error al generar PDF');console.error(e);});
 };
 // Render all pages of a base64 PDF into a container div using PDF.js
 window.renderPdfInto=function(container,b64data){
