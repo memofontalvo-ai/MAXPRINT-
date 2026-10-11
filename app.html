@@ -1490,12 +1490,12 @@ window.saveEmp=async function(){var name=document.getElementById('efn').value.tr
       eps:document.getElementById('efeps').value.trim(),
       arl:document.getElementById('efarl').value.trim(),
       arlVence:document.getElementById('efarlv').value,
-      docsCerts:(function(){var d={};['ss','med','arl','alt'].forEach(function(k){if(window._efDocs&&window._efDocs[k])d[k]=window._efDocs[k];});return d;})()
+      docsCertsMeta:(function(){var d={};['ss','med','arl','alt'].forEach(function(k){if(window._efDocs&&window._efDocs[k])d[k]={nombre:window._efDocs[k].nombre,tipo:window._efDocs[k].tipo};});return d;})()
     };try{var savedId=editEId;if(editEId){await updateDoc(doc(db,"empleados",editEId),data);toast('✅ Actualizado');}else{data.createdAt=serverTimestamp();var ref=await addDoc(collection(db,"empleados"),data);savedId=ref.id;toast('✅ Empleado registrado');}try{var lsDocs={};['ss','med','arl','alt'].forEach(function(k){if(window._efDocs&&window._efDocs[k])lsDocs[k]=window._efDocs[k];});localStorage.setItem('empDocs_'+savedId,JSON.stringify(lsDocs));}catch(le){}window.backRH();}catch(e){document.getElementById('eferr').textContent='❌ Error: '+e.message;}};
 window.showProf=function(eid){var e=emps.find(function(x){return x.id===eid;});if(!e)return;document.getElementById('rlv').style.display='none';document.getElementById('rfv').style.display='none';document.getElementById('rpv').style.display='';document.getElementById('dfv').style.display='none';var c=avc(e.name);var p=tasks.filter(function(t){return t.assignedTo===eid&&!t.done;}).length;var d2=tasks.filter(function(t){return t.assignedTo===eid&&t.done;}).length;function pf(l,v){return '<div class="pf2"><div class="pl2">'+l+'</div><div class="pv">'+(v||'—')+'</div></div>';}function fd(d){if(!d)return'—';var pts=d.split('-');return pts.length===3?pts[2]+'/'+pts[1]+'/'+pts[0]:d;}var h='<div class="ph"><div class="pha" style="background:linear-gradient(135deg,'+c+')">'+ini(e.name)+'</div><div><div class="phn">'+e.name+'</div><div class="phd">'+DI[e.dept]+' '+DN[e.dept]+(e.cargo?' · '+e.cargo:'')+'</div><div style="font-size:10px;color:var(--tm);margin-top:2px">'+p+' pend. · '+d2+' hechas</div></div></div>';h+='<div class="ps"><h4>📋 Datos Personales</h4><div class="pg">'+pf('Cédula',e.cedula)+pf('Teléfono',e.phone)+pf('Nacimiento',fd(e.birth))+pf('Ingreso',fd(e.ingreso))+'</div>'+(e.address?'<div style="margin-top:9px"><div class="pl2">Dirección</div><div class="pv">'+e.address+'</div></div>':'')+'</div>';h+='<div class="ps"><h4>👕 Tallas</h4><div class="pg">'+pf('Camisa',e.camisa)+pf('Pantalón',e.pantalon)+pf('Zapatos',e.zapatos)+'</div></div>';
 h+='<div class="ps"><h4>🛡️ Seguridad</h4><div class="pg">'+pf('Lugar nacimiento',e.lugarNac)+pf('Grupo sanguíneo',e.grupoSang)+pf('EPS',e.eps)+pf('ARL / Póliza',e.arl)+pf('Vence ARL',fd(e.arlVence))+'</div>';
 var DC_LABELS={ss:'Aportes Seg. Social',med:'Aptitud Médica Ocup.',arl:'Afiliación ARL',alt:'Trabajo en Alturas'};
-var dc=e.docsCerts||{};
+var dc={};try{dc=JSON.parse(localStorage.getItem('empDocs_'+eid)||'{}');}catch(le){}
 var dcKeys=Object.keys(dc).filter(function(k){return dc[k];});
 if(dcKeys.length){
   h+='<div style="margin-top:10px;"><div style="font-size:10px;color:#5b8af5;letter-spacing:.5px;font-weight:700;margin-bottom:8px;">📄 DOCUMENTOS</div>';
@@ -1976,7 +1976,7 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v4.7 - 2026-10-11</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v4.8 - 2026-10-11</div>
 
 <!-- SheetJS for reading .xlsx in browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2027,7 +2027,7 @@ async function pSyncFirestore(lista){
       if(pd.fotos&&pd.fotos.length)pd._fotosCount=pd.fotos.length; else pd._fotosCount=0;
       delete pd.fotos;
       /* participantes: guardamos sin fotos grandes para Firestore; las fotos se mantienen en localStorage */
-      if(pd.participantes)pd.participantes=pd.participantes.map(function(pt){var p2=Object.assign({},pt);delete p2.foto;return p2;});
+      if(pd.participantes)pd.participantes=pd.participantes.map(function(pt){var p2=Object.assign({},pt);delete p2.foto;delete p2.docsCerts;delete p2.documentos;return p2;});
       return setDoc(doc(db,'mp_proyectos',pd.code),pd);
     });
     await Promise.all(adds);
@@ -2517,6 +2517,7 @@ window.pfAgregarSeleccionados=function(){
     var empId=chk.dataset.empid;
     var e=emps.find(function(x){return x.id===empId;});
     if(!e)return;
+    var empDocs={};try{empDocs=JSON.parse(localStorage.getItem('empDocs_'+e.id)||'{}');}catch(le){}
     pfAddPartRow({
       nombre:e.name,
       rol:e.cargo||'',
@@ -2531,6 +2532,7 @@ window.pfAgregarSeleccionados=function(){
       arlVence:e.arlVence||'',
       observaciones:'',
       certificados:e.certificados||[],
+      docsCerts:empDocs,
       documentos:[],
       foto:null,
       _empId:e.id
@@ -2545,6 +2547,7 @@ window.pfAgregarEmpProy=function(empId){
   var emps=window.emps||[];
   var e=emps.find(function(x){return x.id===empId;});
   if(!e)return;
+  var empDocs={};try{empDocs=JSON.parse(localStorage.getItem('empDocs_'+e.id)||'{}');}catch(le){}
   pfAddPartRow({
     nombre:e.name,
     rol:e.cargo||'',
@@ -2559,6 +2562,7 @@ window.pfAgregarEmpProy=function(empId){
     arlVence:e.arlVence||'',
     observaciones:'',
     certificados:e.certificados||[],
+    docsCerts:empDocs,
     documentos:[],
     foto:null,
     _empId:e.id
