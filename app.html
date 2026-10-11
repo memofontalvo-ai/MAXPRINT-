@@ -1203,7 +1203,6 @@ function clk() {
 }
 clk(); setInterval(clk, 1000);
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -1586,7 +1585,14 @@ _gs('login-screen');
           <option>Instalado</option><option>Entregado</option>
         </select>
         <input id="pf-fecha" type="date" style="background:#111;border:1px solid #333;border-radius:8px;padding:11px 12px;color:#fff;font-size:14px;width:100%;"/>
-        <div style="font-size:12px;color:#666;">PARTICIPANTES</div>
+        <!-- Excel upload -->
+        <div style="border:1px dashed #3a3a3a;border-radius:10px;padding:14px;text-align:center;">
+          <div style="font-size:12px;color:#888;margin-bottom:10px;">&#128196; Subir Excel del equipo<br><span style="font-size:11px;color:#555;">Formato: Equipo_Instalacion_Avisos.xlsx</span></div>
+          <input id="pf-xlsx-input" type="file" accept=".xlsx,.xls" style="display:none;"/>
+          <button type="button" onclick="document.getElementById('pf-xlsx-input').click()" style="background:#1e1e1e;border:1px solid #444;border-radius:8px;padding:8px 20px;color:#ccc;font-size:13px;cursor:pointer;">Seleccionar archivo</button>
+          <div id="pf-xlsx-msg" style="font-size:11px;color:#555;margin-top:8px;"></div>
+        </div>
+        <div style="font-size:12px;color:#666;letter-spacing:.4px;">PARTICIPANTES</div>
         <div id="pf-parts" style="display:flex;flex-direction:column;gap:8px;"></div>
         <button onclick="pfAddPart()" style="background:#1e1e1e;border:1px solid #333;border-radius:8px;padding:10px;color:#aaa;font-size:13px;cursor:pointer;">+ Agregar participante</button>
         <button onclick="pfGuardar()" style="background:#e83a2f;border:none;border-radius:10px;padding:14px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;">GUARDAR PROYECTO</button>
@@ -1602,8 +1608,10 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v2.5 - 2026-10-10</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v2.6 - 2026-10-11</div>
 
+<!-- SheetJS for reading .xlsx in browser -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 var _pEditId=null;
 
@@ -1632,6 +1640,91 @@ function proyTab(tab){
 
 var ECOL={'En diseno':'#5b8af5','En produccion':'#f5a623','Listo para instalar':'#4af','Instalado':'#a78bfa','Entregado':'#3fb950'};
 
+/* ---- Excel upload ---- */
+document.addEventListener('DOMContentLoaded',function(){
+  var inp=document.getElementById('pf-xlsx-input');
+  if(!inp)return;
+  inp.addEventListener('change',function(){
+    var file=this.files[0];
+    if(!file)return;
+    var msg=document.getElementById('pf-xlsx-msg');
+    msg.style.color='#f5a623'; msg.textContent='Leyendo archivo...';
+    var reader=new FileReader();
+    reader.onload=function(e){
+      try{
+        var wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
+        var ws=wb.Sheets[wb.SheetNames[0]];
+        var rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+        // Find header row: look for "Nombres y apellidos"
+        var hdrIdx=-1;
+        for(var i=0;i<rows.length;i++){
+          for(var j=0;j<rows[i].length;j++){
+            if(String(rows[i][j]).toLowerCase().indexOf('nombres y apellidos')>=0){hdrIdx=i;break;}
+          }
+          if(hdrIdx>=0)break;
+        }
+        if(hdrIdx<0){msg.style.color='#e83a2f';msg.textContent='No se encontro la fila de cabeceras.';return;}
+        var hdrs=rows[hdrIdx].map(function(h){return String(h).toLowerCase().trim();});
+        function col(name){
+          var idx=hdrs.findIndex(function(h){return h.indexOf(name)>=0;});
+          return idx;
+        }
+        var iNom=col('nombres y apellidos');
+        var iTipoDoc=col('tipo de documento');
+        var iDoc=col('numero de documento');
+        var iFnac=col('fecha de nacimiento');
+        var iLnac=col('lugar de nacimiento');
+        var iCargo=col('cargo');
+        var iCel=col('celular');
+        var iEps=col('eps');
+        var iArl=col('arl');
+        var iCont=col('contacto de emergencia');
+        var iParent=col('parentesco');
+        var iTelEm=col('telefono de emergencia');
+        var iObs=col('observaciones');
+
+        var count=0;
+        for(var r=hdrIdx+1;r<rows.length;r++){
+          var row=rows[r];
+          var nom=String(row[iNom]||'').trim();
+          if(!nom||nom===''||/^\d+$/.test(nom))continue; // skip empty or number-only rows
+          var fnac='';
+          if(row[iFnac]){
+            var d=row[iFnac];
+            if(d instanceof Date){fnac=d.toISOString().slice(0,10);}
+            else{fnac=String(d).slice(0,10);}
+          }
+          pfAddPartRow({
+            nombre:nom,
+            tipoDoc:String(row[iTipoDoc]||'CC').trim(),
+            numDoc:String(row[iDoc]||'').trim(),
+            fechaNac:fnac,
+            lugarNac:String(row[iLnac]||'').trim(),
+            rol:String(row[iCargo]||'').trim(),
+            celular:String(row[iCel]||'').trim(),
+            eps:String(row[iEps]||'').trim(),
+            arl:String(row[iArl]||'').trim(),
+            contactoEmerg:String(row[iCont]||'').trim(),
+            parentesco:String(row[iParent]||'').trim(),
+            telEmerg:String(row[iTelEm]||'').trim(),
+            observaciones:String(row[iObs]||'').trim(),
+            foto:null,certificados:[]
+          });
+          count++;
+        }
+        msg.style.color='#3fb950';
+        msg.textContent=count+' participante(s) cargado(s) desde el Excel.';
+        inp.value='';
+      }catch(err){
+        msg.style.color='#e83a2f';
+        msg.textContent='Error al leer el archivo: '+err.message;
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  });
+});
+
+/* ---- List render ---- */
 function pRenderList(){
   var d=pLoad(),el=document.getElementById('proy-lista');
   if(!el)return;
@@ -1648,19 +1741,19 @@ function pRenderList(){
     if(p.participantes&&p.participantes.length){
       partsHtml='<div style="margin-top:10px;border-top:1px solid #2a2a2a;padding-top:10px;">';
       p.participantes.forEach(function(pt){
-        var certs=(pt.certificados||[]).join(', ');
-        var arl=pt.arl?'ARL: '+pt.arl:'';
         partsHtml+='<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;">';
         if(pt.foto){
           partsHtml+='<img src="'+pt.foto+'" style="width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid #333;"/>';
         } else {
-          partsHtml+='<div style="width:40px;height:40px;border-radius:8px;background:#222;border:1px solid #333;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">👤</div>';
+          partsHtml+='<div style="width:40px;height:40px;border-radius:8px;background:#222;border:1px solid #333;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">&#128100;</div>';
         }
         partsHtml+='<div style="flex:1;min-width:0;">';
         partsHtml+='<div style="font-size:13px;font-weight:600;color:#fff;">'+pt.nombre+'</div>';
-        partsHtml+='<div style="font-size:11px;color:#888;">'+pt.rol+'</div>';
-        if(arl) partsHtml+='<div style="font-size:11px;color:#f5a623;margin-top:2px;">'+arl+(pt.arlVence?' · Vence: '+pt.arlVence:'')+'</div>';
-        if(certs) partsHtml+='<div style="font-size:11px;color:#3fb950;margin-top:2px;">Certs: '+certs+'</div>';
+        partsHtml+='<div style="font-size:11px;color:#888;">'+(pt.rol||'')+(pt.numDoc?' &middot; '+pt.numDoc:'')+'</div>';
+        if(pt.celular)partsHtml+='<div style="font-size:11px;color:#5b8af5;">&#128222; '+pt.celular+'</div>';
+        if(pt.arl)partsHtml+='<div style="font-size:11px;color:#f5a623;">ARL: '+pt.arl+'</div>';
+        var certs=pt.certificados||[];
+        if(certs.length)partsHtml+='<div style="font-size:11px;color:#3fb950;">Certs: '+certs.join(', ')+'</div>';
         partsHtml+='</div></div>';
       });
       partsHtml+='</div>';
@@ -1712,32 +1805,33 @@ function pfLimpiar(){
   ['pf-tipo','pf-estado'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   var pl=document.getElementById('pf-parts');if(pl)pl.innerHTML='';
   var ft=document.getElementById('pf-title');if(ft)ft.textContent='NUEVO PROYECTO';
+  var msg=document.getElementById('pf-xlsx-msg');if(msg)msg.textContent='';
 }
 
 var CERTS=['Trabajo en alturas','Electrico','Espacios confinados','Primeros auxilios','Manejo de quimicos'];
 
+/* ---- Add participant row (manual or from Excel) ---- */
 function pfAddPartRow(pt){
   pt=pt||{};
   var pl=document.getElementById('pf-parts');
   var wrap=document.createElement('div');
   wrap.style.cssText='background:#111;border:1px solid #2a2a2a;border-radius:10px;padding:12px;margin-bottom:8px;';
 
-  // Header row: foto + nombre + rol + eliminar
+  /* Header: foto + nombre + btnDel */
   var hdr=document.createElement('div');
   hdr.style.cssText='display:flex;gap:8px;align-items:flex-start;margin-bottom:10px;';
 
-  // Foto container
+  /* Foto */
   var fotoBox=document.createElement('div');
   fotoBox.style.cssText='position:relative;flex-shrink:0;';
-  var fotoId='foto_'+Date.now()+'_'+Math.random().toString(36).slice(2);
   var fotoImg=document.createElement('div');
   fotoImg.style.cssText='width:48px;height:48px;border-radius:8px;background:#1a1a1a;border:1px solid #333;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;overflow:hidden;';
-  fotoImg.innerHTML=pt.foto?('<img src="'+pt.foto+'" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">'):('📷');
+  fotoImg.innerHTML=pt.foto?('<img src="'+pt.foto+'" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">'):'&#128247;';
+  fotoImg._fotoData=pt.foto||null;
   var fotoInput=document.createElement('input');
-  fotoInput.type='file'; fotoInput.accept='image/*'; fotoInput.capture='environment';
-  fotoInput.style.display='none'; fotoInput.id=fotoId;
+  fotoInput.type='file';fotoInput.accept='image/*';fotoInput.capture='environment';fotoInput.style.display='none';
   fotoInput.addEventListener('change',function(){
-    var file=this.files[0]; if(!file)return;
+    var file=this.files[0];if(!file)return;
     var reader=new FileReader();
     reader.onload=function(e){
       fotoImg.innerHTML='<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">';
@@ -1746,54 +1840,82 @@ function pfAddPartRow(pt){
     reader.readAsDataURL(file);
   });
   fotoImg.addEventListener('click',function(){fotoInput.click();});
-  fotoImg._fotoData=pt.foto||null;
-  fotoBox.appendChild(fotoImg);
-  fotoBox.appendChild(fotoInput);
+  fotoBox.appendChild(fotoImg);fotoBox.appendChild(fotoInput);
 
-  // Nombre + rol + btn eliminar
+  /* Nombre y cargo */
   var info=document.createElement('div');
   info.style.cssText='flex:1;display:flex;flex-direction:column;gap:6px;';
-  var nombreIn=document.createElement('input');
-  nombreIn.placeholder='Nombre del participante';
-  nombreIn.value=pt.nombre||'';
-  nombreIn.className='ppart-n';
-  nombreIn.style.cssText='background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:8px 10px;color:#fff;font-size:13px;width:100%;';
-  var rolSel=document.createElement('select');
-  rolSel.className='ppart-r';
-  rolSel.style.cssText='background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:8px;color:#fff;font-size:12px;width:100%;';
-  ['Instalador','Diseñador','Operario de produccion','Asesor comercial','Supervisor','Conductor'].forEach(function(r){
-    var o=document.createElement('option');o.value=r;o.textContent=r;rolSel.appendChild(o);
-  });
-  if(pt.rol)rolSel.value=pt.rol;
+
+  function mkInput(ph,val,cls,extraStyle){
+    var el=document.createElement('input');
+    el.placeholder=ph;el.value=val||'';el.className=cls;
+    el.style.cssText='background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:8px 10px;color:#fff;font-size:13px;width:100%;'+(extraStyle||'');
+    return el;
+  }
+
+  var nombreIn=mkInput('Nombres y apellidos *',pt.nombre,'ppart-n');
+  var cargoIn=mkInput('Cargo / funcion',pt.rol,'ppart-r');
   info.appendChild(nombreIn);
-  info.appendChild(rolSel);
+  info.appendChild(cargoIn);
 
   var btnDel=document.createElement('button');
-  btnDel.innerHTML='✕'; btnDel.type='button';
+  btnDel.innerHTML='&#10005;';btnDel.type='button';
   btnDel.style.cssText='background:#1a0808;border:none;border-radius:6px;padding:6px 10px;color:#e83a2f;cursor:pointer;font-size:16px;flex-shrink:0;';
   btnDel.addEventListener('click',function(){wrap.remove();});
 
-  hdr.appendChild(fotoBox);
-  hdr.appendChild(info);
-  hdr.appendChild(btnDel);
+  hdr.appendChild(fotoBox);hdr.appendChild(info);hdr.appendChild(btnDel);
 
-  // ARL row
+  /* Documento row */
+  var docRow=document.createElement('div');
+  docRow.style.cssText='display:flex;gap:8px;margin-bottom:8px;';
+  var tipoDocSel=document.createElement('select');
+  tipoDocSel.className='ppart-tdoc';
+  tipoDocSel.style.cssText='width:70px;background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:8px;color:#fff;font-size:12px;flex-shrink:0;';
+  ['CC','CE','TI','PA','NIT'].forEach(function(t){var o=document.createElement('option');o.value=t;o.textContent=t;tipoDocSel.appendChild(o);});
+  tipoDocSel.value=pt.tipoDoc||'CC';
+  var numDocIn=mkInput('No. de documento',pt.numDoc,'ppart-ndoc');
+  docRow.appendChild(tipoDocSel);docRow.appendChild(numDocIn);
+
+  /* Fecha nacimiento + Lugar */
+  var nacRow=document.createElement('div');
+  nacRow.style.cssText='display:flex;gap:8px;margin-bottom:8px;';
+  var fnacIn=document.createElement('input');
+  fnacIn.type='date';fnacIn.value=pt.fechaNac||'';fnacIn.className='ppart-fnac';fnacIn.title='Fecha de nacimiento';
+  fnacIn.style.cssText='flex:1;background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:8px 10px;color:#fff;font-size:12px;';
+  var lnacIn=mkInput('Lugar nacimiento',pt.lugarNac,'ppart-lnac');
+  lnacIn.style.cssText+='flex:1;';
+  nacRow.appendChild(fnacIn);nacRow.appendChild(lnacIn);
+
+  /* Celular + EPS */
+  var contactRow=document.createElement('div');
+  contactRow.style.cssText='display:flex;gap:8px;margin-bottom:8px;';
+  var celIn=mkInput('Celular',pt.celular,'ppart-cel');
+  var epsIn=mkInput('EPS',pt.eps,'ppart-eps');
+  contactRow.appendChild(celIn);contactRow.appendChild(epsIn);
+
+  /* ARL */
   var arlRow=document.createElement('div');
   arlRow.style.cssText='display:flex;gap:8px;margin-bottom:8px;';
-  var arlIn=document.createElement('input');
-  arlIn.placeholder='No. Poliza ARL';
-  arlIn.value=pt.arl||'';
-  arlIn.className='ppart-arl';
-  arlIn.style.cssText='flex:1;background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:8px 10px;color:#fff;font-size:12px;';
+  var arlIn=mkInput('No. Poliza ARL',pt.arl,'ppart-arl');
   var arlVIn=document.createElement('input');
-  arlVIn.type='date'; arlVIn.value=pt.arlVence||'';
-  arlVIn.className='ppart-arlv';
-  arlVIn.title='Vencimiento ARL';
-  arlVIn.style.cssText='width:130px;background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:8px 10px;color:#fff;font-size:12px;';
-  arlRow.appendChild(arlIn);
-  arlRow.appendChild(arlVIn);
+  arlVIn.type='date';arlVIn.value=pt.arlVence||'';arlVIn.className='ppart-arlv';arlVIn.title='Vencimiento ARL';
+  arlVIn.style.cssText='width:130px;background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:8px 10px;color:#fff;font-size:12px;flex-shrink:0;';
+  arlRow.appendChild(arlIn);arlRow.appendChild(arlVIn);
 
-  // Certificados
+  /* Contacto emergencia */
+  var emergRow=document.createElement('div');
+  emergRow.style.cssText='display:flex;gap:8px;margin-bottom:8px;';
+  var contIn=mkInput('Contacto emergencia',pt.contactoEmerg,'ppart-cont');
+  var parentIn=mkInput('Parentesco',pt.parentesco,'ppart-parent','width:110px;flex-shrink:0;');
+  emergRow.appendChild(contIn);emergRow.appendChild(parentIn);
+
+  var telEmRow=document.createElement('div');
+  telEmRow.style.cssText='display:flex;gap:8px;margin-bottom:8px;';
+  var telEmIn=mkInput('Tel. emergencia',pt.telEmerg,'ppart-telm');
+  var obsIn=mkInput('Observaciones',pt.observaciones,'ppart-obs');
+  telEmRow.appendChild(telEmIn);telEmRow.appendChild(obsIn);
+
+  /* Certificados */
   var certLabel=document.createElement('div');
   certLabel.textContent='CERTIFICADOS';
   certLabel.style.cssText='font-size:11px;color:#666;letter-spacing:.5px;margin-bottom:6px;';
@@ -1803,17 +1925,22 @@ function pfAddPartRow(pt){
     var label=document.createElement('label');
     label.style.cssText='display:flex;align-items:center;gap:5px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:6px;padding:5px 8px;cursor:pointer;';
     var cb=document.createElement('input');
-    cb.type='checkbox'; cb.value=cert; cb.className='ppart-cert';
+    cb.type='checkbox';cb.value=cert;cb.className='ppart-cert';
     cb.style.accentColor='#e83a2f';
     if(pt.certificados&&pt.certificados.indexOf(cert)>=0)cb.checked=true;
     var span=document.createElement('span');
-    span.textContent=cert; span.style.cssText='font-size:11px;color:#ccc;';
-    label.appendChild(cb); label.appendChild(span);
+    span.textContent=cert;span.style.cssText='font-size:11px;color:#ccc;';
+    label.appendChild(cb);label.appendChild(span);
     certGrid.appendChild(label);
   });
 
   wrap.appendChild(hdr);
+  wrap.appendChild(docRow);
+  wrap.appendChild(nacRow);
+  wrap.appendChild(contactRow);
   wrap.appendChild(arlRow);
+  wrap.appendChild(emergRow);
+  wrap.appendChild(telEmRow);
   wrap.appendChild(certLabel);
   wrap.appendChild(certGrid);
   wrap._fotoImg=fotoImg;
@@ -1836,9 +1963,19 @@ function pfGuardar(){
     var fotoEl=row._fotoImg;
     parts.push({
       nombre:n.value.trim(),
-      rol:row.querySelector('.ppart-r').value,
-      arl:row.querySelector('.ppart-arl').value.trim(),
-      arlVence:row.querySelector('.ppart-arlv').value,
+      rol:(row.querySelector('.ppart-r')||{value:''}).value,
+      tipoDoc:(row.querySelector('.ppart-tdoc')||{value:'CC'}).value,
+      numDoc:(row.querySelector('.ppart-ndoc')||{value:''}).value.trim(),
+      fechaNac:(row.querySelector('.ppart-fnac')||{value:''}).value,
+      lugarNac:(row.querySelector('.ppart-lnac')||{value:''}).value.trim(),
+      celular:(row.querySelector('.ppart-cel')||{value:''}).value.trim(),
+      eps:(row.querySelector('.ppart-eps')||{value:''}).value.trim(),
+      arl:(row.querySelector('.ppart-arl')||{value:''}).value.trim(),
+      arlVence:(row.querySelector('.ppart-arlv')||{value:''}).value,
+      contactoEmerg:(row.querySelector('.ppart-cont')||{value:''}).value.trim(),
+      parentesco:(row.querySelector('.ppart-parent')||{value:''}).value.trim(),
+      telEmerg:(row.querySelector('.ppart-telm')||{value:''}).value.trim(),
+      observaciones:(row.querySelector('.ppart-obs')||{value:''}).value.trim(),
       certificados:certs,
       foto:fotoEl?fotoEl._fotoData:null
     });
@@ -1870,6 +2007,7 @@ function pfGuardar(){
   pSave(d);_pEditId=null;pfLimpiar();pRenderList();proyTab('list');alert('Proyecto guardado.');
 }
 
+/* ---- Buscar ---- */
 function pfBuscar(){
   var codigo=document.getElementById('pf-buscar-input').value.trim().toUpperCase();
   var res=document.getElementById('pf-buscar-res');
@@ -1883,24 +2021,39 @@ function pfBuscar(){
     partsHtml='<div style="border-top:1px solid #2a2a2a;padding-top:12px;margin-top:12px;">'
       +'<div style="font-size:11px;color:#666;letter-spacing:.5px;margin-bottom:8px;">EQUIPO</div>';
     p.participantes.forEach(function(pt){
-      partsHtml+='<div style="display:flex;align-items:flex-start;gap:10px;background:#111;border-radius:10px;padding:10px;margin-bottom:8px;">';
+      partsHtml+='<div style="background:#111;border-radius:10px;padding:12px;margin-bottom:8px;">';
+      partsHtml+='<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;">';
       if(pt.foto){
-        partsHtml+='<img src="'+pt.foto+'" style="width:44px;height:44px;border-radius:8px;object-fit:cover;flex-shrink:0;"/>';
+        partsHtml+='<img src="'+pt.foto+'" style="width:48px;height:48px;border-radius:8px;object-fit:cover;flex-shrink:0;"/>';
       } else {
-        partsHtml+='<div style="width:44px;height:44px;border-radius:8px;background:#222;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">👤</div>';
+        partsHtml+='<div style="width:48px;height:48px;border-radius:8px;background:#222;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">&#128100;</div>';
       }
       partsHtml+='<div style="flex:1;min-width:0;">';
-      partsHtml+='<div style="font-size:14px;font-weight:700;color:#fff;">'+pt.nombre+'</div>';
-      partsHtml+='<div style="font-size:12px;color:#888;">'+pt.rol+'</div>';
-      if(pt.arl) partsHtml+='<div style="font-size:11px;color:#f5a623;margin-top:4px;">ARL: '+pt.arl+(pt.arlVence?' &middot; Vence: '+pt.arlVence:'')+'</div>';
+      partsHtml+='<div style="font-size:15px;font-weight:700;color:#fff;">'+pt.nombre+'</div>';
+      partsHtml+='<div style="font-size:12px;color:#888;">'+(pt.rol||'')+(pt.tipoDoc&&pt.numDoc?' &middot; '+pt.tipoDoc+' '+pt.numDoc:'')+'</div>';
+      if(pt.celular)partsHtml+='<div style="font-size:12px;color:#5b8af5;margin-top:4px;">&#128222; '+pt.celular+'</div>';
+      partsHtml+='</div></div>';
+      var rows2=[];
+      if(pt.fechaNac||pt.lugarNac)rows2.push(['Nacimiento',pt.fechaNac+(pt.lugarNac?' &middot; '+pt.lugarNac:'')]);
+      if(pt.eps)rows2.push(['EPS',pt.eps]);
+      if(pt.arl)rows2.push(['ARL',pt.arl+(pt.arlVence?' (vence '+pt.arlVence+')':'')]);
+      if(pt.contactoEmerg)rows2.push(['Emergencia',pt.contactoEmerg+(pt.parentesco?' ('+pt.parentesco+')':'')+(pt.telEmerg?' '+pt.telEmerg:'')]);
+      if(pt.observaciones)rows2.push(['Obs.',pt.observaciones]);
+      if(rows2.length){
+        partsHtml+='<table style="width:100%;border-collapse:collapse;font-size:11px;">';
+        rows2.forEach(function(r){
+          partsHtml+='<tr><td style="color:#666;padding:3px 8px 3px 0;white-space:nowrap;vertical-align:top;">'+r[0]+'</td><td style="color:#ccc;padding:3px 0;">'+r[1]+'</td></tr>';
+        });
+        partsHtml+='</table>';
+      }
       if(pt.certificados&&pt.certificados.length){
-        partsHtml+='<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;">';
+        partsHtml+='<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px;">';
         pt.certificados.forEach(function(cert){
           partsHtml+='<span style="background:#0a2a0a;border:1px solid #3fb95044;border-radius:4px;padding:2px 7px;font-size:10px;color:#3fb950;">'+cert+'</span>';
         });
         partsHtml+='</div>';
       }
-      partsHtml+='</div></div>';
+      partsHtml+='</div>';
     });
     partsHtml+='</div>';
   }
