@@ -1341,6 +1341,7 @@ function clk() {
 }
 clk(); setInterval(clk, 1000);
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy, getDoc, setDoc, getDocs, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -1988,7 +1989,7 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v5.2 - 2026-10-11</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v5.3 - 2026-10-11</div>
 
 <!-- SheetJS for reading .xlsx in browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2792,6 +2793,43 @@ window.hvClose=function(){
   document.getElementById('hv-overlay').style.display='none';
 };
 window.pdfClose=function(){document.getElementById('pdf-overlay').style.display='none';};
+// Render all pages of a base64 PDF into a container div using PDF.js
+window.renderPdfInto=function(container,b64data){
+  var pdfData;
+  try{
+    var raw=b64data.split(',')[1]||b64data;
+    var bin=atob(raw);
+    var bytes=new Uint8Array(bin.length);
+    for(var i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+    pdfData=bytes.buffer;
+  }catch(e){container.innerHTML='<div style="color:#888;font-size:12px;padding:10px;">No se pudo cargar el PDF</div>';return;}
+  var pdfjsLib=window['pdfjs-dist/build/pdf'];
+  if(!pdfjsLib){container.innerHTML='<div style="color:#888;font-size:12px;padding:10px;">Visor PDF no disponible</div>';return;}
+  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  container.innerHTML='<div style="color:#888;font-size:12px;padding:10px;text-align:center;">Cargando PDF...</div>';
+  pdfjsLib.getDocument({data:new Uint8Array(pdfData)}).promise.then(function(pdf){
+    container.innerHTML='';
+    var totalPages=pdf.numPages;
+    function renderPage(num){
+      pdf.getPage(num).then(function(page){
+        var viewport=page.getViewport({scale:1.5});
+        var canvas=document.createElement('canvas');
+        canvas.style.width='100%';
+        canvas.style.display='block';
+        canvas.style.marginBottom='8px';
+        canvas.style.borderRadius='6px';
+        var ctx=canvas.getContext('2d');
+        canvas.height=viewport.height;
+        canvas.width=viewport.width;
+        container.appendChild(canvas);
+        page.render({canvasContext:ctx,viewport:viewport}).promise.then(function(){
+          if(num<totalPages)renderPage(num+1);
+        });
+      });
+    }
+    renderPage(1);
+  }).catch(function(err){container.innerHTML='<div style="color:#e83a2f;font-size:12px;padding:10px;">Error al leer PDF: '+err.message+'</div>';});
+};
 window.hvImprimir=function(){
   var data=window._hvData;if(!data)return;
   var CERT_L={alturas:'Trabajo en Alturas',electrico:'Riesgo Eléctrico',confinados:'Espacios Confinados',primeros:'Primeros Auxilios',quimicos:'Riesgo Químico'};
@@ -2804,6 +2842,7 @@ window.hvImprimir=function(){
   }
   var DC_LABELS3={ss:'Aportes a Seguridad Social',med:'Aptitud Médica Ocupacional',arl:'Afiliación a la ARL',alt:'Trabajo en Alturas'};
   var docsHtml='';
+  var pendingPdfs=[];
   var dc3=data.docsCerts||{};
   var dcKeys3=Object.keys(dc3).filter(function(k){return dc3[k];});
   if(dcKeys3.length){
@@ -2811,8 +2850,8 @@ window.hvImprimir=function(){
     dcKeys3.forEach(function(k){
       var d=dc3[k];if(!d)return;
       docsHtml+='<div style="margin-bottom:12px;"><div style="font-size:11px;font-weight:700;color:#333;margin-bottom:4px;">'+DC_LABELS3[k]+'</div>';
-      if(d.tipo==='imagen'){docsHtml+='<img src="'+d.data+'" style="max-width:100%;max-height:200px;border-radius:6px;margin-bottom:4px;display:block;border:1px solid #ddd;"/>';}
-      else {docsHtml+='<div style="background:#f5f5f5;border:1px solid #ddd;border-radius:6px;padding:8px 12px;font-size:12px;color:#333;">&#128196; '+d.nombre+'</div>';}
+      if(d.tipo==='imagen'){docsHtml+='<img src="'+d.data+'" style="max-width:100%;border-radius:6px;margin-bottom:4px;display:block;border:1px solid #ddd;"/>';}
+      else{var poId='ppo-pdf-'+k;docsHtml+='<div id="'+poId+'" data-b64="'+encodeURIComponent(d.data)+'" style="background:#f9f9f9;border:1px solid #ddd;border-radius:6px;min-height:60px;overflow:hidden;"></div>';pendingPdfs.push(poId);}
       docsHtml+='</div>';
     });
     docsHtml+='</div>';
@@ -2842,6 +2881,7 @@ window.hvImprimir=function(){
     +certsHtml+docsHtml;
   document.getElementById('pdf-overlay').style.display='block';
   document.getElementById('pdf-overlay').scrollTop=0;
+  setTimeout(function(){pendingPdfs.forEach(function(id){var el=document.getElementById(id);if(el&&window.renderPdfInto)window.renderPdfInto(el,decodeURIComponent(el.dataset.b64));});},150);
 };
 window.portalVerHV=function(ptData){
   var CERT_L={alturas:'Trabajo en Alturas',electrico:'Riesgo Eléctrico',confinados:'Espacios Confinados',primeros:'Primeros Auxilios',quimicos:'Riesgo Químico'};
@@ -2898,6 +2938,7 @@ window.portalVerHV=function(ptData){
   }
   var DC_LABELS2={ss:'Aportes Seg. Social',med:'Aptitud Médica Ocup.',arl:'Afiliación ARL',alt:'Trabajo en Alturas'};
   var docsHtml='';
+  var pendingPdfs=[];
   var dc2=ptData.docsCerts||{};
   var dcKeys2=Object.keys(dc2).filter(function(k){return dc2[k];});
   if(dcKeys2.length){
@@ -2906,8 +2947,8 @@ window.portalVerHV=function(ptData){
       var d=dc2[k];if(!d)return;
       docsHtml+='<div style="margin-bottom:10px;">';
       docsHtml+='<div style="font-size:10px;color:#888;letter-spacing:.3px;margin-bottom:4px;">'+DC_LABELS2[k]+'</div>';
-      if(d.tipo==='imagen'){docsHtml+='<img src="'+d.data+'" style="width:100%;border-radius:10px;border:1px solid #2a2a2a;max-height:220px;object-fit:contain;background:#111;"/>';}
-      else{docsHtml+='<div style="background:#111;border:1px solid #2a2a2a;border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px;"><span style="font-size:20px;">&#128196;</span><span style="font-size:12px;color:#ccc;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+d.nombre+'</span></div>';}
+      if(d.tipo==='imagen'){docsHtml+='<img src="'+d.data+'" style="width:100%;border-radius:10px;border:1px solid #2a2a2a;object-fit:contain;background:#111;"/>';}
+      else{var pdId='pdc-hv-'+k;docsHtml+='<div id="'+pdId+'" data-b64="'+encodeURIComponent(d.data)+'" style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;min-height:60px;overflow:hidden;"></div>';pendingPdfs.push(pdId);}
       docsHtml+='</div>';
     });
     docsHtml+='</div>';
@@ -2931,6 +2972,8 @@ window.portalVerHV=function(ptData){
     +'</div>'
     +certsHtml+docsHtml;
   document.getElementById('hv-overlay').style.display='block';
+  // Render PDFs after DOM is ready
+  setTimeout(function(){pendingPdfs.forEach(function(id){var el=document.getElementById(id);if(el&&window.renderPdfInto)window.renderPdfInto(el,decodeURIComponent(el.dataset.b64));});},100);
 };
 window.portalBuscarProy=function(){
   var codigo=(document.getElementById('portal-proy-code').value||'').trim().toUpperCase();
