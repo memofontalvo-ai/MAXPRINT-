@@ -1757,7 +1757,7 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v3.7 - 2026-10-11</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v3.8 - 2026-10-11</div>
 
 <!-- SheetJS for reading .xlsx in browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1844,6 +1844,12 @@ var ECOL={'En diseno':'#5b8af5','En produccion':'#f5a623','Listo para instalar':
 
 /* ---- Excel upload ---- */
 document.addEventListener('DOMContentLoaded',function(){
+  // Si la URL tiene #portal, abrir directamente el portal de clientes
+  if(window.location.hash==='#portal'){
+    setTimeout(function(){
+      window.goPortalCliente();
+    },300);
+  }
   pfInitDatePicker();
   var inp=document.getElementById('pf-xlsx-input');
   if(!inp)return;
