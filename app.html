@@ -1342,6 +1342,7 @@ function clk() {
 clk(); setInterval(clk, 1000);
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy, getDoc, setDoc, getDocs, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -1991,7 +1992,7 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v5.7 - 2026-10-11</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v5.8 - 2026-10-11</div>
 
 <!-- SheetJS for reading .xlsx in browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2837,15 +2838,11 @@ function _pdfPagesToDataURLs(b64data){
   });
 }
 
-/* Carga jsPDF dinamicamente si no esta cargado */
+/* jsPDF se carga en el <head> estaticamente */
 function _loadJsPDF(){
   return new Promise(function(resolve,reject){
     if(window.jspdf&&window.jspdf.jsPDF){resolve(window.jspdf.jsPDF);return;}
-    var s=document.createElement('script');
-    s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-    s.onload=function(){resolve(window.jspdf.jsPDF);};
-    s.onerror=reject;
-    document.head.appendChild(s);
+    reject(new Error('jsPDF no disponible - recarga la pagina'));
   });
 }
 
@@ -2988,50 +2985,59 @@ window.pdfDescargar=function(){
   var hv=window._hvData||{};
   var nombre=(hv.nombre||'empleado');
   var safeName=nombre.replace(/\s+/g,'-');
+  if(!window.jspdf||!window.jspdf.jsPDF){toast('❌ jsPDF no cargó, recarga la app');return;}
   toast('⏳ Generando PDF...');
   _generarPDFCompleto(hv).then(function(jdoc){
-    // doc.save() es compatible con iOS Safari - no necesita <a download>
-    jdoc.save('HojaDeVida-'+safeName+'.pdf');
-    toast('✅ PDF listo');
-  }).catch(function(e){toast('❌ Error: '+e.message);console.error(e);});
+    try{
+      // iOS: abrir en nueva pestaña con data URI
+      var uri=jdoc.output('datauristring');
+      var a=document.createElement('a');
+      a.href=uri;
+      a.download='HojaDeVida-'+safeName+'.pdf';
+      a.target='_blank';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function(){document.body.removeChild(a);},500);
+      toast('✅ PDF listo');
+    }catch(e2){
+      // Fallback: doc.save()
+      jdoc.save('HojaDeVida-'+safeName+'.pdf');
+      toast('✅ PDF guardado');
+    }
+  }).catch(function(e){toast('❌ '+e.message);console.error(e);});
 };
 window.pdfCompartirWA=function(){
   var hv=window._hvData||{};
   var nombre=(hv.nombre||'empleado');
   var safeName=nombre.replace(/\s+/g,'-');
+  if(!window.jspdf||!window.jspdf.jsPDF){toast('❌ jsPDF no cargó, recarga la app');return;}
   toast('⏳ Preparando PDF...');
   _generarPDFCompleto(hv).then(function(jdoc){
-    // Intentar Web Share API con blob
     var blob=jdoc.output('blob');
     var file=new File([blob],'HojaDeVida-'+safeName+'.pdf',{type:'application/pdf'});
-    if(navigator.share&&navigator.canShare){
-      try{
-        if(navigator.canShare({files:[file]})){
-          navigator.share({title:'Hoja de Vida - '+nombre,files:[file],text:'Hoja de Vida Laboral MAXPRINT S.A.S.'}).catch(function(){
-            // Si falla el share de archivo, abrir PDF directo
-            var uri=jdoc.output('datauristring');
-            window.open(uri,'_blank');
-          });
-          return;
+    // Intentar Web Share nativo (funciona en iOS/Android con gesto de usuario)
+    if(navigator.share){
+      var shareData={title:'Hoja de Vida - '+nombre,text:'Hoja de Vida Laboral MAXPRINT S.A.S.'};
+      var canFiles=false;
+      try{canFiles=navigator.canShare&&navigator.canShare({files:[file]});}catch(e){}
+      if(canFiles){shareData.files=[file];}
+      navigator.share(shareData).then(function(){
+        toast('✅ Compartido');
+      }).catch(function(err){
+        if(err.name!=='AbortError'){
+          // Si falla el share, abrir PDF para compartir manualmente
+          var uri=jdoc.output('datauristring');
+          window.open(uri,'_blank');
+          toast('PDF abierto — usá Compartir del navegador');
         }
-      }catch(e2){}
-    }
-    // iOS Safari: abrir PDF en nueva pestaña (el usuario puede compartir desde ahi)
-    var uri=jdoc.output('datauristring');
-    var w=window.open('','_blank');
-    if(w){
-      w.document.write('<html><head><meta charset="utf-8"><title>Hoja de Vida - '+nombre+'</title></head><body style="margin:0">'
-        +'<embed src="'+uri+'" type="application/pdf" width="100%" height="100%" style="position:fixed;top:0;left:0;bottom:0;right:0;">'
-        +'<p style="font-family:sans-serif;padding:16px">Si no abre el PDF, <a href="'+uri+'" download="HojaDeVida-'+safeName+'.pdf">toca aquí para descargar</a></p>'
-        +'</body></html>');
-      w.document.close();
-      toast('✅ PDF abierto — compartí desde el navegador');
+      });
     } else {
-      // Si bloqueo de popup: descargar directo
-      jdoc.save('HojaDeVida-'+safeName+'.pdf');
-      toast('✅ PDF guardado');
+      // Sin Web Share: abrir PDF en nueva pestaña
+      var uri=jdoc.output('datauristring');
+      window.open(uri,'_blank');
+      toast('PDF abierto — guardalo y envialo por WhatsApp');
     }
-  }).catch(function(e){toast('❌ Error: '+e.message);console.error(e);});
+  }).catch(function(e){toast('❌ '+e.message);console.error(e);});
 };
 // Render all pages of a base64 PDF into a container div using PDF.js
 window.renderPdfInto=function(container,b64data){
