@@ -1365,13 +1365,14 @@ function toast(m) { var t=document.getElementById('tst'); t.textContent=m; t.cla
 
 // Firebase
 var q1=query(collection(db,"tareas"),orderBy("createdAt","desc"));
-onSnapshot(q1,function(s){tasks=s.docs.map(function(d){return Object.assign({id:d.id},d.data());});document.getElementById('hst').textContent='🟢 En línea';render();},function(){document.getElementById('hst').textContent='🔴 Sin conexión';});
+function fbErr(e){var hst=document.getElementById('hst');hst.textContent='🔴 Error: '+(e&&e.code?e.code:(e&&e.message?e.message.slice(0,60):'Sin conexión'));hst.title=e?JSON.stringify({code:e.code,msg:e.message}):'';hst.style.cursor='pointer';hst.onclick=function(){alert('Error Firebase:\nCódigo: '+(e&&e.code||'—')+'\nMensaje: '+(e&&e.message||'—'));};}
+onSnapshot(q1,function(s){tasks=s.docs.map(function(d){return Object.assign({id:d.id},d.data());});var hst=document.getElementById('hst');hst.textContent='🟢 En línea';hst.onclick=null;hst.style.cursor='';render();},fbErr);
 var q2=query(collection(db,"solicitudes"),orderBy("createdAt","desc"));
-onSnapshot(q2,function(s){sols=s.docs.map(function(d){return Object.assign({id:d.id},d.data());});renderSols();});
+onSnapshot(q2,function(s){sols=s.docs.map(function(d){return Object.assign({id:d.id},d.data());});renderSols();},function(e){console.warn('solicitudes:',e);});
 var q3=query(collection(db,"empleados"),orderBy("createdAt","asc"));
-onSnapshot(q3,function(s){emps=s.docs.map(function(d){return Object.assign({id:d.id},d.data());});window.emps=emps;updEmpSel();renderEGs();if(rhSub==='e')renderRH();renderDEL();});
+onSnapshot(q3,function(s){emps=s.docs.map(function(d){return Object.assign({id:d.id},d.data());});window.emps=emps;updEmpSel();renderEGs();if(rhSub==='e')renderRH();renderDEL();},function(e){console.warn('empleados:',e);fbErr(e);});
 var q4=query(collection(db,"dotaciones"),orderBy("createdAt","desc"));
-onSnapshot(q4,function(s){dots=s.docs.map(function(d){return Object.assign({id:d.id},d.data());});if(dtSub==='h')renderDH();renderDEL();});
+onSnapshot(q4,function(s){dots=s.docs.map(function(d){return Object.assign({id:d.id},d.data());});if(dtSub==='h')renderDH();renderDEL();},function(e){console.warn('dotaciones:',e);});
 
 // AUTH
 window.reqAdm=function(){if(isAdm)return;document.getElementById('lmod').classList.add('open');setTimeout(function(){document.getElementById('pwi').focus();},100);};
