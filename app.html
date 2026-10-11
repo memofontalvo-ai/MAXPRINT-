@@ -1600,7 +1600,7 @@ _gs('login-screen');
           <input id="cfg-cli-nombre" placeholder="Nombre o empresa" style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:10px 12px;color:#fff;font-size:14px;width:100%;box-sizing:border-box;margin-bottom:10px;" />
           <div style="font-size:11px;color:#666;font-weight:600;letter-spacing:.4px;margin-bottom:2px;">CONTRASEÑA</div>
           <input id="cfg-cli-pass" type="password" placeholder="Contraseña de acceso" style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:10px 12px;color:#fff;font-size:14px;width:100%;box-sizing:border-box;margin-bottom:12px;" />
-          <button onclick="cfgAddCliente()" style="background:#f5a623;border:none;border-radius:8px;padding:10px 20px;color:#000;font-size:13px;font-weight:700;cursor:pointer;width:100%;">+ Agregar Cliente</button>
+          <button id="cfg-btn-agregar" onclick="cfgAddCliente()" style="background:#f5a623;border:none;border-radius:8px;padding:10px 20px;color:#000;font-size:13px;font-weight:700;cursor:pointer;width:100%;">+ Agregar Cliente</button>
         </div>
         <!-- Clients list -->
         <div id="cfg-cli-lista" style="display:flex;flex-direction:column;gap:8px;"></div>
@@ -1757,7 +1757,7 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v3.8 - 2026-10-11</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v3.9 - 2026-10-11</div>
 
 <!-- SheetJS for reading .xlsx in browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2194,6 +2194,48 @@ function pfAddPartRow(pt){
     certGrid.appendChild(label);
   });
 
+  /* ── Documentos adjuntos (PDF / imagen) ── */
+  var docsLabel=document.createElement('div');
+  docsLabel.textContent='DOCUMENTOS ADJUNTOS';
+  docsLabel.style.cssText='font-size:11px;color:#666;letter-spacing:.5px;margin-top:8px;margin-bottom:6px;';
+  var docsWrap=document.createElement('div');
+  docsWrap._docs=pt.documentos?JSON.parse(JSON.stringify(pt.documentos)):[];
+  function renderDocs(){
+    docsWrap.innerHTML='';
+    docsWrap._docs.forEach(function(d,i){
+      var row=document.createElement('div');
+      row.style.cssText='display:flex;align-items:center;gap:8px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:8px 10px;margin-bottom:6px;';
+      var icon=document.createElement('span');icon.textContent=d.tipo==='pdf'?'📄':'🖼️';icon.style.fontSize='18px';
+      var name=document.createElement('div');name.style.cssText='flex:1;font-size:12px;color:#ccc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';name.textContent=d.nombre;
+      var btnDel=document.createElement('button');btnDel.textContent='✕';
+      btnDel.style.cssText='background:transparent;border:none;color:#e83a2f;cursor:pointer;font-size:14px;flex-shrink:0;';
+      btnDel.onclick=function(){docsWrap._docs.splice(i,1);renderDocs();};
+      row.appendChild(icon);row.appendChild(name);row.appendChild(btnDel);
+      docsWrap.appendChild(row);
+    });
+    // Botón agregar
+    var addDocBtn=document.createElement('button');
+    addDocBtn.textContent='+ Agregar documento (PDF / imagen)';
+    addDocBtn.type='button';
+    addDocBtn.style.cssText='width:100%;background:#111;border:1px dashed #333;border-radius:8px;padding:10px;color:#888;font-size:12px;cursor:pointer;';
+    var docFileInput=document.createElement('input');
+    docFileInput.type='file';docFileInput.accept='application/pdf,image/*';docFileInput.multiple=true;docFileInput.style.display='none';
+    docFileInput.addEventListener('change',function(){
+      Array.from(this.files).forEach(function(file){
+        var reader=new FileReader();
+        reader.onload=function(e){
+          docsWrap._docs.push({nombre:file.name,tipo:file.type.includes('pdf')?'pdf':'img',data:e.target.result});
+          renderDocs();
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+    addDocBtn.onclick=function(){docFileInput.click();};
+    docsWrap.appendChild(addDocBtn);
+    docsWrap.appendChild(docFileInput);
+  }
+  renderDocs();
+
   wrap.appendChild(hdr);
   wrap.appendChild(docRow);
   wrap.appendChild(nacRow);
@@ -2203,7 +2245,10 @@ function pfAddPartRow(pt){
   wrap.appendChild(telEmRow);
   wrap.appendChild(certLabel);
   wrap.appendChild(certGrid);
+  wrap.appendChild(docsLabel);
+  wrap.appendChild(docsWrap);
   wrap._fotoImg=fotoImg;
+  wrap._docsWrap=docsWrap;
   pl.appendChild(wrap);
 }
 
@@ -2235,6 +2280,7 @@ function pfGuardar(){
       arlVence:(row.querySelector('.ppart-arlv')||{value:''}).value,
       observaciones:(row.querySelector('.ppart-obs')||{value:''}).value.trim(),
       certificados:certs,
+      documentos:row._docsWrap?row._docsWrap._docs:[],
       foto:fotoEl?fotoEl._fotoData:null
     });
   });
@@ -2295,16 +2341,31 @@ window.cfgAddCliente=async function(){
   var nombre=document.getElementById('cfg-cli-nombre').value.trim();
   var pass=document.getElementById('cfg-cli-pass').value.trim();
   if(!codigo||!nombre||!pass){alert('Completa todos los campos: código, nombre y contraseña.');return;}
+  var btn=document.getElementById('cfg-btn-agregar');
+  var editCodigo=btn?btn._editCodigo:null;
   var d=cliLoad();
-  if(d.find(function(c){return c.codigo===codigo;})){alert('Ya existe un cliente con ese código.');return;}
-  d.push({codigo:codigo,nombre:nombre,pass:pass,creado:new Date().toISOString().slice(0,10)});
-  cliSave(d);
-  await cliSyncFirestore(d);
-  document.getElementById('cfg-cli-codigo').value='';
-  document.getElementById('cfg-cli-nombre').value='';
-  document.getElementById('cfg-cli-pass').value='';
-  cfgRenderLista();
-  alert('✅ Cliente '+codigo+' creado y sincronizado.');
+  if(editCodigo){
+    // Modo edición — actualizar existente
+    var idx=d.findIndex(function(c){return c.codigo===editCodigo;});
+    if(idx>=0){d[idx]={codigo:codigo,nombre:nombre,pass:pass,creado:d[idx].creado};}
+    cliSave(d);await cliSyncFirestore(d);
+    if(btn){btn.textContent='+ Agregar Cliente';btn._editCodigo=null;}
+    document.getElementById('cfg-cli-codigo').value='';
+    document.getElementById('cfg-cli-nombre').value='';
+    document.getElementById('cfg-cli-pass').value='';
+    cfgRenderLista();
+    alert('✅ Cliente '+codigo+' actualizado.');
+  } else {
+    // Modo nuevo
+    if(d.find(function(c){return c.codigo===codigo;})){alert('Ya existe un cliente con ese código.');return;}
+    d.push({codigo:codigo,nombre:nombre,pass:pass,creado:new Date().toISOString().slice(0,10)});
+    cliSave(d);await cliSyncFirestore(d);
+    document.getElementById('cfg-cli-codigo').value='';
+    document.getElementById('cfg-cli-nombre').value='';
+    document.getElementById('cfg-cli-pass').value='';
+    cfgRenderLista();
+    alert('✅ Cliente '+codigo+' creado y sincronizado.');
+  }
 };
 window.cfgDeleteCliente=async function(codigo){
   if(!confirm('¿Eliminar cliente '+codigo+'?'))return;
@@ -2321,21 +2382,43 @@ function cfgRenderLista(){
   el.innerHTML='';
   d.forEach(function(c){
     var item=document.createElement('div');
-    item.style.cssText='background:#111;border:1px solid #2a2a2a;border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px;';
-    var info=document.createElement('div');
-    info.style.flex='1';
-    info.innerHTML='<div style="font-size:14px;font-weight:700;color:#f5a623;">'+c.codigo+'</div>'
+    item.style.cssText='background:#111;border:1px solid #2a2a2a;border-radius:10px;padding:12px 14px;';
+    // Info
+    var infoDiv=document.createElement('div');
+    infoDiv.innerHTML='<div style="font-size:14px;font-weight:700;color:#f5a623;">'+c.codigo+'</div>'
       +'<div style="font-size:12px;color:#ccc;margin-top:2px;">'+c.nombre+'</div>'
       +'<div style="font-size:11px;color:#555;margin-top:2px;">Pass: '+'•'.repeat(c.pass.length)+' · Creado: '+c.creado+'</div>';
-    var btn=document.createElement('button');
-    btn.textContent='🗑';
-    btn.style.cssText='background:transparent;border:1px solid #333;border-radius:6px;padding:6px 10px;color:#e83a2f;cursor:pointer;font-size:14px;';
-    btn.onclick=function(){cfgDeleteCliente(c.codigo);};
-    item.appendChild(info);
-    item.appendChild(btn);
+    // Botones editar + eliminar
+    var btns=document.createElement('div');
+    btns.style.cssText='display:flex;gap:8px;margin-top:10px;';
+    var btnEdit=document.createElement('button');
+    btnEdit.textContent='✏️ Editar';
+    btnEdit.style.cssText='flex:1;background:#1a1400;border:1px solid #f5a623;border-radius:8px;padding:8px;color:#f5a623;cursor:pointer;font-size:12px;font-weight:600;';
+    btnEdit.onclick=function(){cfgEditarCliente(c.codigo);};
+    var btnDel=document.createElement('button');
+    btnDel.textContent='🗑 Eliminar';
+    btnDel.style.cssText='flex:1;background:#1a0808;border:1px solid #333;border-radius:8px;padding:8px;color:#e83a2f;cursor:pointer;font-size:12px;font-weight:600;';
+    btnDel.onclick=function(){cfgDeleteCliente(c.codigo);};
+    btns.appendChild(btnEdit);btns.appendChild(btnDel);
+    item.appendChild(infoDiv);item.appendChild(btns);
     el.appendChild(item);
   });
 }
+/* Cargar datos del cliente en el formulario para editar */
+window.cfgEditarCliente=function(codigo){
+  var d=cliLoad();
+  var cli=d.find(function(c){return c.codigo===codigo;});
+  if(!cli)return;
+  document.getElementById('cfg-cli-codigo').value=cli.codigo;
+  document.getElementById('cfg-cli-nombre').value=cli.nombre;
+  document.getElementById('cfg-cli-pass').value=cli.pass;
+  // Cambiar botón a "Actualizar"
+  var btn=document.getElementById('cfg-btn-agregar');
+  if(btn){btn.textContent='💾 Actualizar Cliente';btn._editCodigo=cli.codigo;}
+  // Scroll arriba
+  var overlay=document.getElementById('cfg-overlay');
+  if(overlay)overlay.scrollTop=0;
+};
 
 /* ════════ PORTAL CLIENTE ════════ */
 window.goPortalCliente=function(){
@@ -2373,6 +2456,14 @@ window.portalLogin=function(){
 window.portalLogout=function(){
   portalReset();
 };
+window.portalVerHV=function(ptId){
+  var hv=document.getElementById(ptId+'-hv');
+  var card=document.getElementById(ptId);
+  if(!hv)return;
+  var open=hv.style.display!=='none';
+  hv.style.display=open?'none':'block';
+  if(card)card.style.borderColor=open?'#2a2a2a':'#e83a2f';
+};
 window.portalBuscarProy=function(){
   var codigo=(document.getElementById('portal-proy-code').value||'').trim().toUpperCase();
   var res=document.getElementById('portal-proy-res');
@@ -2386,9 +2477,10 @@ window.portalBuscarProy=function(){
   if(p.participantes&&p.participantes.length){
     partsHtml+='<div style="border-top:1px solid #2a2a2a;padding-top:14px;margin-top:14px;">'
       +'<div style="font-size:11px;color:#666;letter-spacing:.5px;margin-bottom:10px;">👷 EQUIPO DE INSTALACIÓN</div>';
-    p.participantes.forEach(function(pt){
-      partsHtml+='<div style="background:#111;border-radius:10px;padding:12px;margin-bottom:8px;">';
-      partsHtml+='<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;">';
+    p.participantes.forEach(function(pt,pi){
+      var ptId='portal-pt-'+pi;
+      partsHtml+='<div id="'+ptId+'" style="background:#111;border:1px solid #2a2a2a;border-radius:10px;padding:12px;margin-bottom:8px;cursor:pointer;transition:border-color .2s;" onclick="portalVerHV(''+ptId+'')">';
+      partsHtml+='<div style="display:flex;align-items:center;gap:10px;">';
       if(pt.foto){
         partsHtml+='<img src="'+pt.foto+'" style="width:48px;height:48px;border-radius:8px;object-fit:cover;flex-shrink:0;"/>';
       } else {
@@ -2397,9 +2489,52 @@ window.portalBuscarProy=function(){
       partsHtml+='<div style="flex:1;min-width:0;">';
       partsHtml+='<div style="font-size:15px;font-weight:700;color:#fff;">'+pt.nombre+'</div>';
       partsHtml+='<div style="font-size:12px;color:#888;">'+(pt.rol||'')+(pt.tipoDoc&&pt.numDoc?' · '+pt.tipoDoc+' '+pt.numDoc:'')+'</div>';
-      if(pt.grupoSang)partsHtml+='<div style="font-size:11px;color:#f5a623;margin-top:2px;">Sangre: '+pt.grupoSang+'</div>';
-      if(pt.eps)partsHtml+='<div style="font-size:11px;color:#aaa;margin-top:2px;">EPS: '+pt.eps+(pt.arl?' · ARL: '+pt.arl:'')+'</div>';
-      partsHtml+='</div></div>';
+      if(pt.grupoSang)partsHtml+='<div style="font-size:11px;color:#f5a623;margin-top:2px;">🩸 Sangre: '+pt.grupoSang+'</div>';
+      partsHtml+='</div>';
+      partsHtml+='<div style="font-size:20px;color:#444;">›</div>';
+      partsHtml+='</div>';
+      // Hoja de vida expandible (oculta por defecto)
+      partsHtml+='<div id="'+ptId+'-hv" style="display:none;margin-top:12px;border-top:1px solid #222;padding-top:12px;">';
+      partsHtml+='<div style="font-size:10px;color:#e83a2f;font-weight:700;letter-spacing:.8px;margin-bottom:10px;">HOJA DE VIDA</div>';
+      var campos=[
+        ['📋 Documento',pt.tipoDoc&&pt.numDoc?pt.tipoDoc+' '+pt.numDoc:'—'],
+        ['🎂 Fecha de nacimiento',pt.fechaNac||'—'],
+        ['📍 Lugar de nacimiento',pt.lugarNac||'—'],
+        ['🩸 Grupo sanguíneo',pt.grupoSang||'—'],
+        ['📱 Celular',pt.celular||'—'],
+        ['🏥 EPS',pt.eps||'—'],
+        ['🛡️ ARL / Póliza',pt.arl||(pt.arlVence?'Vence: '+pt.arlVence:'—')],
+        ['📝 Observaciones',pt.observaciones||'—']
+      ];
+      campos.forEach(function(cam){
+        if(cam[1]==='—')return;
+        partsHtml+='<div style="display:flex;gap:8px;margin-bottom:8px;align-items:flex-start;">'
+          +'<div style="font-size:12px;color:#666;min-width:140px;">'+cam[0]+'</div>'
+          +'<div style="font-size:13px;color:#ddd;flex:1;">'+cam[1]+'</div>'
+          +'</div>';
+      });
+      // Certificados
+      if(pt.certificados&&pt.certificados.length){
+        partsHtml+='<div style="margin-top:8px;"><div style="font-size:10px;color:#666;letter-spacing:.5px;margin-bottom:6px;">✅ CERTIFICADOS</div>';
+        partsHtml+='<div style="display:flex;flex-wrap:wrap;gap:6px;">';
+        pt.certificados.forEach(function(cert){
+          partsHtml+='<span style="background:#0d1a0d;border:1px solid #1e3a1e;border-radius:6px;padding:4px 10px;font-size:11px;color:#3fb950;">'+cert+'</span>';
+        });
+        partsHtml+='</div></div>';
+      }
+      // Documentos adjuntos
+      if(pt.documentos&&pt.documentos.length){
+        partsHtml+='<div style="margin-top:10px;"><div style="font-size:10px;color:#666;letter-spacing:.5px;margin-bottom:6px;">📎 DOCUMENTOS</div>';
+        pt.documentos.forEach(function(d){
+          partsHtml+='<div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:8px 10px;margin-bottom:6px;display:flex;align-items:center;gap:8px;">'
+            +(d.tipo==='pdf'?'<span style="font-size:16px;">📄</span>':'<span style="font-size:16px;">🖼️</span>')
+            +'<span style="font-size:12px;color:#ccc;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+d.nombre+'</span>'
+            +'<a href="'+d.data+'" download="'+d.nombre+'" style="font-size:11px;color:#5b8af5;text-decoration:none;flex-shrink:0;">Abrir</a>'
+            +'</div>';
+        });
+        partsHtml+='</div>';
+      }
+      partsHtml+='</div>';
       partsHtml+='</div>';
     });
     partsHtml+='</div>';
