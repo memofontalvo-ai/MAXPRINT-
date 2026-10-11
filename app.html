@@ -1653,7 +1653,7 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v3.2 - 2026-10-11</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v3.3 - 2026-10-11</div>
 
 <!-- SheetJS for reading .xlsx in browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1820,12 +1820,12 @@ document.addEventListener('DOMContentLoaded',function(){
           pfAddPartRow({
             nombre:nom,
             tipoDoc:String(row[iTipoDoc]||'CC').trim(),
-            numDoc:String(row[iDoc]||'').trim(),
+            numDoc:String(row[iDoc]!=null?Math.round(Number(row[iDoc]))||row[iDoc]:'').replace(/\.0+$/,'').trim(),
             fechaNac:fnac,
             lugarNac:String(row[iLnac]||'').trim(),
             grupoSang:iGrupo>=0?String(row[iGrupo]||'').trim():'',
             rol:iCargo>=0?String(row[iCargo]||'').trim():'',
-            celular:iCel>=0?String(row[iCel]||'').trim():'',
+            celular:iCel>=0?String(row[iCel]!=null?row[iCel]:'').replace(/\.0+$/,'').trim():'',
             eps:iEps>=0?String(row[iEps]||'').trim():'',
             arl:iArl>=0?String(row[iArl]||'').trim():'',
             observaciones:iObs>=0?String(row[iObs]||'').trim():'',
