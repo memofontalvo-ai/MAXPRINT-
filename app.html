@@ -1,4 +1,4 @@
-
+<!-- MAXPRINT Control Operativo v1.8 — 2026-10-10 | Fix: error visible Firebase + getFirestore directo -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -323,6 +323,12 @@ main{padding:12px;max-width:700px;margin:0 auto;}
 .mbt-sc .mbt-pill,.mbt-fac .mbt-pill{background:rgba(136,136,136,.1);color:var(--tm);}
 .mbt-opt .mbt-pill{background:rgba(180,210,50,.12);color:#b4d232;}
 .mbt-opt .mbt-arrow{color:#b4d232;}
+/* ── PROYECTOS DE INSTALACIÓN ── */
+.mbt-proy{background:linear-gradient(135deg,#1a0a0a,#200e0e);border:1.5px solid rgba(232,58,47,.35);}
+.mbt-proy .mbt-name{color:#e83a2f;}
+.mbt-proy .mbt-pill{background:rgba(232,58,47,.13);color:#e83a2f;}
+.mbt-proy .mbt-arrow{color:#e83a2f;}
+
 .mbt-arrow{position:absolute;right:15px;top:50%;transform:translateY(-50%);font-size:22px;opacity:.25;}
 .mbt-emp .mbt-arrow{color:var(--g);}
 .mbt-adm .mbt-arrow{color:var(--a);}
@@ -459,6 +465,7 @@ main{padding:12px;max-width:700px;margin:0 auto;}
       <div class="hs" id="hst">Conectando...</div>
     </div>
   </div>
+  <button id="btn-logout" onclick="doLogout()" style="display:none;background:transparent;border:1px solid rgba(255,255,255,0.2);color:var(--tm);font-size:11px;padding:5px 10px;border-radius:8px;cursor:pointer;letter-spacing:0.5px;">🚪 Salir</button>
 </header>
 
 <!-- Stubs ocultos que el JS original necesita -->
@@ -483,13 +490,14 @@ main{padding:12px;max-width:700px;margin:0 auto;}
         <input id="login-pass" type="password" placeholder="Contraseña" autocomplete="current-password"
           style="width:100%;background:var(--s2);border:1.5px solid var(--b);border-radius:10px;color:var(--t);font-size:15px;padding:11px 42px 11px 13px;outline:none;font-family:'DM Sans',sans-serif;"
           onkeydown="if(event.key==='Enter')doLogin()">
-        <span onclick="toggleEye('login-pass','eye-lp')" id="eye-lp" style="position:absolute;right:13px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:18px;user-select:none;">👁️</span>
+        <button type="button" onclick="toggleEye('login-pass','eye-lp')" id="eye-lp" style="position:absolute;right:0;top:0;bottom:0;width:46px;background:transparent;border:none;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;z-index:5;-webkit-tap-highlight-color:transparent;">👁️</button>
       </div>
       <div id="login-err" style="font-size:11px;color:var(--r);min-height:16px;margin-bottom:8px;"></div>
       <button onclick="doLogin()" style="width:100%;background:var(--a);color:#000;border:none;border-radius:10px;padding:12px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1.5px;cursor:pointer;margin-bottom:12px;">INGRESAR</button>
       <button onclick="openChangePass()" style="background:transparent;border:none;color:var(--tm);font-size:12px;cursor:pointer;text-decoration:underline;">Cambiar contraseña</button>
     </div>
   </div>
+  <div style="text-align:center;margin-top:16px;font-size:10px;color:var(--tm);letter-spacing:1px;opacity:.6;">v1.8 — 2026-10-10</div>
 </div>
 
 <!-- ════════ MODAL CAMBIAR CONTRASEÑA ════════ -->
@@ -556,6 +564,15 @@ main{padding:12px;max-width:700px;margin:0 auto;}
         <div class="mbt-name">Optimizador de Rollos</div>
         <div class="mbt-desc">Nesting · Plotter · Optimización de archivos</div>
         <div class="mbt-pill">Acceso libre</div>
+      </div>
+      <div class="mbt-arrow">›</div>
+    </button>
+    <button class="mbt mbt-proy" onclick="goProy()">
+      <div class="mbt-ico">📋</div>
+      <div>
+        <div class="mbt-name">Proyectos de Instalación</div>
+        <div class="mbt-desc">Crear · Seguimiento · Consulta por código</div>
+        <div class="mbt-pill">Admin</div>
       </div>
       <div class="mbt-arrow">›</div>
     </button>
@@ -1190,12 +1207,76 @@ function clk() {
 }
 clk(); setInterval(clk, 1000);
 </script>
+
+<!-- LOGIN y OJO: script normal (no módulo) para que funcione siempre, incluso si Firebase falla -->
+<script>
+/* Credenciales por defecto — se sobreescriben si Firebase carga */
+window._SYS_USER = 'admin';
+window._SYS_PASS = 'MAXPRINT2026';
+window._credsReady = false;
+
+/* Ojo: mostrar/ocultar contraseña */
+window.toggleEye = function(inputId, eyeId){
+  var inp = document.getElementById(inputId);
+  var eye = document.getElementById(eyeId);
+  if(!inp || !eye) return;
+  if(inp.type === 'password'){
+    inp.type = 'text';
+    eye.innerHTML = '🙈';
+  } else {
+    inp.type = 'password';
+    eye.innerHTML = '👁️';
+  }
+};
+
+/* Login: funciona aunque Firebase no haya cargado */
+window.doLogin = function(){
+  var u = document.getElementById('login-user').value.trim();
+  var p = document.getElementById('login-pass').value;
+  var err = document.getElementById('login-err');
+  /* Entramos directo con la contraseña que tengamos (default o la de Firebase si ya cargó) */
+  if(u === window._SYS_USER && p === window._SYS_PASS){
+    err.textContent = '';
+    sessionStorage.setItem('mp_sesion', 'activa');
+    var bl = document.getElementById('btn-logout');
+    if(bl) bl.style.display = '';
+    /* Usar window._gs si ya cargó el módulo, o cambiar pantalla directo */
+    if(typeof window._gs === 'function'){
+      window._gs('home');
+      if(typeof window.goEmp === 'function') window.goEmp();
+    } else {
+      /* Módulo aún no listo: cambiar pantalla manualmente */
+      document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+      var home = document.getElementById('home');
+      if(home) home.classList.add('active');
+      window.scrollTo(0,0);
+    }
+  } else {
+    err.textContent = '⚠️ Usuario o contraseña incorrectos';
+    document.getElementById('login-pass').value = '';
+  }
+};
+
+window.doLogout = function(){
+  sessionStorage.removeItem('mp_sesion');
+  var bl = document.getElementById('btn-logout');
+  if(bl) bl.style.display = 'none';
+  if(typeof window._gs === 'function'){
+    window._gs('login-screen');
+  } else {
+    document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+    var ls = document.getElementById('login-screen');
+    if(ls) ls.classList.add('active');
+    window.scrollTo(0,0);
+  }
+};
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-var cfg = { apiKey:"AIzaSyC_89LSZSiuKAqIp_JUnaRRuMwALGCt_8o", authDomain:"tareas-empresa-2911f.firebaseapp.com", projectId:"tareas-empresa-2911f", storageBucket:"tareas-empresa-2911f.firebasestorage.app", messagingSenderId:"686763477486", appId:"1:686763477486:web:b65ee267900d9f49cf3a7f" };
+var cfg = { apiKey:"AIzaSyC_89LSZSiuKAqIp_JUnaRRuMwALGCt_8o", projectId:"tareas-empresa-2911f", storageBucket:"tareas-empresa-2911f.firebasestorage.app", messagingSenderId:"686763477486", appId:"1:686763477486:web:b65ee267900d9f49cf3a7f" };
 var PASS = "3942";
 var DEPTS = ['carpinteria','soldadura','armado','impresion','instalaciones','otras','diseno','acrilicos'];
 var DN = { carpinteria:'Carpintería', soldadura:'Soldadura', armado:'Armado', impresion:'Impresión', instalaciones:'Inst. de Avisos', otras:'Otras Instalaciones', diseno:'Diseño', acrilicos:'Acrílicos' };
@@ -1204,7 +1285,9 @@ var DC = { carpinteria:'--carp', soldadura:'--sold', armado:'--arma', impresion:
 var STD = [{k:'camisa',n:'Camisa',i:'👕'},{k:'pantalon',n:'Pantalón',i:'👖'},{k:'zapatos',n:'Zapatos',i:'👟'},{k:'casco',n:'Casco',i:'⛑️'},{k:'chaleco',n:'Chaleco',i:'🦺'},{k:'guantes',n:'Guantes',i:'🧤'},{k:'botas',n:'Botas',i:'🥾'}];
 window.DN = DN; window.DI = DI;
 
-var db = getFirestore(initializeApp(cfg));
+var app = initializeApp(cfg);
+var db = getFirestore(app);
+
 var tasks=[], sols=[], emps=[], dots=[];
 var curTab='todos', actDept=null, isAdm=false;
 var pendCId=null, editEId=null, curDEId=null, dotCI=[];
@@ -1214,14 +1297,15 @@ var fEMode='todos', fSelE=[], fSelI={}, fItemQ={};
 function toast(m) { var t=document.getElementById('tst'); t.textContent=m; t.classList.add('show'); setTimeout(function(){t.classList.remove('show');},2400); }
 
 // Firebase
+function showFBError(e){ var hst=document.getElementById('hst'); hst.textContent='❌ '+(e&&e.code?e.code:e&&e.message?e.message:'Error FB'); hst.title=e?String(e):''; }
 var q1=query(collection(db,"tareas"),orderBy("createdAt","desc"));
-onSnapshot(q1,function(s){tasks=s.docs.map(function(d){return Object.assign({id:d.id},d.data());});document.getElementById('hst').textContent='🟢 En línea';render();},function(){document.getElementById('hst').textContent='🔴 Sin conexión';});
+onSnapshot(q1,function(s){tasks=s.docs.map(function(d){return Object.assign({id:d.id},d.data());});document.getElementById('hst').textContent='🟢 En línea';render();},function(e){showFBError(e);});
 var q2=query(collection(db,"solicitudes"),orderBy("createdAt","desc"));
-onSnapshot(q2,function(s){sols=s.docs.map(function(d){return Object.assign({id:d.id},d.data());});renderSols();});
+onSnapshot(q2,function(s){sols=s.docs.map(function(d){return Object.assign({id:d.id},d.data());});renderSols();},function(e){console.warn('sols:',e);});
 var q3=query(collection(db,"empleados"),orderBy("createdAt","asc"));
-onSnapshot(q3,function(s){emps=s.docs.map(function(d){return Object.assign({id:d.id},d.data());});updEmpSel();renderEGs();if(rhSub==='e')renderRH();renderDEL();});
+onSnapshot(q3,function(s){emps=s.docs.map(function(d){return Object.assign({id:d.id},d.data());});updEmpSel();renderEGs();if(rhSub==='e')renderRH();renderDEL();},function(e){console.warn('emps:',e);});
 var q4=query(collection(db,"dotaciones"),orderBy("createdAt","desc"));
-onSnapshot(q4,function(s){dots=s.docs.map(function(d){return Object.assign({id:d.id},d.data());});if(dtSub==='h')renderDH();renderDEL();});
+onSnapshot(q4,function(s){dots=s.docs.map(function(d){return Object.assign({id:d.id},d.data());});if(dtSub==='h')renderDH();renderDEL();},function(e){console.warn('dots:',e);});
 
 // AUTH
 window.reqAdm=function(){if(isAdm)return;document.getElementById('lmod').classList.add('open');setTimeout(function(){document.getElementById('pwi').focus();},100);};
@@ -1296,7 +1380,117 @@ window.saveDot=async function(){if(!curDE)return;var e=emps.find(function(x){ret
 function renderDH(){var el=document.getElementById('dhl');if(!el)return;if(!dots.length){el.innerHTML='<div class="emp"><span class="emp-ico">📋</span><p>Sin entregas registradas.</p></div>';return;}el.innerHTML=dots.map(function(d){return '<div class="dhi"><div class="dhh"><div><div class="dhe">👤 '+d.empName+'</div><div style="font-size:10px;color:var(--tm)">'+DI[d.empDept]+' '+DN[d.empDept]+(d.empCedula?' · CI: '+d.empCedula:'')+'</div></div><div style="display:flex;align-items:center;gap:5px"><div class="dhd">'+d.dateStr+'</div><button class="dhx" data-did="'+d.id+'" onclick="delDot(this.dataset.did)">✕</button></div></div><div class="dhi2">'+d.items.map(function(i){return '<span class="dhb">'+i.icon+' '+i.name+(i.talla?' T:'+i.talla:'')+' x'+i.qty+'</span>';}).join('')+'</div>'+(d.notes?'<div class="dhn">"'+d.notes+'"</div>':'')+'</div>';}).join('');}
 window.delDot=async function(id){if(!confirm('¿Eliminar este registro?'))return;try{await deleteDoc(doc(db,"dotaciones",id));toast('🗑 Eliminado');}catch(e){toast('❌ Error');}};
 window.expDE=function(){if(!dots.length){toast('⚠️ Sin entregas');return;}var wb=window.XLSX.utils.book_new();var rows=[['Empleado','Cédula','Departamento','Item','Talla','Cantidad','Fecha','Obs.']];dots.forEach(function(d){d.items.forEach(function(i){rows.push([d.empName,d.empCedula||'',DN[d.empDept]||d.empDept,i.name,i.talla||'',i.qty,d.dateStr,d.notes||'']);});});var ws=window.XLSX.utils.aoa_to_sheet(rows);window.XLSX.utils.book_append_sheet(wb,ws,'Todas');var empMap={};dots.forEach(function(d){if(!empMap[d.empName])empMap[d.empName]=[];empMap[d.empName].push(d);});Object.keys(empMap).forEach(function(name){var rows2=[['Item','Talla','Cantidad','Fecha','Obs.']];empMap[name].forEach(function(d){d.items.forEach(function(i){rows2.push([i.name,i.talla||'',i.qty,d.dateStr,d.notes||'']);});});var ws2=window.XLSX.utils.aoa_to_sheet(rows2);window.XLSX.utils.book_append_sheet(wb,ws2,name.substring(0,28));});window.XLSX.writeFile(wb,'Dotaciones_'+new Date().toLocaleDateString('es-AR').split('/').join('-')+'.xlsx');toast('✅ Excel descargado');};
-window.expDP=function(){if(!dots.length){toast('⚠️ Sin entregas');return;}var h='<html><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;font-size:12px;padding:20px;}h1{font-size:17px;color:#f5a623;margin-bottom:4px;}.sub{font-size:10px;color:#888;margin-bottom:18px;}table{width:100%;border-collapse:collapse;margin-bottom:18px;}th{background:#f5a623;color:#000;padding:6px 8px;text-align:left;font-size:10px;}td{padding:5px 8px;border-bottom:1px solid #eee;font-size:10px;}.eh{background:#1a1a1a;color:#f5a623;padding:9px 11px;border-radius:5px;margin:12px 0 5px;font-weight:bold;font-size:11px;}</style></head><body>';h+='<h1>⚙ MAXPRINT — Reporte de Dotaciones</h1><div class="sub">Generado el '+new Date().toLocaleDateString('es-AR')+' a las '+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})+'</div>';var empMap={};dots.forEach(function(d){if(!empMap[d.empName])empMap[d.empName]={cedula:d.empCedula,dept:d.empDept,entregas:[]};empMap[d.empName].entregas.push(d);});Object.keys(empMap).forEach(function(name){var e2=empMap[name];h+='<div class="eh">👤 '+name+' — '+(DN[e2.dept]||e2.dept)+(e2.cedula?' | CI: '+e2.cedula:'')+'</div>';h+='<table><tr><th>Item</th><th>Talla</th><th>Cant.</th><th>Fecha</th><th>Obs.</th></tr>';e2.entregas.forEach(function(d){d.items.forEach(function(i){h+='<tr><td>'+i.icon+' '+i.name+'</td><td>'+(i.talla||'—')+'</td><td>'+i.qty+'</td><td>'+d.dateStr+'</td><td>'+(d.notes||'—')+'</td></tr>';});});h+='</table>';});h+='</body></html>';var w=window.open('','_blank');w.document.write(h);w.document.close();setTimeout(function(){w.print();},500);toast('📄 PDF listo');};
+window.expDP=function(){if(!dots.length){toast('⚠️ Sin entregas');return;}var h='<html><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;font-size:12px;padding:20px;}h1{font-size:17px;color:#f5a623;margin-bottom:4px;}.sub{font-size:10px;color:#888;margin-bottom:18px;}table{width:100%;border-collapse:collapse;margin-bottom:18px;}th{background:#f5a623;color:#000;padding:6px 8px;text-align:left;font-size:10px;}td{padding:5px 8px;border-bottom:1px solid #eee;font-size:10px;}.eh{background:#1a1a1a;color:#f5a623;padding:9px 11px;border-radius:5px;margin:12px 0 5px;font-weight:bold;font-size:11px;}</style></head><body>';h+='<h1>⚙ MAXPRINT — Reporte de Dotaciones</h1><div class="sub">Generado el '+new Date().toLocaleDateString('es-AR')+' a las '+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})+'</div>';var empMap={};dots.forEach(function(d){if(!empMap[d.empName])empMap[d.empName]={cedula:d.empCedula,dept:d.empDept,entregas:[]};empMap[d.empName].entregas.push(d);});Object.keys(empMap).forEach(function(name){var e2=empMap[name];h+='<div class="eh">👤 '+name+' — '+(DN[e2.dept]||e2.dept)+(e2.cedula?' | CI: '+e2.cedula:'')+'</div>';h+='<table><tr><th>Item</th><th>Talla</th><th>Cant.</th><th>Fecha</th><th>Obs.</th></tr>';e2.entregas.forEach(function(d){d.items.forEach(function(i){h+='<tr><td>'+i.icon+' '+i.name+'</td><td>'+(i.talla||'—')+'</td><td>'+i.qty+'</td><td>'+d.dateStr+'</td><td>'+(d.notes||'—')+'</td></tr>';});});h+='</table>';});h+='
+<!-- ════════ PROYECTOS DE INSTALACIÓN ════════ -->
+<div class="screen" id="proy-screen">
+  <div class="sub-hdr">
+    <button class="sub-back" onclick="_gs('home')">← Inicio</button>
+    <div class="sub-ttl" style="color:#e83a2f;">📋 Proyectos de Instalación</div>
+  </div>
+  <div style="padding:0 16px 16px;">
+    <!-- TABS -->
+    <div id="proy-tabs" style="display:flex;gap:8px;margin-bottom:16px;">
+      <button class="sv on" id="ptab-list" onclick="proyTab('list')" style="flex:1;padding:10px;border-radius:10px;border:none;font-size:13px;cursor:pointer;">📋 Proyectos</button>
+      <button class="sv" id="ptab-new" onclick="proyTab('new')" style="flex:1;padding:10px;border-radius:10px;border:none;font-size:13px;cursor:pointer;">➕ Nuevo</button>
+      <button class="sv" id="ptab-buscar" onclick="proyTab('buscar')" style="flex:1;padding:10px;border-radius:10px;border:none;font-size:13px;cursor:pointer;">🔍 Buscar</button>
+    </div>
+
+    <!-- LISTA DE PROYECTOS -->
+    <div id="proy-list-view">
+      <div id="proy-list-container" style="display:flex;flex-direction:column;gap:10px;"></div>
+      <div id="proy-empty" style="text-align:center;padding:40px 0;color:var(--ts);display:none;">
+        <div style="font-size:36px;margin-bottom:8px;">📭</div>
+        <div>No hay proyectos aún.</div>
+        <div style="font-size:12px;margin-top:4px;">Usa el botón ➕ Nuevo para crear el primero.</div>
+      </div>
+    </div>
+
+    <!-- FORMULARIO NUEVO PROYECTO -->
+    <div id="proy-new-view" style="display:none;">
+      <div id="proy-code-banner" style="display:none;background:rgba(232,58,47,.12);border:1.5px solid rgba(232,58,47,.4);border-radius:14px;padding:18px;text-align:center;margin-bottom:18px;">
+        <div style="font-size:11px;color:var(--ts);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;">Código del proyecto</div>
+        <div id="proy-code-display" style="font-family:'Bebas Neue',sans-serif;font-size:38px;letter-spacing:3px;color:#e83a2f;margin-bottom:10px;"></div>
+        <button onclick="proycopyCod()" style="background:#e83a2f;color:#fff;border:none;border-radius:8px;padding:8px 20px;font-size:13px;cursor:pointer;font-weight:600;">📋 Copiar código</button>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div>
+          <label style="font-size:12px;color:var(--ts);display:block;margin-bottom:4px;">Nombre del proyecto *</label>
+          <input id="pf-nombre" type="text" placeholder="Ej: Letras volumétricas Almacén XYZ" class="fi" style="width:100%;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="font-size:12px;color:var(--ts);display:block;margin-bottom:4px;">Nombre del cliente *</label>
+          <input id="pf-cliente" type="text" placeholder="Ej: Almacén XYZ S.A.S." class="fi" style="width:100%;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="font-size:12px;color:var(--ts);display:block;margin-bottom:4px;">Descripción del trabajo</label>
+          <textarea id="pf-desc" rows="3" placeholder="Describe los detalles del trabajo..." class="fi" style="width:100%;box-sizing:border-box;resize:vertical;"></textarea>
+        </div>
+        <div>
+          <label style="font-size:12px;color:var(--ts);display:block;margin-bottom:4px;">Tipo de servicio</label>
+          <select id="pf-tipo" class="fi" style="width:100%;box-sizing:border-box;">
+            <option value="">Seleccionar...</option>
+            <option>Gran Formato</option>
+            <option>Avisos LED</option>
+            <option>Impresión Digital</option>
+            <option>Impresión Offset</option>
+            <option>Impresión Textil</option>
+            <option>Corte Láser</option>
+            <option>Muebles y Decoración</option>
+            <option>Diseño Gráfico</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:12px;color:var(--ts);display:block;margin-bottom:4px;">Estado del proyecto</label>
+          <select id="pf-estado" class="fi" style="width:100%;box-sizing:border-box;">
+            <option value="En diseño">En diseño</option>
+            <option value="En producción">En producción</option>
+            <option value="Listo para instalar">Listo para instalar</option>
+            <option value="Instalado">Instalado</option>
+            <option value="Entregado">Entregado</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:12px;color:var(--ts);display:block;margin-bottom:4px;">Fecha estimada de entrega</label>
+          <input id="pf-fecha" type="date" class="fi" style="width:100%;box-sizing:border-box;">
+        </div>
+
+        <!-- PARTICIPANTES -->
+        <div style="margin-top:4px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <label style="font-size:13px;font-weight:600;color:var(--tm);">👥 Participantes</label>
+            <button onclick="proyAddPart()" style="background:rgba(232,58,47,.15);color:#e83a2f;border:1px solid rgba(232,58,47,.3);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">+ Agregar</button>
+          </div>
+          <div id="pf-partic" style="display:flex;flex-direction:column;gap:8px;"></div>
+          <div id="pf-partic-empty" style="font-size:12px;color:var(--ts);text-align:center;padding:10px 0;">Sin participantes agregados</div>
+        </div>
+
+        <button onclick="proyGuardar()" style="width:100%;background:#e83a2f;color:#fff;border:none;border-radius:12px;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;cursor:pointer;margin-top:8px;">GUARDAR PROYECTO</button>
+        <div id="pf-err" style="color:#ff6b6b;font-size:13px;text-align:center;min-height:18px;"></div>
+      </div>
+    </div>
+
+    <!-- BUSCAR POR CÓDIGO -->
+    <div id="proy-buscar-view" style="display:none;">
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <input id="pb-codigo" type="text" placeholder="Ej: MAX-2026-0001" class="fi" style="flex:1;" oninput="this.value=this.value.toUpperCase()">
+        <button onclick="proyBuscar()" style="background:#e83a2f;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:14px;cursor:pointer;white-space:nowrap;">Buscar</button>
+      </div>
+      <div id="pb-resultado"></div>
+    </div>
+  </div>
+</div>
+
+<!-- DETALLE / EDITAR PROYECTO -->
+<div class="screen" id="proy-detail-screen">
+  <div class="sub-hdr">
+    <button class="sub-back" onclick="_gs('proy-screen');proyTab('list')">← Proyectos</button>
+    <div class="sub-ttl" style="color:#e83a2f;">Detalle del proyecto</div>
+  </div>
+  <div id="proy-detail-body" style="padding:0 16px 24px;"></div>
+</div>
+
+</body></html>';var w=window.open('','_blank');w.document.write(h);w.document.close();setTimeout(function(){w.print();},500);toast('📄 PDF listo');};
 
 // FORMAT MODAL
 var fEMode='todos',fSelE=[],fItemQ={},fItemSel=[];
@@ -1396,6 +1590,7 @@ function _gs(id){
   if(el)el.classList.add('active');
   window.scrollTo(0,0);
 }
+window._gs = _gs; /* exponer al script de login */
 /* Public API */
 window.goHome       = function(){ showEmp(); };
 window.goEmpModule  = function(){
@@ -1468,48 +1663,21 @@ window.goPDF = function(){
     },80);
   },80);
 };
-/* ── LOGIN ── */
-var SYS_USER = 'admin';
-var SYS_PASS = 'MaxPrint2026';
-
-/* Cargar credenciales desde Firebase al iniciar */
+/* ── LOGIN (credenciales desde Firebase) ── */
+/* Las funciones de login/logout/ojo están en el script normal antes del módulo */
+/* Aquí solo actualizamos las variables globales si Firebase tiene credenciales */
 async function loadCredentials(){
   try {
     var snap = await getDoc(doc(db,'config','credentials'));
     if(snap.exists()){
       var d = snap.data();
-      if(d.user) SYS_USER = d.user;
-      if(d.pass) SYS_PASS = d.pass;
+      if(d.user) window._SYS_USER = d.user;
+      if(d.pass) window._SYS_PASS = d.pass;
     }
-  } catch(e){ console.warn('No se pudieron cargar credenciales:', e); }
+  } catch(e){ console.warn('Credenciales Firebase no disponibles, usando default:', e); }
+  window._credsReady = true;
 }
 loadCredentials();
-
-/* Mostrar/ocultar contraseña */
-window.toggleEye = function(inputId, eyeId){
-  var inp = document.getElementById(inputId);
-  var eye = document.getElementById(eyeId);
-  if(inp.type === 'password'){
-    inp.type = 'text';
-    eye.textContent = '🙈';
-  } else {
-    inp.type = 'password';
-    eye.textContent = '👁️';
-  }
-};
-
-window.doLogin = function(){
-  var u = document.getElementById('login-user').value.trim();
-  var p = document.getElementById('login-pass').value;
-  var err = document.getElementById('login-err');
-  if(u === SYS_USER && p === SYS_PASS){
-    err.textContent = '';
-    _gs('home');
-  } else {
-    err.textContent = '⚠️ Usuario o contraseña incorrectos';
-    document.getElementById('login-pass').value = '';
-  }
-};
 
 window.openChangePass = function(){
   document.getElementById('cp-old').value='';
@@ -1524,12 +1692,12 @@ window.doChangePass = async function(){
   var n1  = document.getElementById('cp-new1').value;
   var n2  = document.getElementById('cp-new2').value;
   var err = document.getElementById('cp-err');
-  if(old !== SYS_PASS){ err.textContent='⚠️ Contraseña actual incorrecta'; return; }
+  if(old !== window._SYS_PASS){ err.textContent='⚠️ Contraseña actual incorrecta'; return; }
   if(n1.length < 6){ err.textContent='⚠️ La nueva contraseña debe tener al menos 6 caracteres'; return; }
   if(n1 !== n2){ err.textContent='⚠️ Las contraseñas no coinciden'; return; }
   try {
-    await setDoc(doc(db,'config','credentials'), { user: SYS_USER, pass: n1 });
-    SYS_PASS = n1;
+    await setDoc(doc(db,'config','credentials'), { user: window._SYS_USER, pass: n1 });
+    window._SYS_PASS = n1;
     document.getElementById('chpass-mod').classList.remove('open');
     toast('✅ Contraseña actualizada');
   } catch(e){
@@ -1537,8 +1705,315 @@ window.doChangePass = async function(){
   }
 };
 
+
+/* ════════ MÓDULO PROYECTOS ════════ */
+var _proyEdit = null; // id del proyecto en edición
+
+/* Navegar al módulo */
+window.goProy = function(){ renderProyList(); _gs('proy-screen'); proyTab('list'); };
+
+/* Tabs */
+window.proyTab = function(tab){
+  ['list','new','buscar'].forEach(function(t){
+    var v = document.getElementById('proy-'+t+'-view');
+    var b = document.getElementById('ptab-'+t);
+    if(v) v.style.display = (t===tab)?'':'none';
+    if(b){ b.classList.toggle('on', t===tab); }
+  });
+  if(tab==='new'){ proyResetForm(); }
+  if(tab==='list'){ renderProyList(); }
+};
+
+/* Generar código MAX-YYYY-NNNN */
+async function proyNextCode(){
+  var yr = new Date().getFullYear();
+  var prefix = 'MAX-'+yr+'-';
+  try {
+    var snap = await getDocs(collection(db,'proyectos'));
+    var max = 0;
+    snap.forEach(function(d){
+      var cod = d.data().codigo || '';
+      if(cod.startsWith(prefix)){
+        var n = parseInt(cod.replace(prefix,''),10);
+        if(!isNaN(n) && n > max) max = n;
+      }
+    });
+    return prefix + String(max+1).padStart(4,'0');
+  } catch(e){ return prefix + '0001'; }
+}
+
+/* Reset formulario */
+function proyResetForm(){
+  _proyEdit = null;
+  ['pf-nombre','pf-cliente','pf-desc','pf-fecha'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value='';
+  });
+  var t=document.getElementById('pf-tipo'); if(t) t.value='';
+  var s=document.getElementById('pf-estado'); if(s) s.value='En diseño';
+  document.getElementById('pf-partic').innerHTML='';
+  document.getElementById('pf-partic-empty').style.display='';
+  document.getElementById('pf-err').textContent='';
+  document.getElementById('proy-code-banner').style.display='none';
+}
+
+/* Participantes */
+window.proyAddPart = function(){
+  document.getElementById('pf-partic-empty').style.display='none';
+  var idx = document.querySelectorAll('.proy-part-row').length;
+  var row = document.createElement('div');
+  row.className='proy-part-row';
+  row.style.cssText='display:flex;gap:8px;align-items:center;';
+  row.innerHTML='<input type="text" placeholder="Nombre completo" class="fi" style="flex:2;" />'
+    +'<select class="fi" style="flex:1;">'
+    +'<option>Diseñador</option>'
+    +'<option>Operario de producción</option>'
+    +'<option>Instalador</option>'
+    +'<option>Asesor comercial</option>'
+    +'<option>Supervisor</option>'
+    +'</select>'
+    +'<button onclick="this.parentElement.remove();proyCheckParts()" style="background:rgba(255,80,80,.15);color:#ff5252;border:1px solid rgba(255,80,80,.3);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:14px;">✕</button>';
+  document.getElementById('pf-partic').appendChild(row);
+};
+window.proyCheckParts = function(){
+  var rows = document.querySelectorAll('.proy-part-row');
+  document.getElementById('pf-partic-empty').style.display = rows.length?'none':'';
+};
+
+/* Guardar proyecto */
+window.proyGuardar = async function(){
+  var nombre  = document.getElementById('pf-nombre').value.trim();
+  var cliente = document.getElementById('pf-cliente').value.trim();
+  var desc    = document.getElementById('pf-desc').value.trim();
+  var tipo    = document.getElementById('pf-tipo').value;
+  var estado  = document.getElementById('pf-estado').value;
+  var fecha   = document.getElementById('pf-fecha').value;
+  var err     = document.getElementById('pf-err');
+  if(!nombre||!cliente){ err.textContent='⚠️ Nombre del proyecto y cliente son obligatorios.'; return; }
+  err.textContent='';
+
+  // Participantes
+  var partics=[];
+  document.querySelectorAll('.proy-part-row').forEach(function(row){
+    var inputs=row.querySelectorAll('input,select');
+    var n=(inputs[0]?inputs[0].value.trim():'');
+    var r=(inputs[1]?inputs[1].value:'');
+    if(n) partics.push({nombre:n,rol:r});
+  });
+
+  try {
+    var codigo = _proyEdit ? (await getDocs(collection(db,'proyectos')), _proyEdit.codigo) : await proyNextCode();
+    var data = { nombre:nombre, cliente:cliente, desc:desc, tipo:tipo, estado:estado, fecha:fecha, participantes:partics, updatedAt:Date.now() };
+
+    if(_proyEdit){
+      await updateDoc(doc(db,'proyectos',_proyEdit.id), data);
+      toast('✅ Proyecto actualizado');
+      _proyEdit=null;
+      renderProyList(); _gs('proy-screen'); proyTab('list');
+    } else {
+      data.codigo = codigo;
+      data.createdAt = Date.now();
+      await addDoc(collection(db,'proyectos'), data);
+      // Mostrar código
+      document.getElementById('proy-code-display').textContent = codigo;
+      document.getElementById('proy-code-banner').style.display = '';
+      toast('✅ Proyecto creado: '+codigo);
+      renderProyList();
+    }
+  } catch(e){ err.textContent='⚠️ Error al guardar: '+e.message; }
+};
+
+/* Copiar código */
+window.proycopyCod = function(){
+  var txt = document.getElementById('proy-code-display').textContent;
+  try { navigator.clipboard.writeText(txt); } catch(e){}
+  toast('📋 Código copiado: '+txt);
+};
+
+/* Lista de proyectos */
+async function renderProyList(){
+  var cont = document.getElementById('proy-list-container');
+  var empty = document.getElementById('proy-empty');
+  cont.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ts);">Cargando...</div>';
+  empty.style.display='none';
+  try {
+    var snap = await getDocs(collection(db,'proyectos'));
+    cont.innerHTML='';
+    var docs=[];
+    snap.forEach(function(d){ docs.push({id:d.id,...d.data()}); });
+    docs.sort(function(a,b){ return (b.createdAt||0)-(a.createdAt||0); });
+    if(!docs.length){ empty.style.display=''; return; }
+    docs.forEach(function(p){
+      var card=document.createElement('div');
+      card.style.cssText='background:var(--c1);border-radius:14px;padding:14px 16px;cursor:pointer;border:1.5px solid rgba(232,58,47,.18);';
+      card.onclick=function(){ proyVerDetalle(p); };
+      var pct=proyPct(p.estado);
+      card.innerHTML='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">'
+        +'<div style="min-width:0;">'
+        +'<div style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;color:#e83a2f;margin-bottom:2px;">'+escHtml(p.codigo||'')+'</div>'
+        +'<div style="font-size:15px;font-weight:700;color:var(--tm);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escHtml(p.nombre||'')+'</div>'
+        +'<div style="font-size:12px;color:var(--ts);">'+escHtml(p.cliente||'')+'</div>'
+        +'</div>'
+        +'<span style="background:'+proyEstadoColor(p.estado)+';color:#fff;border-radius:20px;padding:3px 10px;font-size:10px;white-space:nowrap;flex-shrink:0;">'+escHtml(p.estado||'')+'</span>'
+        +'</div>'
+        +'<div style="margin-top:10px;background:rgba(255,255,255,.07);border-radius:6px;height:5px;overflow:hidden;">'
+        +'<div style="height:100%;width:'+pct+'%;background:#e83a2f;border-radius:6px;transition:width .4s;"></div>'
+        +'</div>'
+        +'<div style="display:flex;justify-content:space-between;margin-top:4px;">'
+        +'<span style="font-size:11px;color:var(--ts);">'+(p.tipo||'')+'</span>'
+        +'<span style="font-size:11px;color:var(--ts);">'+pct+'% completado</span>'
+        +'</div>';
+      cont.appendChild(card);
+    });
+  } catch(e){ cont.innerHTML='<div style="color:#ff6b6b;padding:12px;">Error cargando proyectos.</div>'; }
+}
+
+function proyPct(estado){
+  return {
+    'En diseño':20,'En producción':40,'Listo para instalar':60,'Instalado':80,'Entregado':100
+  }[estado]||0;
+}
+function proyEstadoColor(e){
+  return {'En diseño':'#1565C0','En producción':'#E65100','Listo para instalar':'#6A1B9A','Instalado':'#2E7D32','Entregado':'#424242'}[e]||'#555';
+}
+function escHtml(s){ var d=document.createElement('div');d.textContent=s;return d.innerHTML; }
+
+/* Ver / editar detalle */
+window.proyVerDetalle = function(p){
+  var pct=proyPct(p.estado);
+  var partsHtml = (p.participantes&&p.participantes.length)
+    ? p.participantes.map(function(pt){ return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.07);"><span style="color:var(--tm);">'+escHtml(pt.nombre)+'</span><span style="color:var(--ts);font-size:12px;">'+escHtml(pt.rol)+'</span></div>'; }).join('')
+    : '<div style="color:var(--ts);font-size:13px;padding:8px 0;">Sin participantes</div>';
+  var fechaFmt = p.fecha ? p.fecha.split('-').reverse().join('/') : 'Sin definir';
+
+  document.getElementById('proy-detail-body').innerHTML =
+    '<div style="background:rgba(232,58,47,.1);border:1.5px solid rgba(232,58,47,.35);border-radius:14px;padding:18px;text-align:center;margin-bottom:18px;">'
+    +'<div style="font-size:11px;color:var(--ts);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;">Código del proyecto</div>'
+    +'<div style="font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:3px;color:#e83a2f;">'+escHtml(p.codigo||'')+'</div>'
+    +'<button onclick="var t=''+escHtml(p.codigo||'')+'';try{navigator.clipboard.writeText(t);}catch(e){}toast('📋 Copiado: '+t);" style="background:#e83a2f;color:#fff;border:none;border-radius:8px;padding:7px 18px;font-size:12px;cursor:pointer;margin-top:10px;">📋 Copiar código</button>'
+    +'</div>'
+    +'<div style="background:var(--c1);border-radius:14px;padding:16px;margin-bottom:14px;">'
+    +'<div style="font-size:11px;color:var(--ts);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Información del proyecto</div>'
+    +'<div style="font-size:18px;font-weight:700;color:var(--tm);margin-bottom:4px;">'+escHtml(p.nombre||'')+'</div>'
+    +'<div style="font-size:14px;color:var(--ts);margin-bottom:10px;">Cliente: '+escHtml(p.cliente||'')+'</div>'
+    +(p.desc?'<div style="font-size:13px;color:var(--tm);opacity:.8;margin-bottom:10px;">'+escHtml(p.desc)+'</div>':'')
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">'
+    +(p.tipo?'<span style="background:rgba(255,255,255,.08);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--ts);">'+escHtml(p.tipo)+'</span>':'')
+    +'<span style="background:'+proyEstadoColor(p.estado)+';color:#fff;border-radius:20px;padding:4px 12px;font-size:12px;">'+escHtml(p.estado||'')+'</span>'
+    +'</div>'
+    +'<div style="font-size:12px;color:var(--ts);margin-bottom:8px;">📅 Entrega estimada: '+fechaFmt+'</div>'
+    +'<div style="background:rgba(255,255,255,.07);border-radius:6px;height:8px;overflow:hidden;margin-bottom:4px;">'
+    +'<div style="height:100%;width:'+pct+'%;background:#e83a2f;border-radius:6px;"></div>'
+    +'</div>'
+    +'<div style="font-size:11px;color:var(--ts);text-align:right;">'+pct+'% completado</div>'
+    +'</div>'
+    +'<div style="background:var(--c1);border-radius:14px;padding:16px;margin-bottom:18px;">'
+    +'<div style="font-size:11px;color:var(--ts);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">👥 Participantes</div>'
+    + partsHtml
+    +'</div>'
+    +'<button onclick="proyIniciarEdicion('+JSON.stringify(p).replace(/</g,'\u003c')+')" style="width:100%;background:rgba(232,58,47,.15);color:#e83a2f;border:1.5px solid rgba(232,58,47,.35);border-radius:12px;padding:13px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;margin-bottom:10px;">✏️ EDITAR PROYECTO</button>'
+    +'<button onclick="proyEliminar(''+p.id+'')" style="width:100%;background:rgba(255,80,80,.1);color:#ff5252;border:1.5px solid rgba(255,80,80,.2);border-radius:12px;padding:13px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;">🗑️ ELIMINAR</button>';
+
+  _gs('proy-detail-screen');
+};
+
+/* Editar desde detalle */
+window.proyIniciarEdicion = function(p){
+  _proyEdit = p;
+  proyTab('new');
+  document.getElementById('pf-nombre').value = p.nombre||'';
+  document.getElementById('pf-cliente').value = p.cliente||'';
+  document.getElementById('pf-desc').value = p.desc||'';
+  document.getElementById('pf-tipo').value = p.tipo||'';
+  document.getElementById('pf-estado').value = p.estado||'En diseño';
+  document.getElementById('pf-fecha').value = p.fecha||'';
+  // Participantes
+  var cont = document.getElementById('pf-partic');
+  cont.innerHTML='';
+  document.getElementById('pf-partic-empty').style.display='none';
+  (p.participantes||[]).forEach(function(pt){
+    proyAddPart();
+    var rows=document.querySelectorAll('.proy-part-row');
+    var row=rows[rows.length-1];
+    var inputs=row.querySelectorAll('input,select');
+    if(inputs[0]) inputs[0].value=pt.nombre||'';
+    if(inputs[1]) inputs[1].value=pt.rol||'';
+  });
+  if(!(p.participantes&&p.participantes.length)) document.getElementById('pf-partic-empty').style.display='';
+  // Mostrar código
+  document.getElementById('proy-code-display').textContent = p.codigo||'';
+  document.getElementById('proy-code-banner').style.display = '';
+  _gs('proy-screen');
+};
+
+/* Eliminar */
+window.proyEliminar = async function(id){
+  if(!id) return;
+  // Confirmación inline
+  var detail = document.getElementById('proy-detail-body');
+  detail.insertAdjacentHTML('afterbegin','<div id="proy-confirm-del" style="background:rgba(255,80,80,.12);border:1.5px solid rgba(255,80,80,.4);border-radius:12px;padding:14px;margin-bottom:14px;text-align:center;">'
+    +'<div style="font-size:14px;color:#ff5252;font-weight:700;margin-bottom:8px;">⚠️ ¿Eliminar este proyecto?</div>'
+    +'<div style="font-size:12px;color:var(--ts);margin-bottom:12px;">Esta acción no se puede deshacer.</div>'
+    +'<div style="display:flex;gap:8px;justify-content:center;">'
+    +'<button onclick="document.getElementById('proy-confirm-del').remove()" style="background:rgba(255,255,255,.1);color:var(--tm);border:none;border-radius:8px;padding:8px 18px;cursor:pointer;">Cancelar</button>'
+    +'<button onclick="proyConfirmarElim(''+id+'')" style="background:#ff5252;color:#fff;border:none;border-radius:8px;padding:8px 18px;cursor:pointer;font-weight:700;">Eliminar</button>'
+    +'</div></div>');
+};
+window.proyConfirmarElim = async function(id){
+  try {
+    await deleteDoc(doc(db,'proyectos',id));
+    toast('🗑️ Proyecto eliminado');
+    renderProyList();
+    _gs('proy-screen'); proyTab('list');
+  } catch(e){ toast('⚠️ Error al eliminar'); }
+};
+
+/* BÚSQUEDA POR CÓDIGO */
+window.proyBuscar = async function(){
+  var codigo = document.getElementById('pb-codigo').value.trim().toUpperCase();
+  var res = document.getElementById('pb-resultado');
+  if(!codigo){ res.innerHTML='<div style="color:#ff6b6b;font-size:13px;">Ingresa un código.</div>'; return; }
+  res.innerHTML='<div style="color:var(--ts);font-size:13px;text-align:center;padding:16px;">Buscando...</div>';
+  try {
+    var snap = await getDocs(collection(db,'proyectos'));
+    var found=null;
+    snap.forEach(function(d){ if((d.data().codigo||'').toUpperCase()===codigo) found={id:d.id,...d.data()}; });
+    if(!found){ res.innerHTML='<div style="text-align:center;padding:20px;"><div style="font-size:28px;">❌</div><div style="color:var(--ts);margin-top:8px;">No se encontró el código <strong>'+escHtml(codigo)+'</strong></div></div>'; return; }
+    var p=found; var pct=proyPct(p.estado); var fechaFmt=p.fecha?p.fecha.split('-').reverse().join('/'):'Sin definir';
+    var partsHtml=(p.participantes&&p.participantes.length)
+      ?p.participantes.map(function(pt){return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.07);"><span style="color:var(--tm);">'+escHtml(pt.nombre)+'</span><span style="color:var(--ts);font-size:12px;">'+escHtml(pt.rol)+'</span></div>';}).join('')
+      :'<div style="color:var(--ts);font-size:13px;padding:8px 0;">Sin participantes</div>';
+    res.innerHTML='<div style="background:var(--c1);border-radius:14px;padding:16px;margin-bottom:12px;">'
+      +'<div style="text-align:center;margin-bottom:14px;">'
+      +'<div style="font-size:11px;color:var(--ts);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px;">Código del proyecto</div>'
+      +'<div style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:3px;color:#e83a2f;">'+escHtml(p.codigo)+'</div>'
+      +'</div>'
+      +'<div style="font-size:16px;font-weight:700;color:var(--tm);margin-bottom:2px;">'+escHtml(p.nombre||'')+'</div>'
+      +'<div style="font-size:13px;color:var(--ts);margin-bottom:10px;">'+escHtml(p.cliente||'')+'</div>'
+      +(p.desc?'<div style="font-size:13px;color:var(--tm);opacity:.8;margin-bottom:10px;">'+escHtml(p.desc)+'</div>':'')
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">'
+      +(p.tipo?'<span style="background:rgba(255,255,255,.08);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--ts);">'+escHtml(p.tipo)+'</span>':'')
+      +'<span style="background:'+proyEstadoColor(p.estado)+';color:#fff;border-radius:20px;padding:4px 12px;font-size:12px;">'+escHtml(p.estado||'')+'</span>'
+      +'</div>'
+      +'<div style="font-size:12px;color:var(--ts);margin-bottom:10px;">📅 Entrega estimada: '+fechaFmt+'</div>'
+      +'<div style="background:rgba(255,255,255,.07);border-radius:6px;height:8px;overflow:hidden;margin-bottom:4px;">'
+      +'<div style="height:100%;width:'+pct+'%;background:#e83a2f;border-radius:6px;"></div>'
+      +'</div>'
+      +'<div style="font-size:11px;color:var(--ts);text-align:right;margin-bottom:12px;">'+pct+'% completado</div>'
+      +'<div style="font-size:11px;color:var(--ts);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">👥 Participantes</div>'
+      +partsHtml
+      +'</div>';
+  } catch(e){ res.innerHTML='<div style="color:#ff6b6b;padding:12px;">Error al buscar.</div>'; }
+};
+/* ════════ FIN MÓDULO PROYECTOS ════════ */
+
 /* Start */
-_gs('login-screen');
+if(sessionStorage.getItem('mp_sesion') === 'activa'){
+  document.getElementById('btn-logout').style.display = '';
+  _gs('home');
+} else {
+  _gs('login-screen');
+}
 </script>
+
 </body>
 </html>
