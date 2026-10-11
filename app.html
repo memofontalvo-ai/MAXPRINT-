@@ -881,14 +881,53 @@ main{padding:12px;max-width:700px;margin:0 auto;}
             <div class="eff"><label class="efl">No. Póliza ARL</label><input type="text" class="efi" id="efarl" placeholder="Número de póliza"/></div>
             <div class="eff"><label class="efl">Vencimiento ARL</label><input type="date" class="efi" id="efarlv"/></div>
           </div>
-          <div style="margin-top:10px;">
-            <div class="efl" style="margin-bottom:6px;">CERTIFICADOS</div>
-            <div style="display:flex;flex-wrap:wrap;gap:8px;">
-              <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="checkbox" id="efcert-alturas"> Trabajo en alturas</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="checkbox" id="efcert-electrico"> Eléctrico</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="checkbox" id="efcert-confinados"> Espacios confinados</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="checkbox" id="efcert-primeros"> Primeros auxilios</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="checkbox" id="efcert-quimicos"> Manejo de químicos</label>
+          <div style="margin-top:16px;">
+            <div class="efl" style="margin-bottom:10px;letter-spacing:.5px;">📄 DOCUMENTOS DE SEGURIDAD <span style="font-size:10px;color:#555;font-weight:400;">(Opcionales)</span></div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <div style="background:#111;border:1px solid #222;border-radius:10px;overflow:hidden;">
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;">
+                  <div style="flex:1;">
+                    <div style="font-size:12px;font-weight:700;color:#ddd;">1. Aportes a Seguridad Social</div>
+                    <div style="font-size:10px;color:#555;margin-top:2px;">Certificado de aportes a seguridad social</div>
+                  </div>
+                  <button onclick="document.getElementById('efdc-ss').click()" style="background:#1a1a2e;border:1px solid #333;border-radius:7px;padding:6px 12px;color:#5b8af5;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">📎 Cargar</button>
+                </div>
+                <input type="file" id="efdc-ss" accept="image/*,application/pdf" style="display:none;" onchange="efPrevDoc(this,'efdc-ss-prev','efdc-ss-name')"/>
+                <div id="efdc-ss-prev" style="display:none;padding:0 12px 10px;border-top:1px solid #1a1a1a;margin-top:0;"></div>
+              </div>
+              <div style="background:#111;border:1px solid #222;border-radius:10px;overflow:hidden;">
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;">
+                  <div style="flex:1;">
+                    <div style="font-size:12px;font-weight:700;color:#ddd;">2. Aptitud Médica Ocupacional</div>
+                    <div style="font-size:10px;color:#555;margin-top:2px;">Certificado de aptitud médica ocupacional</div>
+                  </div>
+                  <button onclick="document.getElementById('efdc-med').click()" style="background:#1a1a2e;border:1px solid #333;border-radius:7px;padding:6px 12px;color:#5b8af5;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">📎 Cargar</button>
+                </div>
+                <input type="file" id="efdc-med" accept="image/*,application/pdf" style="display:none;" onchange="efPrevDoc(this,'efdc-med-prev','efdc-med-name')"/>
+                <div id="efdc-med-prev" style="display:none;padding:0 12px 10px;border-top:1px solid #1a1a1a;"></div>
+              </div>
+              <div style="background:#111;border:1px solid #222;border-radius:10px;overflow:hidden;">
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;">
+                  <div style="flex:1;">
+                    <div style="font-size:12px;font-weight:700;color:#ddd;">3. Afiliación a la ARL</div>
+                    <div style="font-size:10px;color:#555;margin-top:2px;">Certificado de afiliación a la ARL</div>
+                  </div>
+                  <button onclick="document.getElementById('efdc-arl').click()" style="background:#1a1a2e;border:1px solid #333;border-radius:7px;padding:6px 12px;color:#5b8af5;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">📎 Cargar</button>
+                </div>
+                <input type="file" id="efdc-arl" accept="image/*,application/pdf" style="display:none;" onchange="efPrevDoc(this,'efdc-arl-prev','efdc-arl-name')"/>
+                <div id="efdc-arl-prev" style="display:none;padding:0 12px 10px;border-top:1px solid #1a1a1a;"></div>
+              </div>
+              <div style="background:#111;border:1px solid #222;border-radius:10px;overflow:hidden;">
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;">
+                  <div style="flex:1;">
+                    <div style="font-size:12px;font-weight:700;color:#ddd;">4. Trabajo en Alturas</div>
+                    <div style="font-size:10px;color:#555;margin-top:2px;">Certificado de trabajo en alturas</div>
+                  </div>
+                  <button onclick="document.getElementById('efdc-alt').click()" style="background:#1a1a2e;border:1px solid #333;border-radius:7px;padding:6px 12px;color:#5b8af5;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">📎 Cargar</button>
+                </div>
+                <input type="file" id="efdc-alt" accept="image/*,application/pdf" style="display:none;" onchange="efPrevDoc(this,'efdc-alt-prev','efdc-alt-name')"/>
+                <div id="efdc-alt-prev" style="display:none;padding:0 12px 10px;border-top:1px solid #1a1a1a;"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -1151,14 +1190,53 @@ main{padding:12px;max-width:700px;margin:0 auto;}
             <div class="eff"><label class="efl">No. Póliza ARL</label><input type="text" class="efi" id="efarl" placeholder="Número de póliza"/></div>
             <div class="eff"><label class="efl">Vencimiento ARL</label><input type="date" class="efi" id="efarlv"/></div>
           </div>
-          <div style="margin-top:10px;">
-            <div class="efl" style="margin-bottom:6px;">CERTIFICADOS</div>
-            <div style="display:flex;flex-wrap:wrap;gap:8px;">
-              <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="checkbox" id="efcert-alturas"> Trabajo en alturas</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="checkbox" id="efcert-electrico"> Eléctrico</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="checkbox" id="efcert-confinados"> Espacios confinados</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="checkbox" id="efcert-primeros"> Primeros auxilios</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="checkbox" id="efcert-quimicos"> Manejo de químicos</label>
+          <div style="margin-top:16px;">
+            <div class="efl" style="margin-bottom:10px;letter-spacing:.5px;">📄 DOCUMENTOS DE SEGURIDAD <span style="font-size:10px;color:#555;font-weight:400;">(Opcionales)</span></div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <div style="background:#111;border:1px solid #222;border-radius:10px;overflow:hidden;">
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;">
+                  <div style="flex:1;">
+                    <div style="font-size:12px;font-weight:700;color:#ddd;">1. Aportes a Seguridad Social</div>
+                    <div style="font-size:10px;color:#555;margin-top:2px;">Certificado de aportes a seguridad social</div>
+                  </div>
+                  <button onclick="document.getElementById('efdc-ss').click()" style="background:#1a1a2e;border:1px solid #333;border-radius:7px;padding:6px 12px;color:#5b8af5;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">📎 Cargar</button>
+                </div>
+                <input type="file" id="efdc-ss" accept="image/*,application/pdf" style="display:none;" onchange="efPrevDoc(this,'efdc-ss-prev','efdc-ss-name')"/>
+                <div id="efdc-ss-prev" style="display:none;padding:0 12px 10px;border-top:1px solid #1a1a1a;margin-top:0;"></div>
+              </div>
+              <div style="background:#111;border:1px solid #222;border-radius:10px;overflow:hidden;">
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;">
+                  <div style="flex:1;">
+                    <div style="font-size:12px;font-weight:700;color:#ddd;">2. Aptitud Médica Ocupacional</div>
+                    <div style="font-size:10px;color:#555;margin-top:2px;">Certificado de aptitud médica ocupacional</div>
+                  </div>
+                  <button onclick="document.getElementById('efdc-med').click()" style="background:#1a1a2e;border:1px solid #333;border-radius:7px;padding:6px 12px;color:#5b8af5;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">📎 Cargar</button>
+                </div>
+                <input type="file" id="efdc-med" accept="image/*,application/pdf" style="display:none;" onchange="efPrevDoc(this,'efdc-med-prev','efdc-med-name')"/>
+                <div id="efdc-med-prev" style="display:none;padding:0 12px 10px;border-top:1px solid #1a1a1a;"></div>
+              </div>
+              <div style="background:#111;border:1px solid #222;border-radius:10px;overflow:hidden;">
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;">
+                  <div style="flex:1;">
+                    <div style="font-size:12px;font-weight:700;color:#ddd;">3. Afiliación a la ARL</div>
+                    <div style="font-size:10px;color:#555;margin-top:2px;">Certificado de afiliación a la ARL</div>
+                  </div>
+                  <button onclick="document.getElementById('efdc-arl').click()" style="background:#1a1a2e;border:1px solid #333;border-radius:7px;padding:6px 12px;color:#5b8af5;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">📎 Cargar</button>
+                </div>
+                <input type="file" id="efdc-arl" accept="image/*,application/pdf" style="display:none;" onchange="efPrevDoc(this,'efdc-arl-prev','efdc-arl-name')"/>
+                <div id="efdc-arl-prev" style="display:none;padding:0 12px 10px;border-top:1px solid #1a1a1a;"></div>
+              </div>
+              <div style="background:#111;border:1px solid #222;border-radius:10px;overflow:hidden;">
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;">
+                  <div style="flex:1;">
+                    <div style="font-size:12px;font-weight:700;color:#ddd;">4. Trabajo en Alturas</div>
+                    <div style="font-size:10px;color:#555;margin-top:2px;">Certificado de trabajo en alturas</div>
+                  </div>
+                  <button onclick="document.getElementById('efdc-alt').click()" style="background:#1a1a2e;border:1px solid #333;border-radius:7px;padding:6px 12px;color:#5b8af5;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">📎 Cargar</button>
+                </div>
+                <input type="file" id="efdc-alt" accept="image/*,application/pdf" style="display:none;" onchange="efPrevDoc(this,'efdc-alt-prev','efdc-alt-name')"/>
+                <div id="efdc-alt-prev" style="display:none;padding:0 12px 10px;border-top:1px solid #1a1a1a;"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -1353,28 +1431,95 @@ window.showEF=function(eid){editEId=eid||null;document.getElementById('rlv').sty
         document.getElementById('efeps').value=e.eps||'';
         document.getElementById('efarl').value=e.arl||'';
         document.getElementById('efarlv').value=e.arlVence||'';
-        var certs=e.certificados||[];
-        ['alturas','electrico','confinados','primeros','quimicos'].forEach(function(k){
-          var el=document.getElementById('efcert-'+k);if(el)el.checked=certs.indexOf(k)>=0;
+        window._efDocs={ss:null,med:null,arl:null,alt:null};
+        var dc=e.docsCerts||{};
+        ['ss','med','arl','alt'].forEach(function(k){
+          efClearDoc('efdc-'+k,'efdc-'+k+'-prev');
+          if(dc[k])efLoadDocPrev(k,'efdc-'+k+'-prev',dc[k]);
         });['pipf','pipb'].forEach(function(pid){var src=pid==='pipf'?e.cedulaFront:e.cedulaBack;var p=document.getElementById(pid);if(src){p.src=src;p.style.display='block';}else{p.style.display='none';p.src='';}});}}else{['efn','efc','efb','eft2','efa','efcg','efi2','efp','efz','eflnac','efeps','efarl','efarlv'].forEach(function(id){document.getElementById(id).value='';});
         document.getElementById('efgrupo').value='';
-        ['alturas','electrico','confinados','primeros','quimicos'].forEach(function(k){
-          var el=document.getElementById('efcert-'+k);if(el)el.checked=false;
-        });document.getElementById('efd').value='';document.getElementById('efcs').value='';['pipf','pipb'].forEach(function(pid){var p=document.getElementById(pid);p.style.display='none';p.src='';});['picf','picb'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});window._pid_pipf=null;window._pid_pipb=null;}};
+        window._efDocs={ss:null,med:null,arl:null,alt:null};
+        ['ss','med','arl','alt'].forEach(function(k){efClearDoc('efdc-'+k,'efdc-'+k+'-prev');});document.getElementById('efd').value='';document.getElementById('efcs').value='';['pipf','pipb'].forEach(function(pid){var p=document.getElementById(pid);p.style.display='none';p.src='';});['picf','picb'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});window._pid_pipf=null;window._pid_pipb=null;}};
 window.backRH=function(){document.getElementById('rlv').style.display='';document.getElementById('rfv').style.display='none';document.getElementById('rpv').style.display='none';document.getElementById('dfv').style.display='none';renderRH();renderDEL();_gs('rrhh-screen');};
+/* ---- Documentos de seguridad empleado ---- */
+window._efDocs={ss:null,med:null,arl:null,alt:null};
+window.efPrevDoc=function(input,prevId,nameId){
+  var file=input.files[0];if(!file)return;
+  var key=input.id.replace('efdc-','').replace('-','');
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    var data=ev.target.result;
+    var isPdf=file.type==='application/pdf';
+    var docKey=input.id.replace('efdc-','');
+    window._efDocs[docKey]={nombre:file.name,data:data,tipo:isPdf?'pdf':'imagen'};
+    var prev=document.getElementById(prevId);
+    if(!prev)return;
+    prev.style.display='block';
+    if(isPdf){
+      prev.innerHTML='<div style="display:flex;align-items:center;gap:8px;padding:6px 0;">'
+        +'<span style="font-size:20px;">📄</span>'
+        +'<div><div style="font-size:12px;color:#ccc;">'+file.name+'</div>'
+        +'<div style="font-size:10px;color:#3fb950;">✓ PDF cargado</div></div>'
+        +'<button onclick="efClearDoc(''+input.id+'',''+prevId+'')" style="margin-left:auto;background:none;border:none;color:#e83a2f;font-size:16px;cursor:pointer;">✕</button>'
+        +'</div>';
+    } else {
+      prev.innerHTML='<div style="position:relative;display:inline-block;width:100%;margin-top:4px;">'
+        +'<img src="'+data+'" style="width:100%;border-radius:6px;max-height:140px;object-fit:contain;background:#0a0a0a;border:1px solid #222;"/>'
+        +'<button onclick="efClearDoc(''+input.id+'',''+prevId+'')" style="position:absolute;top:4px;right:4px;background:#e83a2f;border:none;border-radius:50%;width:22px;height:22px;color:#fff;font-size:12px;cursor:pointer;line-height:22px;text-align:center;">✕</button>'
+        +'</div>';
+    }
+  };
+  reader.readAsDataURL(file);
+};
+window.efClearDoc=function(inputId,prevId){
+  var docKey=inputId.replace('efdc-','');
+  window._efDocs[docKey]=null;
+  var inp=document.getElementById(inputId);if(inp)inp.value='';
+  var prev=document.getElementById(prevId);if(prev){prev.style.display='none';prev.innerHTML='';}
+};
+window.efLoadDocPrev=function(docKey,prevId,doc){
+  if(!doc)return;
+  window._efDocs[docKey]=doc;
+  var prev=document.getElementById(prevId);
+  if(!prev)return;
+  prev.style.display='block';
+  if(doc.tipo==='pdf'){
+    prev.innerHTML='<div style="display:flex;align-items:center;gap:8px;padding:6px 0;">'
+      +'<span style="font-size:20px;">📄</span>'
+      +'<div><div style="font-size:12px;color:#ccc;">'+doc.nombre+'</div>'
+      +'<div style="font-size:10px;color:#3fb950;">✓ PDF guardado</div></div>'
+      +'<button onclick="efClearDoc('efdc-'+docKey+'',''+prevId+'')" style="margin-left:auto;background:none;border:none;color:#e83a2f;font-size:16px;cursor:pointer;">✕</button>'
+      +'</div>';
+  } else {
+    prev.innerHTML='<div style="position:relative;display:inline-block;width:100%;margin-top:4px;">'
+      +'<img src="'+doc.data+'" style="width:100%;border-radius:6px;max-height:140px;object-fit:contain;background:#0a0a0a;border:1px solid #222;"/>'
+      +'<button onclick="efClearDoc('efdc-'+docKey+'',''+prevId+'')" style="position:absolute;top:4px;right:4px;background:#e83a2f;border:none;border-radius:50%;width:22px;height:22px;color:#fff;font-size:12px;cursor:pointer;line-height:22px;text-align:center;">✕</button>'
+      +'</div>';
+  }
+};
 window.saveEmp=async function(){var name=document.getElementById('efn').value.trim(),ced=document.getElementById('efc').value.trim(),dept=document.getElementById('efd').value;if(!name){document.getElementById('eferr').textContent='⚠️ El nombre es obligatorio';return;}if(!ced){document.getElementById('eferr').textContent='⚠️ La cédula es obligatoria';return;}if(!dept){document.getElementById('eferr').textContent='⚠️ Seleccioná el departamento';return;}var pfP=document.getElementById('pipf'),pbP=document.getElementById('pipb');var cF=window._pid_pipf||(pfP.style.display!=='none'&&pfP.src.indexOf('data:')===0?pfP.src:(editEId?emps.find(function(e){return e.id===editEId;}):null)?emps.find(function(e){return e.id===editEId;}).cedulaFront||null:null);var cB=window._pid_pipb||(pbP.style.display!=='none'&&pbP.src.indexOf('data:')===0?pbP.src:(editEId?emps.find(function(e){return e.id===editEId;}):null)?emps.find(function(e){return e.id===editEId;}).cedulaBack||null:null);var data={name:name,cedula:ced,dept:dept,birth:document.getElementById('efb').value,phone:document.getElementById('eft2').value.trim(),address:document.getElementById('efa').value.trim(),cargo:document.getElementById('efcg').value.trim(),ingreso:document.getElementById('efi2').value,camisa:document.getElementById('efcs').value,pantalon:document.getElementById('efp').value.trim(),zapatos:document.getElementById('efz').value.trim(),cedulaFront:cF,cedulaBack:cB,
       lugarNac:document.getElementById('eflnac').value.trim(),
       grupoSang:document.getElementById('efgrupo').value,
       eps:document.getElementById('efeps').value.trim(),
       arl:document.getElementById('efarl').value.trim(),
       arlVence:document.getElementById('efarlv').value,
-      certificados:(function(){var c=[];['alturas','electrico','confinados','primeros','quimicos'].forEach(function(k){var el=document.getElementById('efcert-'+k);if(el&&el.checked)c.push(k);});return c;})()
+      docsCerts:(function(){var d={};['ss','med','arl','alt'].forEach(function(k){if(window._efDocs&&window._efDocs[k])d[k]=window._efDocs[k];});return d;})()
     };try{if(editEId){await updateDoc(doc(db,"empleados",editEId),data);toast('✅ Actualizado');}else{data.createdAt=serverTimestamp();await addDoc(collection(db,"empleados"),data);toast('✅ Empleado registrado');}window.backRH();}catch(e){document.getElementById('eferr').textContent='❌ Error: '+e.message;}};
 window.showProf=function(eid){var e=emps.find(function(x){return x.id===eid;});if(!e)return;document.getElementById('rlv').style.display='none';document.getElementById('rfv').style.display='none';document.getElementById('rpv').style.display='';document.getElementById('dfv').style.display='none';var c=avc(e.name);var p=tasks.filter(function(t){return t.assignedTo===eid&&!t.done;}).length;var d2=tasks.filter(function(t){return t.assignedTo===eid&&t.done;}).length;function pf(l,v){return '<div class="pf2"><div class="pl2">'+l+'</div><div class="pv">'+(v||'—')+'</div></div>';}function fd(d){if(!d)return'—';var pts=d.split('-');return pts.length===3?pts[2]+'/'+pts[1]+'/'+pts[0]:d;}var h='<div class="ph"><div class="pha" style="background:linear-gradient(135deg,'+c+')">'+ini(e.name)+'</div><div><div class="phn">'+e.name+'</div><div class="phd">'+DI[e.dept]+' '+DN[e.dept]+(e.cargo?' · '+e.cargo:'')+'</div><div style="font-size:10px;color:var(--tm);margin-top:2px">'+p+' pend. · '+d2+' hechas</div></div></div>';h+='<div class="ps"><h4>📋 Datos Personales</h4><div class="pg">'+pf('Cédula',e.cedula)+pf('Teléfono',e.phone)+pf('Nacimiento',fd(e.birth))+pf('Ingreso',fd(e.ingreso))+'</div>'+(e.address?'<div style="margin-top:9px"><div class="pl2">Dirección</div><div class="pv">'+e.address+'</div></div>':'')+'</div>';h+='<div class="ps"><h4>👕 Tallas</h4><div class="pg">'+pf('Camisa',e.camisa)+pf('Pantalón',e.pantalon)+pf('Zapatos',e.zapatos)+'</div></div>';
 h+='<div class="ps"><h4>🛡️ Seguridad</h4><div class="pg">'+pf('Lugar nacimiento',e.lugarNac)+pf('Grupo sanguíneo',e.grupoSang)+pf('EPS',e.eps)+pf('ARL / Póliza',e.arl)+pf('Vence ARL',fd(e.arlVence))+'</div>';
-var CERT_LABELS={alturas:'Trabajo en alturas',electrico:'Eléctrico',confinados:'Espacios confinados',primeros:'Primeros auxilios',quimicos:'Manejo de químicos'};
-var certs=e.certificados||[];
-if(certs.length){h+='<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">'+certs.map(function(k){return '<span style="background:#1a3a1a;color:#3fb950;border:1px solid #3fb950;border-radius:20px;padding:3px 10px;font-size:11px;">✓ '+(CERT_LABELS[k]||k)+'</span>';}).join('')+'</div>';}
+var DC_LABELS={ss:'Aportes Seg. Social',med:'Aptitud Médica Ocup.',arl:'Afiliación ARL',alt:'Trabajo en Alturas'};
+var dc=e.docsCerts||{};
+var dcKeys=Object.keys(dc).filter(function(k){return dc[k];});
+if(dcKeys.length){
+  h+='<div style="margin-top:10px;"><div style="font-size:10px;color:#5b8af5;letter-spacing:.5px;font-weight:700;margin-bottom:8px;">📄 DOCUMENTOS</div>';
+  dcKeys.forEach(function(k){
+    var d=dc[k];
+    if(!d)return;
+    if(d.tipo==='imagen'){h+='<div style="margin-bottom:8px;"><div style="font-size:10px;color:#666;margin-bottom:4px;">'+DC_LABELS[k]+'</div><img src="'+d.data+'" style="width:100%;border-radius:8px;max-height:160px;object-fit:contain;background:#0a0a0a;border:1px solid #222;"/></div>';}
+    else{h+='<div style="background:#111;border:1px solid #222;border-radius:8px;padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;"><span style="font-size:18px;">📄</span><div style="flex:1;"><div style="font-size:10px;color:#666;">'+DC_LABELS[k]+'</div><div style="font-size:12px;color:#ccc;">'+d.nombre+'</div></div></div>';}
+  });
+  h+='</div>';
+}
 h+='</div>';if(e.cedulaFront||e.cedulaBack){h+='<div class="ps"><h4>🪪 Cédula</h4><div class="pip">'+(e.cedulaFront?'<div><div class="pl2">Frontal</div><img src="'+e.cedulaFront+'"/></div>':'')+(e.cedulaBack?'<div><div class="pl2">Trasera</div><img src="'+e.cedulaBack+'"/></div>':'')+'</div></div>';}h+='<button class="bep" data-eid="'+eid+'" onclick="showEF(this.dataset.eid)">✏️ EDITAR</button>';h+='<button class="bdp" data-eid="'+eid+'" data-ename="'+e.name.replace(/"/g,'&quot;')+'" onclick="confDelE(this.dataset.eid,this.dataset.ename)">🗑 ELIMINAR EMPLEADO</button>';document.getElementById('rpc').innerHTML=h;};
 window.confDelE=async function(id,name){if(!confirm('¿Eliminar a '+name+'?'))return;try{await deleteDoc(doc(db,"empleados",id));toast('🗑 Eliminado');window.backRH();}catch(e){toast('❌ Error');}};
 
@@ -1733,6 +1878,18 @@ _gs('login-screen');
   </div>
 </div>
 
+<div id="hv-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#0d0d0d;z-index:11000;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+  <div style="max-width:540px;margin:0 auto;padding:0 0 100px;">
+    <!-- header -->
+    <div id="hv-header" style="display:flex;align-items:center;gap:12px;padding:16px;border-bottom:1px solid #2a2a2a;position:sticky;top:0;background:#0d0d0d;z-index:10;">
+      <button onclick="hvClose()" style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:8px 14px;color:#fff;font-size:13px;cursor:pointer;">&#8592; Volver</button>
+      <div style="font-size:15px;font-weight:700;color:#fff;flex:1;">HOJA DE VIDA</div>
+      <button onclick="hvImprimir()" style="background:#1a3a1a;border:1px solid #3fb950;border-radius:8px;padding:8px 14px;color:#3fb950;font-size:12px;font-weight:700;cursor:pointer;">&#128247; PDF</button>
+    </div>
+    <div id="hv-body" style="padding:20px 16px;"></div>
+  </div>
+</div>
+
 <div id="proy-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#0d0d0d;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;">
   <div style="max-width:520px;margin:0 auto;padding:0 0 80px;">
     <div style="display:flex;align-items:center;gap:12px;padding:16px;border-bottom:1px solid #2a2a2a;position:sticky;top:0;background:#0d0d0d;z-index:10;">
@@ -1832,7 +1989,7 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v4.4 - 2026-10-11</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v4.6 - 2026-10-11</div>
 
 <!-- SheetJS for reading .xlsx in browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2626,13 +2783,119 @@ window.portalLogin=function(){
 window.portalLogout=function(){
   portalReset();
 };
-window.portalVerHV=function(ptId){
-  var hv=document.getElementById(ptId+'-hv');
-  var card=document.getElementById(ptId);
-  if(!hv)return;
-  var open=hv.style.display!=='none';
-  hv.style.display=open?'none':'block';
-  if(card)card.style.borderColor=open?'#2a2a2a':'#e83a2f';
+/* ---- Hoja de vida overlay ---- */
+window._hvData=null;
+window.hvClose=function(){
+  document.getElementById('hv-overlay').style.display='none';
+};
+window.hvImprimir=function(){
+  var data=window._hvData;if(!data)return;
+  var CERT_L={alturas:'Trabajo en Alturas',electrico:'Riesgo Eléctrico',confinados:'Espacios Confinados',primeros:'Primeros Auxilios',quimicos:'Riesgo Químico'};
+  var win=window.open('','_blank','width=800,height=900');
+  if(!win)return;
+  var fotoHtml=data.foto?'<img src="'+data.foto+'" style="width:90px;height:90px;border-radius:8px;object-fit:cover;border:2px solid #e83a2f;float:right;margin-left:16px;"/>':'';
+  var certsHtml='';
+  if(data.certificados&&data.certificados.length){
+    certsHtml='<div style="margin-top:14px;"><div style="font-size:11px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #ddd;padding-bottom:4px;margin-bottom:8px;">Certificados de Seguridad</div><div>';
+    data.certificados.forEach(function(k){certsHtml+='<span style="display:inline-block;background:#e6f4ea;border:1px solid #34a853;color:#1e7e34;border-radius:4px;padding:3px 10px;font-size:11px;margin:3px 4px 3px 0;">&#10003; '+(CERT_L[k]||k)+'</span>';});
+    certsHtml+='</div></div>';
+  }
+  var DC_LABELS3={ss:'Aportes a Seguridad Social',med:'Aptitud Médica Ocupacional',arl:'Afiliación a la ARL',alt:'Trabajo en Alturas'};
+  var docsHtml='';
+  var dc3=data.docsCerts||{};
+  var dcKeys3=Object.keys(dc3).filter(function(k){return dc3[k];});
+  if(dcKeys3.length){
+    docsHtml='<div style="margin-top:14px;"><div style="font-size:11px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #ddd;padding-bottom:4px;margin-bottom:8px;">Documentos de Seguridad</div>';
+    dcKeys3.forEach(function(k){
+      var d=dc3[k];if(!d)return;
+      docsHtml+='<div style="margin-bottom:12px;"><div style="font-size:11px;font-weight:700;color:#333;margin-bottom:4px;">'+DC_LABELS3[k]+'</div>';
+      if(d.tipo==='imagen'){docsHtml+='<img src="'+d.data+'" style="max-width:100%;max-height:200px;border-radius:6px;margin-bottom:4px;display:block;border:1px solid #ddd;"/>';}
+      else {docsHtml+='<div style="background:#f5f5f5;border:1px solid #ddd;border-radius:6px;padding:8px 12px;font-size:12px;color:#333;">&#128196; '+d.nombre+'</div>';}
+      docsHtml+='</div>';
+    });
+    docsHtml+='</div>';
+  }
+  function row(label,val){return val&&val!=='—'?'<tr><td style="color:#777;font-size:12px;padding:5px 12px 5px 0;white-space:nowrap;vertical-align:top;">'+label+'</td><td style="color:#111;font-size:13px;padding:5px 0;">'+val+'</td></tr>':'';}
+  var rows=[
+    row('Tipo / Número doc.',data.tipoDoc&&data.numDoc?data.tipoDoc+' '+data.numDoc:''),
+    row('Cargo / Rol',data.rol),
+    row('Fecha de nacimiento',data.fechaNac),
+    row('Lugar de nacimiento',data.lugarNac),
+    row('Grupo sanguíneo',data.grupoSang),
+    row('Celular',data.celular),
+    row('EPS',data.eps),
+    row('ARL / Póliza',data.arl),
+    row('Vencimiento ARL',data.arlVence),
+    row('Observaciones',data.observaciones)
+  ].join('');
+  win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Hoja de Vida - '+data.nombre+'</title><style>body{font-family:Arial,sans-serif;color:#111;background:#fff;padding:32px;max-width:720px;margin:0 auto;}@media print{body{padding:0;} .no-print{display:none;}}</style></head><body>');
+  win.document.write('<div style="display:flex;align-items:flex-start;justify-content:space-between;border-bottom:3px solid #e83a2f;padding-bottom:16px;margin-bottom:20px;">'+fotoHtml+'<div style="flex:1;"><div style="font-size:10px;font-weight:700;color:#e83a2f;letter-spacing:.5px;margin-bottom:4px;">HOJA DE VIDA LABORAL</div><div style="font-size:22px;font-weight:700;color:#111;margin-bottom:4px;">'+data.nombre+'</div>'+(data.rol?'<div style="font-size:13px;color:#555;">'+data.rol+'</div>':'')+'<div style="font-size:11px;color:#aaa;margin-top:6px;">MAXPRINT S.A.S. &middot; '+new Date().toLocaleDateString('es-CO',{year:'numeric',month:'long',day:'numeric'})+'</div></div></div>');
+  win.document.write('<table style="width:100%;border-collapse:collapse;">'+rows+'</table>');
+  win.document.write(certsHtml);
+  win.document.write(docsHtml);
+  win.document.write('<div class="no-print" style="margin-top:24px;text-align:center;"><button onclick="window.print()" style="background:#e83a2f;color:#fff;border:none;padding:12px 32px;border-radius:6px;font-size:14px;font-weight:700;cursor:pointer;">&#128247; Imprimir / Guardar PDF</button></div>');
+  win.document.write('</body></html>');
+  win.document.close();
+  setTimeout(function(){win.focus();win.print();},400);
+};
+window.portalVerHV=function(ptData){
+  var CERT_L={alturas:'Trabajo en Alturas',electrico:'Riesgo Eléctrico',confinados:'Espacios Confinados',primeros:'Primeros Auxilios',quimicos:'Riesgo Químico'};
+  window._hvData=ptData;
+  var body=document.getElementById('hv-body');
+  if(!body)return;
+  var fotoHtml=ptData.foto
+    ?'<img src="'+ptData.foto+'" style="width:80px;height:80px;border-radius:12px;object-fit:cover;border:2px solid #e83a2f;flex-shrink:0;"/>'
+    :'<div style="width:80px;height:80px;border-radius:12px;background:#1a1a1a;display:flex;align-items:center;justify-content:center;font-size:36px;flex-shrink:0;">&#128100;</div>';
+  function row(ico,label,val){
+    if(!val||val==='—')return '';
+    return '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #1a1a1a;">'
+      +'<div style="font-size:18px;width:28px;text-align:center;flex-shrink:0;">'+ico+'</div>'
+      +'<div style="flex:1;min-width:0;"><div style="font-size:10px;color:#666;letter-spacing:.4px;margin-bottom:2px;">'+label+'</div>'
+      +'<div style="font-size:14px;color:#fff;font-weight:600;">'+val+'</div></div></div>';
+  }
+  var certsHtml='';
+  if(ptData.certificados&&ptData.certificados.length){
+    certsHtml='<div style="margin-top:20px;"><div style="font-size:10px;color:#3fb950;letter-spacing:.8px;font-weight:700;margin-bottom:10px;">&#10003; CERTIFICADOS DE SEGURIDAD</div><div style="display:flex;flex-wrap:wrap;gap:8px;">';
+    ptData.certificados.forEach(function(k){
+      certsHtml+='<div style="background:#0a2a0a;border:1px solid #3fb950;border-radius:8px;padding:6px 12px;font-size:12px;color:#3fb950;">&#10003; '+(CERT_L[k]||k)+'</div>';
+    });
+    certsHtml+='</div></div>';
+  }
+  var DC_LABELS2={ss:'Aportes Seg. Social',med:'Aptitud Médica Ocup.',arl:'Afiliación ARL',alt:'Trabajo en Alturas'};
+  var docsHtml='';
+  var dc2=ptData.docsCerts||{};
+  var dcKeys2=Object.keys(dc2).filter(function(k){return dc2[k];});
+  if(dcKeys2.length){
+    docsHtml='<div style="margin-top:20px;"><div style="font-size:10px;color:#5b8af5;letter-spacing:.8px;font-weight:700;margin-bottom:10px;">&#128206; CERTIFICADOS Y DOCUMENTOS</div>';
+    dcKeys2.forEach(function(k){
+      var d=dc2[k];if(!d)return;
+      docsHtml+='<div style="margin-bottom:10px;">';
+      docsHtml+='<div style="font-size:10px;color:#888;letter-spacing:.3px;margin-bottom:4px;">'+DC_LABELS2[k]+'</div>';
+      if(d.tipo==='imagen'){docsHtml+='<img src="'+d.data+'" style="width:100%;border-radius:10px;border:1px solid #2a2a2a;max-height:220px;object-fit:contain;background:#111;"/>';}
+      else{docsHtml+='<div style="background:#111;border:1px solid #2a2a2a;border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px;"><span style="font-size:20px;">&#128196;</span><span style="font-size:12px;color:#ccc;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+d.nombre+'</span></div>';}
+      docsHtml+='</div>';
+    });
+    docsHtml+='</div>';
+  }
+  body.innerHTML=
+    '<div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid #222;">'+fotoHtml
+    +'<div style="flex:1;min-width:0;">'
+    +'<div style="font-size:18px;font-weight:700;color:#fff;margin-bottom:4px;">'+ptData.nombre+'</div>'
+    +(ptData.rol?'<div style="font-size:13px;color:#888;margin-bottom:6px;">'+ptData.rol+'</div>':'')
+    +(ptData.tipoDoc&&ptData.numDoc?'<div style="font-size:12px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:6px;padding:4px 10px;display:inline-block;color:#ccc;">'+ptData.tipoDoc+' '+ptData.numDoc+'</div>':'')
+    +'</div></div>'
+    +'<div>'
+    +row('🎂','FECHA DE NACIMIENTO',ptData.fechaNac)
+    +row('📍','LUGAR DE NACIMIENTO',ptData.lugarNac)
+    +row('🩸','GRUPO SANGUÍNEO',ptData.grupoSang)
+    +row('📱','CELULAR',ptData.celular)
+    +row('🏥','EPS',ptData.eps)
+    +row('🛡️','ARL / PÓLIZA',ptData.arl)
+    +row('📅','VENCIMIENTO ARL',ptData.arlVence)
+    +(ptData.observaciones?row('📝','OBSERVACIONES',ptData.observaciones):'')
+    +'</div>'
+    +certsHtml+docsHtml;
+  document.getElementById('hv-overlay').style.display='block';
 };
 window.portalBuscarProy=function(){
   var codigo=(document.getElementById('portal-proy-code').value||'').trim().toUpperCase();
@@ -2644,6 +2907,7 @@ window.portalBuscarProy=function(){
   var PROG2={'En diseno':20,'En produccion':40,'Listo para instalar':60,'Instalado':80,'Entregado':100};
   var c=ECOL2[p.estado]||'#888',pct=PROG2[p.estado]||0;
   var partsHtml='';
+  window._hvParts=p.participantes||[];
   if(p.participantes&&p.participantes.length){
     partsHtml+='<div style="border-top:1px solid #2a2a2a;padding-top:14px;margin-top:14px;">'
       +'<div style="font-size:11px;color:#666;letter-spacing:.5px;margin-bottom:10px;">👷 EQUIPO DE INSTALACIÓN</div>';
@@ -2662,48 +2926,6 @@ window.portalBuscarProy=function(){
       if(pt.grupoSang)partsHtml+='<div style="font-size:11px;color:#f5a623;margin-top:2px;">🩸 Sangre: '+pt.grupoSang+'</div>';
       partsHtml+='</div>';
       partsHtml+='<div style="font-size:20px;color:#444;">›</div>';
-      partsHtml+='</div>';
-      // Hoja de vida expandible (oculta por defecto)
-      partsHtml+='<div id="'+ptId+'-hv" style="display:none;margin-top:12px;border-top:1px solid #222;padding-top:12px;">';
-      partsHtml+='<div style="font-size:10px;color:#e83a2f;font-weight:700;letter-spacing:.8px;margin-bottom:10px;">HOJA DE VIDA</div>';
-      var campos=[
-        ['📋 Documento',pt.tipoDoc&&pt.numDoc?pt.tipoDoc+' '+pt.numDoc:'—'],
-        ['🎂 Fecha de nacimiento',pt.fechaNac||'—'],
-        ['📍 Lugar de nacimiento',pt.lugarNac||'—'],
-        ['🩸 Grupo sanguíneo',pt.grupoSang||'—'],
-        ['📱 Celular',pt.celular||'—'],
-        ['🏥 EPS',pt.eps||'—'],
-        ['🛡️ ARL / Póliza',pt.arl||(pt.arlVence?'Vence: '+pt.arlVence:'—')],
-        ['📝 Observaciones',pt.observaciones||'—']
-      ];
-      campos.forEach(function(cam){
-        if(cam[1]==='—')return;
-        partsHtml+='<div style="display:flex;gap:8px;margin-bottom:8px;align-items:flex-start;">'
-          +'<div style="font-size:12px;color:#666;min-width:140px;">'+cam[0]+'</div>'
-          +'<div style="font-size:13px;color:#ddd;flex:1;">'+cam[1]+'</div>'
-          +'</div>';
-      });
-      // Certificados
-      if(pt.certificados&&pt.certificados.length){
-        partsHtml+='<div style="margin-top:8px;"><div style="font-size:10px;color:#666;letter-spacing:.5px;margin-bottom:6px;">✅ CERTIFICADOS</div>';
-        partsHtml+='<div style="display:flex;flex-wrap:wrap;gap:6px;">';
-        pt.certificados.forEach(function(cert){
-          partsHtml+='<span style="background:#0d1a0d;border:1px solid #1e3a1e;border-radius:6px;padding:4px 10px;font-size:11px;color:#3fb950;">'+cert+'</span>';
-        });
-        partsHtml+='</div></div>';
-      }
-      // Documentos adjuntos
-      if(pt.documentos&&pt.documentos.length){
-        partsHtml+='<div style="margin-top:10px;"><div style="font-size:10px;color:#666;letter-spacing:.5px;margin-bottom:6px;">📎 DOCUMENTOS</div>';
-        pt.documentos.forEach(function(d){
-          partsHtml+='<div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:8px 10px;margin-bottom:6px;display:flex;align-items:center;gap:8px;">'
-            +(d.tipo==='pdf'?'<span style="font-size:16px;">📄</span>':'<span style="font-size:16px;">🖼️</span>')
-            +'<span style="font-size:12px;color:#ccc;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+d.nombre+'</span>'
-            +'<a href="'+d.data+'" download="'+d.nombre+'" style="font-size:11px;color:#5b8af5;text-decoration:none;flex-shrink:0;">Abrir</a>'
-            +'</div>';
-        });
-        partsHtml+='</div>';
-      }
       partsHtml+='</div>';
       partsHtml+='</div>';
     });
