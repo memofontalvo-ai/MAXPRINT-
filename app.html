@@ -871,6 +871,27 @@ main{padding:12px;max-width:700px;margin:0 auto;}
             <div class="eff"><label class="efl">Zapatos</label><input type="text" class="efi" id="efz" placeholder="Ej: 40, 42..."/></div>
           </div>
         </div>
+        <div class="efs"><h4>🛡️ Seguridad</h4>
+          <div class="efg">
+            <div class="eff"><label class="efl">Lugar de nacimiento</label><input type="text" class="efi" id="eflnac" placeholder="Ej: Barranquilla"/></div>
+            <div class="eff"><label class="efl">Grupo sanguíneo</label>
+              <select class="efi" id="efgrupo"><option value="">—</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select>
+            </div>
+            <div class="eff"><label class="efl">EPS</label><input type="text" class="efi" id="efeps" placeholder="Ej: Sura, Compensar..."/></div>
+            <div class="eff"><label class="efl">No. Póliza ARL</label><input type="text" class="efi" id="efarl" placeholder="Número de póliza"/></div>
+            <div class="eff"><label class="efl">Vencimiento ARL</label><input type="date" class="efi" id="efarlv"/></div>
+          </div>
+          <div style="margin-top:10px;">
+            <div class="efl" style="margin-bottom:6px;">CERTIFICADOS</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;">
+              <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="checkbox" id="efcert-alturas"> Trabajo en alturas</label>
+              <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="checkbox" id="efcert-electrico"> Eléctrico</label>
+              <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="checkbox" id="efcert-confinados"> Espacios confinados</label>
+              <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="checkbox" id="efcert-primeros"> Primeros auxilios</label>
+              <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="checkbox" id="efcert-quimicos"> Manejo de químicos</label>
+            </div>
+          </div>
+        </div>
         <div class="efs"><h4>🪪 Cédula</h4>
           <div class="pig">
             <div><div class="pb2" onclick="document.getElementById('picf').click()"><input type="file" id="picf" accept="image/*" capture="environment" onchange="prevID(this,'pipf')"/><span class="pbi">📷</span><div class="pbl">Foto FRONTAL</div></div><img id="pipf" class="pbp" alt=""/></div>
@@ -1120,6 +1141,27 @@ main{padding:12px;max-width:700px;margin:0 auto;}
             <div class="eff"><label class="efl">Zapatos</label><input type="text" class="efi" id="efz" placeholder="Ej: 40, 42..."/></div>
           </div>
         </div>
+        <div class="efs"><h4>🛡️ Seguridad</h4>
+          <div class="efg">
+            <div class="eff"><label class="efl">Lugar de nacimiento</label><input type="text" class="efi" id="eflnac" placeholder="Ej: Barranquilla"/></div>
+            <div class="eff"><label class="efl">Grupo sanguíneo</label>
+              <select class="efi" id="efgrupo"><option value="">—</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select>
+            </div>
+            <div class="eff"><label class="efl">EPS</label><input type="text" class="efi" id="efeps" placeholder="Ej: Sura, Compensar..."/></div>
+            <div class="eff"><label class="efl">No. Póliza ARL</label><input type="text" class="efi" id="efarl" placeholder="Número de póliza"/></div>
+            <div class="eff"><label class="efl">Vencimiento ARL</label><input type="date" class="efi" id="efarlv"/></div>
+          </div>
+          <div style="margin-top:10px;">
+            <div class="efl" style="margin-bottom:6px;">CERTIFICADOS</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;">
+              <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="checkbox" id="efcert-alturas"> Trabajo en alturas</label>
+              <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="checkbox" id="efcert-electrico"> Eléctrico</label>
+              <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="checkbox" id="efcert-confinados"> Espacios confinados</label>
+              <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="checkbox" id="efcert-primeros"> Primeros auxilios</label>
+              <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="checkbox" id="efcert-quimicos"> Manejo de químicos</label>
+            </div>
+          </div>
+        </div>
         <div class="efs"><h4>🪪 Cédula</h4>
           <div class="pig">
             <div><div class="pb2" onclick="document.getElementById('picf').click()"><input type="file" id="picf" accept="image/*" capture="environment" onchange="prevID(this,'pipf')"/><span class="pbi">📷</span><div class="pbl">Foto FRONTAL</div></div><img id="pipf" class="pbp" alt=""/></div>
@@ -1305,10 +1347,35 @@ window.expSol=function(mode){var d=curTab==='todos'||curTab==='pendientes'?null:
 
 // RRHH
 window.renderRH=function(){var filter=document.getElementById('rhf').value;var el=document.getElementById('rel');var seen={};var list=[];emps.forEach(function(e){var key=e.cedula?e.cedula.trim():e.name.trim().toUpperCase();if(!seen[key]){seen[key]=true;var depts=emps.filter(function(x){return(x.cedula?x.cedula.trim():x.name.trim().toUpperCase())===key;}).map(function(x){return x.dept;});list.push(Object.assign({},e,{allDepts:depts}));}});var filtered=filter?list.filter(function(e){return e.allDepts.indexOf(filter)>=0;}):list;if(!filtered.length){el.innerHTML='<div class="emp"><span class="emp-ico">👥</span><p>Sin empleados registrados.<br>Tocá "+ NUEVO" para agregar.</p></div>';return;}el.innerHTML=filtered.map(function(e){var c=avc(e.name);var p=tasks.filter(function(t){return t.assignedTo===e.id&&!t.done;}).length;var depts=e.allDepts.slice(0,2).map(function(d){return DI[d]+' '+DN[d];}).join(' · ');return '<div class="er" data-eid="'+e.id+'" onclick="showProf(this.dataset.eid)"><div class="era" style="background:linear-gradient(135deg,'+c+')">'+ini(e.name)+'</div><div class="eri"><div class="ern">'+e.name+'</div><div class="erm">'+(e.cedula?'CI: '+e.cedula:'')+( e.cargo?' · '+e.cargo:'')+'</div></div><div style="text-align:right;flex-shrink:0"><div style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:20px;background:rgba(245,166,35,.15);color:var(--a);margin-bottom:3px">'+depts+'</div><div style="font-size:10px;color:var(--tm)">'+p+' pend.</div></div></div>';}).join('');};
-window.showEF=function(eid){editEId=eid||null;document.getElementById('rlv').style.display='none';document.getElementById('rfv').style.display='';document.getElementById('rpv').style.display='none';document.getElementById('dfv').style.display='none';document.getElementById('eft').textContent=eid?'✏️ Editar':'+ Nuevo Empleado';document.getElementById('eferr').textContent='';if(eid){var e=emps.find(function(x){return x.id===eid;});if(e){document.getElementById('efn').value=e.name||'';document.getElementById('efc').value=e.cedula||'';document.getElementById('efb').value=e.birth||'';document.getElementById('eft2').value=e.phone||'';document.getElementById('efa').value=e.address||'';document.getElementById('efd').value=e.dept||'';document.getElementById('efcg').value=e.cargo||'';document.getElementById('efi2').value=e.ingreso||'';document.getElementById('efcs').value=e.camisa||'';document.getElementById('efp').value=e.pantalon||'';document.getElementById('efz').value=e.zapatos||'';['pipf','pipb'].forEach(function(pid){var src=pid==='pipf'?e.cedulaFront:e.cedulaBack;var p=document.getElementById(pid);if(src){p.src=src;p.style.display='block';}else{p.style.display='none';p.src='';}});}}else{['efn','efc','efb','eft2','efa','efcg','efi2','efp','efz'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('efd').value='';document.getElementById('efcs').value='';['pipf','pipb'].forEach(function(pid){var p=document.getElementById(pid);p.style.display='none';p.src='';});['picf','picb'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});window._pid_pipf=null;window._pid_pipb=null;}};
+window.showEF=function(eid){editEId=eid||null;document.getElementById('rlv').style.display='none';document.getElementById('rfv').style.display='';document.getElementById('rpv').style.display='none';document.getElementById('dfv').style.display='none';document.getElementById('eft').textContent=eid?'✏️ Editar':'+ Nuevo Empleado';document.getElementById('eferr').textContent='';if(eid){var e=emps.find(function(x){return x.id===eid;});if(e){document.getElementById('efn').value=e.name||'';document.getElementById('efc').value=e.cedula||'';document.getElementById('efb').value=e.birth||'';document.getElementById('eft2').value=e.phone||'';document.getElementById('efa').value=e.address||'';document.getElementById('efd').value=e.dept||'';document.getElementById('efcg').value=e.cargo||'';document.getElementById('efi2').value=e.ingreso||'';document.getElementById('efcs').value=e.camisa||'';document.getElementById('efp').value=e.pantalon||'';document.getElementById('efz').value=e.zapatos||'';
+        document.getElementById('eflnac').value=e.lugarNac||'';
+        document.getElementById('efgrupo').value=e.grupoSang||'';
+        document.getElementById('efeps').value=e.eps||'';
+        document.getElementById('efarl').value=e.arl||'';
+        document.getElementById('efarlv').value=e.arlVence||'';
+        var certs=e.certificados||[];
+        ['alturas','electrico','confinados','primeros','quimicos'].forEach(function(k){
+          var el=document.getElementById('efcert-'+k);if(el)el.checked=certs.indexOf(k)>=0;
+        });['pipf','pipb'].forEach(function(pid){var src=pid==='pipf'?e.cedulaFront:e.cedulaBack;var p=document.getElementById(pid);if(src){p.src=src;p.style.display='block';}else{p.style.display='none';p.src='';}});}}else{['efn','efc','efb','eft2','efa','efcg','efi2','efp','efz','eflnac','efeps','efarl','efarlv'].forEach(function(id){document.getElementById(id).value='';});
+        document.getElementById('efgrupo').value='';
+        ['alturas','electrico','confinados','primeros','quimicos'].forEach(function(k){
+          var el=document.getElementById('efcert-'+k);if(el)el.checked=false;
+        });document.getElementById('efd').value='';document.getElementById('efcs').value='';['pipf','pipb'].forEach(function(pid){var p=document.getElementById(pid);p.style.display='none';p.src='';});['picf','picb'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});window._pid_pipf=null;window._pid_pipb=null;}};
 window.backRH=function(){document.getElementById('rlv').style.display='';document.getElementById('rfv').style.display='none';document.getElementById('rpv').style.display='none';document.getElementById('dfv').style.display='none';renderRH();renderDEL();_gs('rrhh-screen');};
-window.saveEmp=async function(){var name=document.getElementById('efn').value.trim(),ced=document.getElementById('efc').value.trim(),dept=document.getElementById('efd').value;if(!name){document.getElementById('eferr').textContent='⚠️ El nombre es obligatorio';return;}if(!ced){document.getElementById('eferr').textContent='⚠️ La cédula es obligatoria';return;}if(!dept){document.getElementById('eferr').textContent='⚠️ Seleccioná el departamento';return;}var pfP=document.getElementById('pipf'),pbP=document.getElementById('pipb');var cF=window._pid_pipf||(pfP.style.display!=='none'&&pfP.src.indexOf('data:')===0?pfP.src:(editEId?emps.find(function(e){return e.id===editEId;}):null)?emps.find(function(e){return e.id===editEId;}).cedulaFront||null:null);var cB=window._pid_pipb||(pbP.style.display!=='none'&&pbP.src.indexOf('data:')===0?pbP.src:(editEId?emps.find(function(e){return e.id===editEId;}):null)?emps.find(function(e){return e.id===editEId;}).cedulaBack||null:null);var data={name:name,cedula:ced,dept:dept,birth:document.getElementById('efb').value,phone:document.getElementById('eft2').value.trim(),address:document.getElementById('efa').value.trim(),cargo:document.getElementById('efcg').value.trim(),ingreso:document.getElementById('efi2').value,camisa:document.getElementById('efcs').value,pantalon:document.getElementById('efp').value.trim(),zapatos:document.getElementById('efz').value.trim(),cedulaFront:cF,cedulaBack:cB};try{if(editEId){await updateDoc(doc(db,"empleados",editEId),data);toast('✅ Actualizado');}else{data.createdAt=serverTimestamp();await addDoc(collection(db,"empleados"),data);toast('✅ Empleado registrado');}window.backRH();}catch(e){document.getElementById('eferr').textContent='❌ Error: '+e.message;}};
-window.showProf=function(eid){var e=emps.find(function(x){return x.id===eid;});if(!e)return;document.getElementById('rlv').style.display='none';document.getElementById('rfv').style.display='none';document.getElementById('rpv').style.display='';document.getElementById('dfv').style.display='none';var c=avc(e.name);var p=tasks.filter(function(t){return t.assignedTo===eid&&!t.done;}).length;var d2=tasks.filter(function(t){return t.assignedTo===eid&&t.done;}).length;function pf(l,v){return '<div class="pf2"><div class="pl2">'+l+'</div><div class="pv">'+(v||'—')+'</div></div>';}function fd(d){if(!d)return'—';var pts=d.split('-');return pts.length===3?pts[2]+'/'+pts[1]+'/'+pts[0]:d;}var h='<div class="ph"><div class="pha" style="background:linear-gradient(135deg,'+c+')">'+ini(e.name)+'</div><div><div class="phn">'+e.name+'</div><div class="phd">'+DI[e.dept]+' '+DN[e.dept]+(e.cargo?' · '+e.cargo:'')+'</div><div style="font-size:10px;color:var(--tm);margin-top:2px">'+p+' pend. · '+d2+' hechas</div></div></div>';h+='<div class="ps"><h4>📋 Datos Personales</h4><div class="pg">'+pf('Cédula',e.cedula)+pf('Teléfono',e.phone)+pf('Nacimiento',fd(e.birth))+pf('Ingreso',fd(e.ingreso))+'</div>'+(e.address?'<div style="margin-top:9px"><div class="pl2">Dirección</div><div class="pv">'+e.address+'</div></div>':'')+'</div>';h+='<div class="ps"><h4>👕 Tallas</h4><div class="pg">'+pf('Camisa',e.camisa)+pf('Pantalón',e.pantalon)+pf('Zapatos',e.zapatos)+'</div></div>';if(e.cedulaFront||e.cedulaBack){h+='<div class="ps"><h4>🪪 Cédula</h4><div class="pip">'+(e.cedulaFront?'<div><div class="pl2">Frontal</div><img src="'+e.cedulaFront+'"/></div>':'')+(e.cedulaBack?'<div><div class="pl2">Trasera</div><img src="'+e.cedulaBack+'"/></div>':'')+'</div></div>';}h+='<button class="bep" data-eid="'+eid+'" onclick="showEF(this.dataset.eid)">✏️ EDITAR</button>';h+='<button class="bdp" data-eid="'+eid+'" data-ename="'+e.name.replace(/"/g,'&quot;')+'" onclick="confDelE(this.dataset.eid,this.dataset.ename)">🗑 ELIMINAR EMPLEADO</button>';document.getElementById('rpc').innerHTML=h;};
+window.saveEmp=async function(){var name=document.getElementById('efn').value.trim(),ced=document.getElementById('efc').value.trim(),dept=document.getElementById('efd').value;if(!name){document.getElementById('eferr').textContent='⚠️ El nombre es obligatorio';return;}if(!ced){document.getElementById('eferr').textContent='⚠️ La cédula es obligatoria';return;}if(!dept){document.getElementById('eferr').textContent='⚠️ Seleccioná el departamento';return;}var pfP=document.getElementById('pipf'),pbP=document.getElementById('pipb');var cF=window._pid_pipf||(pfP.style.display!=='none'&&pfP.src.indexOf('data:')===0?pfP.src:(editEId?emps.find(function(e){return e.id===editEId;}):null)?emps.find(function(e){return e.id===editEId;}).cedulaFront||null:null);var cB=window._pid_pipb||(pbP.style.display!=='none'&&pbP.src.indexOf('data:')===0?pbP.src:(editEId?emps.find(function(e){return e.id===editEId;}):null)?emps.find(function(e){return e.id===editEId;}).cedulaBack||null:null);var data={name:name,cedula:ced,dept:dept,birth:document.getElementById('efb').value,phone:document.getElementById('eft2').value.trim(),address:document.getElementById('efa').value.trim(),cargo:document.getElementById('efcg').value.trim(),ingreso:document.getElementById('efi2').value,camisa:document.getElementById('efcs').value,pantalon:document.getElementById('efp').value.trim(),zapatos:document.getElementById('efz').value.trim(),cedulaFront:cF,cedulaBack:cB,
+      lugarNac:document.getElementById('eflnac').value.trim(),
+      grupoSang:document.getElementById('efgrupo').value,
+      eps:document.getElementById('efeps').value.trim(),
+      arl:document.getElementById('efarl').value.trim(),
+      arlVence:document.getElementById('efarlv').value,
+      certificados:(function(){var c=[];['alturas','electrico','confinados','primeros','quimicos'].forEach(function(k){var el=document.getElementById('efcert-'+k);if(el&&el.checked)c.push(k);});return c;})()
+    };try{if(editEId){await updateDoc(doc(db,"empleados",editEId),data);toast('✅ Actualizado');}else{data.createdAt=serverTimestamp();await addDoc(collection(db,"empleados"),data);toast('✅ Empleado registrado');}window.backRH();}catch(e){document.getElementById('eferr').textContent='❌ Error: '+e.message;}};
+window.showProf=function(eid){var e=emps.find(function(x){return x.id===eid;});if(!e)return;document.getElementById('rlv').style.display='none';document.getElementById('rfv').style.display='none';document.getElementById('rpv').style.display='';document.getElementById('dfv').style.display='none';var c=avc(e.name);var p=tasks.filter(function(t){return t.assignedTo===eid&&!t.done;}).length;var d2=tasks.filter(function(t){return t.assignedTo===eid&&t.done;}).length;function pf(l,v){return '<div class="pf2"><div class="pl2">'+l+'</div><div class="pv">'+(v||'—')+'</div></div>';}function fd(d){if(!d)return'—';var pts=d.split('-');return pts.length===3?pts[2]+'/'+pts[1]+'/'+pts[0]:d;}var h='<div class="ph"><div class="pha" style="background:linear-gradient(135deg,'+c+')">'+ini(e.name)+'</div><div><div class="phn">'+e.name+'</div><div class="phd">'+DI[e.dept]+' '+DN[e.dept]+(e.cargo?' · '+e.cargo:'')+'</div><div style="font-size:10px;color:var(--tm);margin-top:2px">'+p+' pend. · '+d2+' hechas</div></div></div>';h+='<div class="ps"><h4>📋 Datos Personales</h4><div class="pg">'+pf('Cédula',e.cedula)+pf('Teléfono',e.phone)+pf('Nacimiento',fd(e.birth))+pf('Ingreso',fd(e.ingreso))+'</div>'+(e.address?'<div style="margin-top:9px"><div class="pl2">Dirección</div><div class="pv">'+e.address+'</div></div>':'')+'</div>';h+='<div class="ps"><h4>👕 Tallas</h4><div class="pg">'+pf('Camisa',e.camisa)+pf('Pantalón',e.pantalon)+pf('Zapatos',e.zapatos)+'</div></div>';
+h+='<div class="ps"><h4>🛡️ Seguridad</h4><div class="pg">'+pf('Lugar nacimiento',e.lugarNac)+pf('Grupo sanguíneo',e.grupoSang)+pf('EPS',e.eps)+pf('ARL / Póliza',e.arl)+pf('Vence ARL',fd(e.arlVence))+'</div>';
+var CERT_LABELS={alturas:'Trabajo en alturas',electrico:'Eléctrico',confinados:'Espacios confinados',primeros:'Primeros auxilios',quimicos:'Manejo de químicos'};
+var certs=e.certificados||[];
+if(certs.length){h+='<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">'+certs.map(function(k){return '<span style="background:#1a3a1a;color:#3fb950;border:1px solid #3fb950;border-radius:20px;padding:3px 10px;font-size:11px;">✓ '+(CERT_LABELS[k]||k)+'</span>';}).join('')+'</div>';}
+h+='</div>';if(e.cedulaFront||e.cedulaBack){h+='<div class="ps"><h4>🪪 Cédula</h4><div class="pip">'+(e.cedulaFront?'<div><div class="pl2">Frontal</div><img src="'+e.cedulaFront+'"/></div>':'')+(e.cedulaBack?'<div><div class="pl2">Trasera</div><img src="'+e.cedulaBack+'"/></div>':'')+'</div></div>';}h+='<button class="bep" data-eid="'+eid+'" onclick="showEF(this.dataset.eid)">✏️ EDITAR</button>';h+='<button class="bdp" data-eid="'+eid+'" data-ename="'+e.name.replace(/"/g,'&quot;')+'" onclick="confDelE(this.dataset.eid,this.dataset.ename)">🗑 ELIMINAR EMPLEADO</button>';document.getElementById('rpc').innerHTML=h;};
 window.confDelE=async function(id,name){if(!confirm('¿Eliminar a '+name+'?'))return;try{await deleteDoc(doc(db,"empleados",id));toast('🗑 Eliminado');window.backRH();}catch(e){toast('❌ Error');}};
 
 // DOTACIONES
@@ -1741,9 +1808,12 @@ _gs('login-screen');
           <button type="button" onclick="document.getElementById('pf-xlsx-input').click()" style="background:#1e1e1e;border:1px solid #444;border-radius:8px;padding:8px 20px;color:#ccc;font-size:13px;cursor:pointer;">Seleccionar archivo</button>
           <div id="pf-xlsx-msg" style="font-size:11px;color:#555;margin-top:8px;"></div>
         </div>
-        <div style="font-size:12px;color:#666;letter-spacing:.4px;">PARTICIPANTES</div>
+        <div style="font-size:12px;color:#666;letter-spacing:.4px;margin-bottom:6px;">👷 EQUIPO DE TRABAJO</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+          <input id="pf-emp-buscar" type="text" placeholder="🔍 Buscar empleado por nombre o cédula..." style="flex:1;background:#111;border:1px solid #333;border-radius:8px;padding:10px 12px;color:#fff;font-size:13px;" oninput="pfBuscarEmp(this.value)"/>
+        </div>
+        <div id="pf-emp-resultados" style="display:none;background:#111;border:1px solid #333;border-radius:8px;margin-bottom:8px;max-height:200px;overflow-y:auto;"></div>
         <div id="pf-parts" style="display:flex;flex-direction:column;gap:8px;"></div>
-        <button onclick="pfAddPart()" style="background:#1e1e1e;border:1px solid #333;border-radius:8px;padding:10px;color:#aaa;font-size:13px;cursor:pointer;">+ Agregar participante</button>
         <button onclick="pfGuardar()" style="background:#e83a2f;border:none;border-radius:10px;padding:14px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;">GUARDAR PROYECTO</button>
       </div>
     </div>
@@ -1757,7 +1827,7 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v4.1 - 2026-10-11</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v4.2 - 2026-10-11</div>
 
 <!-- SheetJS for reading .xlsx in browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2053,6 +2123,7 @@ function pfAddPartRow(pt){
   var pl=document.getElementById('pf-parts');
   var wrap=document.createElement('div');
   wrap.style.cssText='background:#111;border:1px solid #2a2a2a;border-radius:10px;padding:12px;margin-bottom:8px;';
+  if(pt._empId)wrap.dataset.empid=pt._empId;
 
   /* Header: foto + nombre + btnDel */
   var hdr=document.createElement('div');
@@ -2251,6 +2322,63 @@ function pfAddPartRow(pt){
   pl.appendChild(wrap);
 }
 
+
+/* ── Buscar y asignar empleados a proyecto ── */
+window.pfBuscarEmp=function(q){
+  var res=document.getElementById('pf-emp-resultados');
+  if(!q||q.length<2){res.style.display='none';return;}
+  var ql=q.toLowerCase();
+  var found=emps.filter(function(e){
+    return (e.name||'').toLowerCase().indexOf(ql)>=0||(e.cedula||'').indexOf(ql)>=0;
+  });
+  // Quitar los ya agregados
+  var yaIds=[];
+  document.querySelectorAll('#pf-parts [data-empid]').forEach(function(el){yaIds.push(el.dataset.empid);});
+  found=found.filter(function(e){return yaIds.indexOf(e.id)<0;});
+  if(!found.length){res.innerHTML='<div style="padding:12px;color:#666;font-size:13px;">Sin resultados</div>';res.style.display='block';return;}
+  res.innerHTML=found.map(function(e){
+    var CERT_L={alturas:'Alturas',electrico:'Eléctrico',confinados:'Confinados',primeros:'Primeros aux.',quimicos:'Químicos'};
+    var certs=(e.certificados||[]).map(function(k){return CERT_L[k]||k;}).join(', ');
+    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid #1a1a1a;cursor:pointer;" onclick="pfAgregarEmpProy(\''+e.id+'\')">'
+      +'<div style="width:38px;height:38px;border-radius:8px;background:#1a2a1a;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">👷</div>'
+      +'<div style="flex:1;min-width:0;">'
+      +'<div style="font-size:13px;font-weight:700;color:#fff;">'+e.name+'</div>'
+      +'<div style="font-size:11px;color:#888;">CI: '+(e.cedula||'—')+(e.cargo?' · '+e.cargo:'')+'</div>'
+      +(certs?'<div style="font-size:10px;color:#3fb950;">✓ '+certs+'</div>':'')
+      +'</div>'
+      +'<div style="font-size:20px;color:#3fb950;">+</div>'
+      +'</div>';
+  }).join('');
+  res.style.display='block';
+};
+
+window.pfAgregarEmpProy=function(empId){
+  var e=emps.find(function(x){return x.id===empId;});
+  if(!e)return;
+  // Limpiar búsqueda
+  document.getElementById('pf-emp-buscar').value='';
+  document.getElementById('pf-emp-resultados').style.display='none';
+  // Agregar como participante con todos los datos del empleado
+  pfAddPartRow({
+    nombre:e.name,
+    rol:e.cargo||'',
+    tipoDoc:'CC',
+    numDoc:e.cedula||'',
+    fechaNac:e.birth||'',
+    lugarNac:e.lugarNac||'',
+    grupoSang:e.grupoSang||'',
+    celular:e.phone||'',
+    eps:e.eps||'',
+    arl:e.arl||'',
+    arlVence:e.arlVence||'',
+    observaciones:'',
+    certificados:e.certificados||[],
+    documentos:[],
+    foto:null,
+    _empId:e.id
+  });
+};
+
 function pfAddPart(){pfAddPartRow({});}
 
 function pfGuardar(){
@@ -2280,6 +2408,7 @@ function pfGuardar(){
       observaciones:(row.querySelector('.ppart-obs')||{value:''}).value.trim(),
       certificados:certs,
       documentos:row._docsWrap?row._docsWrap._docs:[],
+      _empId:row.dataset?row.dataset.empid||null:null,
       foto:fotoEl?fotoEl._fotoData:null
     });
   });
