@@ -563,6 +563,15 @@ main{padding:12px;max-width:700px;margin:0 auto;}
       </div>
       <div class="mbt-arrow">›</div>
     </button>
+    <button class="mbt" onclick="goPortalCliente()" style="border-left-color:#f5a623;">
+      <div class="mbt-ico">🔑</div>
+      <div>
+        <div class="mbt-name">Portal Clientes</div>
+        <div class="mbt-desc">Consulta el estado de tu proyecto · Equipo · Fotos</div>
+        <div class="mbt-pill" style="background:#f5a623;color:#000;">Acceso clientes</div>
+      </div>
+      <div class="mbt-arrow">›</div>
+    </button>
     <button class="mbt mbt-adm" onclick="openAdminLogin()">
       <div class="mbt-ico">🔐</div>
       <div>
@@ -674,6 +683,15 @@ main{padding:12px;max-width:700px;margin:0 auto;}
       <div>
         <div class="adm-btn-name">Proyectos de Instalación</div>
         <div class="adm-btn-desc">Crear · Seguimiento · Consulta por código</div>
+      </div>
+      <div class="adm-btn-arrow">›</div>
+    </button>
+
+    <button class="adm-btn" onclick="goConfigClientes()" style="border-left-color:#f5a623;">
+      <div class="adm-btn-ico">⚙️</div>
+      <div>
+        <div class="adm-btn-name">Configuraciones</div>
+        <div class="adm-btn-desc">Códigos de acceso para clientes · Portal de consulta · Administrar credenciales</div>
       </div>
       <div class="adm-btn-arrow">›</div>
     </button>
@@ -1205,7 +1223,7 @@ clk(); setInterval(clk, 1000);
 </script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy, getDoc, setDoc, getDocs, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 var cfg = { apiKey:"AIzaSyC_89LSZSiuKAqIp_JUnaRRuMwALGCt_8o", authDomain:"tareas-empresa-2911f.firebaseapp.com", projectId:"tareas-empresa-2911f", storageBucket:"tareas-empresa-2911f.firebasestorage.app", messagingSenderId:"686763477486", appId:"1:686763477486:web:b65ee267900d9f49cf3a7f" };
 var PASS = "3942";
@@ -1562,6 +1580,92 @@ _gs('login-screen');
 #proy-overlay textarea::-webkit-input-placeholder { color:#555; }
 #proy-overlay select option[value=""] { color:#555; }
 </style>
+<!-- ════════ CONFIGURACIONES OVERLAY ════════ -->
+<div id="cfg-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#0d0d0d;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+  <div style="max-width:520px;margin:0 auto;padding:0 0 80px;">
+    <div style="display:flex;align-items:center;gap:12px;padding:16px;border-bottom:1px solid #2a2a2a;position:sticky;top:0;background:#0d0d0d;z-index:10;">
+      <button onclick="cfgClose()" style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:8px 14px;color:#fff;font-size:13px;cursor:pointer;">&#8592; Admin</button>
+      <div style="font-size:16px;font-weight:700;color:#f5a623;">⚙️ Configuraciones</div>
+    </div>
+    <div style="padding:20px 16px;">
+      <!-- PORTAL CLIENTES -->
+      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:14px;padding:20px;margin-bottom:20px;">
+        <div style="font-size:13px;color:#f5a623;font-weight:700;letter-spacing:.5px;margin-bottom:16px;">🔑 PORTAL DE CLIENTES</div>
+        <p style="font-size:12px;color:#888;margin-bottom:16px;">Crea un código y contraseña para cada cliente. El cliente usará estas credenciales para acceder al Portal y consultar sus proyectos por código MAX.</p>
+        <!-- New client form -->
+        <div style="background:#111;border-radius:10px;padding:16px;margin-bottom:16px;">
+          <div style="font-size:11px;color:#666;font-weight:600;letter-spacing:.4px;margin-bottom:2px;">CÓDIGO DE CLIENTE</div>
+          <input id="cfg-cli-codigo" placeholder="Ej: CLI-001" style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:10px 12px;color:#fff;font-size:14px;width:100%;box-sizing:border-box;margin-bottom:10px;" />
+          <div style="font-size:11px;color:#666;font-weight:600;letter-spacing:.4px;margin-bottom:2px;">NOMBRE DEL CLIENTE</div>
+          <input id="cfg-cli-nombre" placeholder="Nombre o empresa" style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:10px 12px;color:#fff;font-size:14px;width:100%;box-sizing:border-box;margin-bottom:10px;" />
+          <div style="font-size:11px;color:#666;font-weight:600;letter-spacing:.4px;margin-bottom:2px;">CONTRASEÑA</div>
+          <input id="cfg-cli-pass" type="password" placeholder="Contraseña de acceso" style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:10px 12px;color:#fff;font-size:14px;width:100%;box-sizing:border-box;margin-bottom:12px;" />
+          <button onclick="cfgAddCliente()" style="background:#f5a623;border:none;border-radius:8px;padding:10px 20px;color:#000;font-size:13px;font-weight:700;cursor:pointer;width:100%;">+ Agregar Cliente</button>
+        </div>
+        <!-- Clients list -->
+        <div id="cfg-cli-lista" style="display:flex;flex-direction:column;gap:8px;"></div>
+      </div>
+      <!-- URL PORTAL -->
+      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:14px;padding:20px;">
+        <div style="font-size:13px;color:#f5a623;font-weight:700;letter-spacing:.5px;margin-bottom:10px;">🌐 ACCESO AL PORTAL</div>
+        <p style="font-size:12px;color:#888;margin-bottom:12px;">El portal de clientes está disponible en la misma aplicación. Comparte esta pantalla con el cliente para que consulte sus proyectos.</p>
+        <button onclick="goPortalCliente()" style="background:#1a1a1a;border:2px solid #f5a623;border-radius:8px;padding:10px 20px;color:#f5a623;font-size:13px;font-weight:700;cursor:pointer;width:100%;">Abrir Portal Cliente ›</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ PORTAL CLIENTE OVERLAY ════════ -->
+<div id="portal-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#0d0d0d;z-index:10000;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+  <div style="max-width:420px;margin:0 auto;padding:40px 20px 80px;">
+    <!-- LOGO / HEADER -->
+    <div style="text-align:center;margin-bottom:32px;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:#e83a2f;letter-spacing:3px;">MAXPRINT</div>
+      <div style="font-size:12px;color:#666;letter-spacing:2px;margin-top:2px;">PORTAL DE CLIENTES</div>
+    </div>
+
+    <!-- LOGIN PANEL -->
+    <div id="portal-login" style="">
+      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:16px;padding:28px;">
+        <div style="font-size:14px;color:#fff;font-weight:700;margin-bottom:4px;">Acceso para Clientes</div>
+        <div style="font-size:12px;color:#666;margin-bottom:24px;">Ingrese sus credenciales para consultar sus proyectos</div>
+        <div style="font-size:11px;color:#666;font-weight:600;letter-spacing:.4px;margin-bottom:2px;">CÓDIGO DE CLIENTE</div>
+        <input id="portal-codigo" placeholder="Ej: CLI-001" style="background:#111;border:1px solid #333;border-radius:8px;padding:12px 14px;color:#fff;font-size:15px;width:100%;box-sizing:border-box;margin-bottom:14px;" />
+        <div style="font-size:11px;color:#666;font-weight:600;letter-spacing:.4px;margin-bottom:2px;">CONTRASEÑA</div>
+        <input id="portal-pass" type="password" placeholder="Contraseña" style="background:#111;border:1px solid #333;border-radius:8px;padding:12px 14px;color:#fff;font-size:15px;width:100%;box-sizing:border-box;margin-bottom:18px;" />
+        <div id="portal-err" style="color:#e83a2f;font-size:12px;text-align:center;margin-bottom:10px;display:none;">Código o contraseña incorrectos</div>
+        <button onclick="portalLogin()" style="background:#e83a2f;border:none;border-radius:10px;padding:14px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;width:100%;margin-bottom:12px;">INGRESAR</button>
+        <button onclick="portalClose()" style="background:transparent;border:1px solid #333;border-radius:10px;padding:10px;color:#888;font-size:13px;cursor:pointer;width:100%;">← Volver</button>
+      </div>
+    </div>
+
+    <!-- DASHBOARD POST-LOGIN -->
+    <div id="portal-dash" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+        <div>
+          <div style="font-size:11px;color:#666;letter-spacing:.5px;">BIENVENIDO</div>
+          <div id="portal-client-name" style="font-size:16px;font-weight:700;color:#fff;"></div>
+        </div>
+        <button onclick="portalLogout()" style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:8px 12px;color:#888;font-size:12px;cursor:pointer;">Salir</button>
+      </div>
+
+      <!-- CONSULTA PROYECTO -->
+      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:16px;padding:24px;margin-bottom:20px;">
+        <div style="font-size:14px;color:#f5a623;font-weight:700;margin-bottom:4px;">🔍 Consulta su Proyecto</div>
+        <div style="font-size:12px;color:#666;margin-bottom:16px;">Ingrese el código del proyecto que le proporcionó MAXPRINT</div>
+        <div style="font-size:11px;color:#666;font-weight:600;letter-spacing:.4px;margin-bottom:2px;">CÓDIGO DE PROYECTO</div>
+        <div style="display:flex;gap:8px;">
+          <input id="portal-proy-code" placeholder="MAX-2026-0307" style="background:#111;border:1px solid #333;border-radius:8px;padding:12px 14px;color:#fff;font-size:14px;flex:1;min-width:0;text-transform:uppercase;" />
+          <button onclick="portalBuscarProy()" style="background:#e83a2f;border:none;border-radius:8px;padding:12px 16px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Consultar</button>
+        </div>
+      </div>
+
+      <!-- RESULTADO -->
+      <div id="portal-proy-res"></div>
+    </div>
+  </div>
+</div>
+
 <div id="proy-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#0d0d0d;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;">
   <div style="max-width:520px;margin:0 auto;padding:0 0 80px;">
     <div style="display:flex;align-items:center;gap:12px;padding:16px;border-bottom:1px solid #2a2a2a;position:sticky;top:0;background:#0d0d0d;z-index:10;">
@@ -1653,7 +1757,7 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v3.5 - 2026-10-11</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v3.7 - 2026-10-11</div>
 
 <!-- SheetJS for reading .xlsx in browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1695,7 +1799,21 @@ function pfSetFecha(val){
 }
 
 function pLoad(){try{return JSON.parse(localStorage.getItem('mp_proyectos')||'[]');}catch(e){return[];}}
-function pSave(d){try{localStorage.setItem('mp_proyectos',JSON.stringify(d));}catch(e){}}
+function pSave(d){try{localStorage.setItem('mp_proyectos',JSON.stringify(d));}catch(e){}pSyncFirestore(d);}
+async function pSyncFirestore(lista){
+  try{
+    var adds=lista.map(function(p){
+      var pd=Object.assign({},p);
+      /* Firestore no acepta arrays de base64 grandes — guardamos fotos como conteo */
+      if(pd.fotos&&pd.fotos.length)pd._fotosCount=pd.fotos.length; else pd._fotosCount=0;
+      delete pd.fotos;
+      /* participantes: guardamos sin fotos grandes para Firestore; las fotos se mantienen en localStorage */
+      if(pd.participantes)pd.participantes=pd.participantes.map(function(pt){var p2=Object.assign({},pt);delete p2.foto;return p2;});
+      return setDoc(doc(db,'mp_proyectos',pd.code),pd);
+    });
+    await Promise.all(adds);
+  }catch(e){console.warn('Firebase proyectos sync error:',e);}
+}
 function pGenCode(){
   var d=pLoad(),yr=new Date().getFullYear();
   var MIN=307;
@@ -2140,6 +2258,168 @@ function pfGuardar(){
   }
   pSave(d);_pEditId=null;pfLimpiar();pRenderList();proyTab('list');alert('Proyecto guardado.');
 }
+
+/* ════════ CONFIGURACIONES CLIENTES (Firebase + localStorage espejo) ════════ */
+function cliLoad(){try{return JSON.parse(localStorage.getItem('mp_clientes')||'[]');}catch(e){return[];}}
+function cliSave(d){try{localStorage.setItem('mp_clientes',JSON.stringify(d));}catch(e){}}
+
+/* Sincronizar lista de clientes a Firestore */
+async function cliSyncFirestore(lista){
+  try{
+    // Borramos colección existente y reescribimos
+    var col=collection(db,'mp_clientes');
+    var snap=await getDocs(col);
+    var dels=snap.docs.map(function(d){return deleteDoc(doc(db,'mp_clientes',d.id));});
+    await Promise.all(dels);
+    var adds=lista.map(function(c){return setDoc(doc(db,'mp_clientes',c.codigo),{codigo:c.codigo,nombre:c.nombre,pass:c.pass,creado:c.creado});});
+    await Promise.all(adds);
+  }catch(e){console.warn('Firebase clientes sync error:',e);}
+}
+
+window.goConfigClientes=function(){
+  document.getElementById('cfg-overlay').style.display='block';
+  cfgRenderLista();
+};
+window.cfgClose=function(){
+  document.getElementById('cfg-overlay').style.display='none';
+  _gs('adm-screen');
+};
+window.cfgAddCliente=async function(){
+  var codigo=document.getElementById('cfg-cli-codigo').value.trim().toUpperCase();
+  var nombre=document.getElementById('cfg-cli-nombre').value.trim();
+  var pass=document.getElementById('cfg-cli-pass').value.trim();
+  if(!codigo||!nombre||!pass){alert('Completa todos los campos: código, nombre y contraseña.');return;}
+  var d=cliLoad();
+  if(d.find(function(c){return c.codigo===codigo;})){alert('Ya existe un cliente con ese código.');return;}
+  d.push({codigo:codigo,nombre:nombre,pass:pass,creado:new Date().toISOString().slice(0,10)});
+  cliSave(d);
+  await cliSyncFirestore(d);
+  document.getElementById('cfg-cli-codigo').value='';
+  document.getElementById('cfg-cli-nombre').value='';
+  document.getElementById('cfg-cli-pass').value='';
+  cfgRenderLista();
+  alert('✅ Cliente '+codigo+' creado y sincronizado.');
+};
+window.cfgDeleteCliente=async function(codigo){
+  if(!confirm('¿Eliminar cliente '+codigo+'?'))return;
+  var d=cliLoad().filter(function(c){return c.codigo!==codigo;});
+  cliSave(d);
+  await cliSyncFirestore(d);
+  cfgRenderLista();
+};
+function cfgRenderLista(){
+  var d=cliLoad();
+  var el=document.getElementById('cfg-cli-lista');
+  if(!el)return;
+  if(!d.length){el.innerHTML='<div style="color:#555;font-size:13px;text-align:center;padding:16px;">No hay clientes registrados</div>';return;}
+  el.innerHTML='';
+  d.forEach(function(c){
+    var item=document.createElement('div');
+    item.style.cssText='background:#111;border:1px solid #2a2a2a;border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px;';
+    var info=document.createElement('div');
+    info.style.flex='1';
+    info.innerHTML='<div style="font-size:14px;font-weight:700;color:#f5a623;">'+c.codigo+'</div>'
+      +'<div style="font-size:12px;color:#ccc;margin-top:2px;">'+c.nombre+'</div>'
+      +'<div style="font-size:11px;color:#555;margin-top:2px;">Pass: '+'•'.repeat(c.pass.length)+' · Creado: '+c.creado+'</div>';
+    var btn=document.createElement('button');
+    btn.textContent='🗑';
+    btn.style.cssText='background:transparent;border:1px solid #333;border-radius:6px;padding:6px 10px;color:#e83a2f;cursor:pointer;font-size:14px;';
+    btn.onclick=function(){cfgDeleteCliente(c.codigo);};
+    item.appendChild(info);
+    item.appendChild(btn);
+    el.appendChild(item);
+  });
+}
+
+/* ════════ PORTAL CLIENTE ════════ */
+window.goPortalCliente=function(){
+  portalReset();
+  document.getElementById('portal-overlay').style.display='block';
+};
+window.portalClose=function(){
+  document.getElementById('portal-overlay').style.display='none';
+};
+function portalReset(){
+  document.getElementById('portal-login').style.display='';
+  document.getElementById('portal-dash').style.display='none';
+  document.getElementById('portal-codigo').value='';
+  document.getElementById('portal-pass').value='';
+  document.getElementById('portal-err').style.display='none';
+  document.getElementById('portal-proy-res').innerHTML='';
+  if(document.getElementById('portal-proy-code'))document.getElementById('portal-proy-code').value='';
+}
+window.portalLogin=function(){
+  var codigo=document.getElementById('portal-codigo').value.trim().toUpperCase();
+  var pass=document.getElementById('portal-pass').value.trim();
+  var d=cliLoad();
+  var cli=d.find(function(c){return c.codigo===codigo&&c.pass===pass;});
+  if(!cli){
+    document.getElementById('portal-err').style.display='';
+    setTimeout(function(){document.getElementById('portal-err').style.display='none';},3000);
+    document.getElementById('portal-pass').value='';
+    return;
+  }
+  document.getElementById('portal-client-name').textContent=cli.nombre+' ('+cli.codigo+')';
+  document.getElementById('portal-login').style.display='none';
+  document.getElementById('portal-dash').style.display='';
+  document.getElementById('portal-proy-res').innerHTML='';
+};
+window.portalLogout=function(){
+  portalReset();
+};
+window.portalBuscarProy=function(){
+  var codigo=(document.getElementById('portal-proy-code').value||'').trim().toUpperCase();
+  var res=document.getElementById('portal-proy-res');
+  if(!codigo){res.innerHTML='<div style="color:#666;font-size:13px;padding:8px;">Ingresa un código MAX-AAAA-####</div>';return;}
+  var p=pLoad().find(function(x){return x.code===codigo;});
+  if(!p){res.innerHTML='<div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:32px;text-align:center;color:#e83a2f;font-size:14px;">No se encontró el proyecto <strong>'+codigo+'</strong><br><span style="color:#666;font-size:12px;margin-top:8px;display:block;">Verifica el código o contacta a MAXPRINT</span></div>';return;}
+  var ECOL2={'En diseno':'#5b8af5','En produccion':'#f5a623','Listo para instalar':'#3fb950','Instalado':'#e83a2f','Entregado':'#aaa'};
+  var PROG2={'En diseno':20,'En produccion':40,'Listo para instalar':60,'Instalado':80,'Entregado':100};
+  var c=ECOL2[p.estado]||'#888',pct=PROG2[p.estado]||0;
+  var partsHtml='';
+  if(p.participantes&&p.participantes.length){
+    partsHtml+='<div style="border-top:1px solid #2a2a2a;padding-top:14px;margin-top:14px;">'
+      +'<div style="font-size:11px;color:#666;letter-spacing:.5px;margin-bottom:10px;">👷 EQUIPO DE INSTALACIÓN</div>';
+    p.participantes.forEach(function(pt){
+      partsHtml+='<div style="background:#111;border-radius:10px;padding:12px;margin-bottom:8px;">';
+      partsHtml+='<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;">';
+      if(pt.foto){
+        partsHtml+='<img src="'+pt.foto+'" style="width:48px;height:48px;border-radius:8px;object-fit:cover;flex-shrink:0;"/>';
+      } else {
+        partsHtml+='<div style="width:48px;height:48px;border-radius:8px;background:#222;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">&#128100;</div>';
+      }
+      partsHtml+='<div style="flex:1;min-width:0;">';
+      partsHtml+='<div style="font-size:15px;font-weight:700;color:#fff;">'+pt.nombre+'</div>';
+      partsHtml+='<div style="font-size:12px;color:#888;">'+(pt.rol||'')+(pt.tipoDoc&&pt.numDoc?' · '+pt.tipoDoc+' '+pt.numDoc:'')+'</div>';
+      if(pt.grupoSang)partsHtml+='<div style="font-size:11px;color:#f5a623;margin-top:2px;">Sangre: '+pt.grupoSang+'</div>';
+      if(pt.eps)partsHtml+='<div style="font-size:11px;color:#aaa;margin-top:2px;">EPS: '+pt.eps+(pt.arl?' · ARL: '+pt.arl:'')+'</div>';
+      partsHtml+='</div></div>';
+      partsHtml+='</div>';
+    });
+    partsHtml+='</div>';
+  }
+  /* Fotos del proyecto */
+  var fotosHtml='';
+  if(p.fotos&&p.fotos.length){
+    fotosHtml='<div style="border-top:1px solid #2a2a2a;padding-top:14px;margin-top:14px;">'
+      +'<div style="font-size:11px;color:#666;letter-spacing:.5px;margin-bottom:10px;">📷 FOTOS DEL PROYECTO</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">';
+    p.fotos.forEach(function(f){
+      fotosHtml+='<img src="'+f+'" style="width:100%;border-radius:8px;aspect-ratio:4/3;object-fit:cover;" />';
+    });
+    fotosHtml+='</div></div>';
+  }
+  res.innerHTML='<div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:14px;padding:18px;">'
+    +'<div style="font-size:11px;color:#e83a2f;font-weight:700;letter-spacing:.5px;">'+p.code+'</div>'
+    +'<div style="font-size:20px;font-weight:700;color:#fff;margin:6px 0 4px;">'+p.nombre+'</div>'
+    +'<div style="font-size:13px;color:#888;margin-bottom:12px;">Cliente: '+p.cliente+'</div>'
+    +(p.tipo?'<div style="font-size:12px;color:#666;margin-bottom:8px;">Tipo: '+p.tipo+'</div>':'')
+    +(p.desc?'<div style="font-size:13px;color:#bbb;margin-bottom:12px;">'+p.desc+'</div>':'')
+    +'<div style="font-size:12px;color:#888;margin-bottom:6px;">ESTADO: <span style="color:'+c+';font-weight:700;">'+p.estado+'</span></div>'
+    +'<div style="background:#222;border-radius:6px;height:10px;margin-bottom:10px;overflow:hidden;"><div style="background:'+c+';height:10px;width:'+pct+'%;transition:width .5s;"></div></div>'
+    +(p.fecha?'<div style="font-size:12px;color:#888;margin-bottom:8px;">📅 Fecha de instalación: <strong style="color:#ccc;">'+p.fecha+'</strong></div>':'')
+    +partsHtml+fotosHtml+'</div>';
+};
 
 /* ---- Buscar ---- */
 function pfBuscar(){
