@@ -1291,7 +1291,7 @@ onSnapshot(q1,function(s){tasks=s.docs.map(function(d){return Object.assign({id:
 var q2=query(collection(db,"solicitudes"),orderBy("createdAt","desc"));
 onSnapshot(q2,function(s){sols=s.docs.map(function(d){return Object.assign({id:d.id},d.data());});renderSols();});
 var q3=query(collection(db,"empleados"),orderBy("createdAt","asc"));
-onSnapshot(q3,function(s){emps=s.docs.map(function(d){return Object.assign({id:d.id},d.data());});updEmpSel();renderEGs();if(rhSub==='e')renderRH();renderDEL();});
+onSnapshot(q3,function(s){emps=s.docs.map(function(d){return Object.assign({id:d.id},d.data());});window.emps=emps;updEmpSel();renderEGs();if(rhSub==='e')renderRH();renderDEL();});
 var q4=query(collection(db,"dotaciones"),orderBy("createdAt","desc"));
 onSnapshot(q4,function(s){dots=s.docs.map(function(d){return Object.assign({id:d.id},d.data());});if(dtSub==='h')renderDH();renderDEL();});
 
@@ -1832,7 +1832,7 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v4.3 - 2026-10-11</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v4.4 - 2026-10-11</div>
 
 <!-- SheetJS for reading .xlsx in browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2334,6 +2334,7 @@ function pfAddPartRow(pt){
 window.pfRenderListaEmps=function(filtro){
   var lista=document.getElementById('pf-emp-lista');
   if(!lista)return;
+  var emps=window.emps||[];
   var yaIds=[];
   document.querySelectorAll('#pf-parts [data-empid]').forEach(function(el){yaIds.push(el.dataset.empid);});
   var ql=(filtro||'').toLowerCase();
@@ -2365,6 +2366,7 @@ window.pfFiltrarEmps=function(q){
 };
 
 window.pfAgregarSeleccionados=function(){
+  var emps=window.emps||[];
   var checks=document.querySelectorAll('.pf-emp-chk:checked');
   if(!checks.length)return;
   checks.forEach(function(chk){
@@ -2396,6 +2398,7 @@ window.pfAgregarSeleccionados=function(){
 
 /* legacy — kept for compatibility */
 window.pfAgregarEmpProy=function(empId){
+  var emps=window.emps||[];
   var e=emps.find(function(x){return x.id===empId;});
   if(!e)return;
   pfAddPartRow({
