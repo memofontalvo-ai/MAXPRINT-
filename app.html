@@ -1,5 +1,4 @@
 
-<!-- MAXPRINT Control Operativo v1.9 — 2026-10-10 | +Módulo Proyectos -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -360,6 +359,10 @@ main{padding:12px;max-width:700px;margin:0 auto;}
 .stk .sopt-name{color:var(--a);}
 .srh .sopt-name{color:var(--blue);}
 .sdt .sopt-name{color:var(--g);}
+
+.adm-btn-proy{background:linear-gradient(135deg,#1a0808,#200d0d);border:1.5px solid rgba(232,58,47,.4);}
+.adm-btn-proy .adm-btn-name{color:#e83a2f;}
+.adm-btn-proy .adm-btn-arrow{color:#e83a2f;}
 </style>
 </head>
 <body>
@@ -666,13 +669,13 @@ main{padding:12px;max-width:700px;margin:0 auto;}
       <div class="adm-btn-arrow">›</div>
     </button>
 
-    <button class="adm-btn adm-btn-proy" onclick="goProy()" style="background:linear-gradient(135deg,#1a0808,#200d0d);border:1.5px solid rgba(232,58,47,.4);">
-      <div class="adm-btn-ico" style="font-size:28px;">📋</div>
+    <button class="adm-btn adm-btn-proy" onclick="goProy()">
+      <div class="adm-btn-ico">📋</div>
       <div>
-        <div class="adm-btn-name" style="color:#e83a2f;">Proyectos de Instalación</div>
+        <div class="adm-btn-name">Proyectos de Instalación</div>
         <div class="adm-btn-desc">Crear · Seguimiento · Consulta por código</div>
       </div>
-      <div class="adm-btn-arrow" style="color:#e83a2f;">›</div>
+      <div class="adm-btn-arrow">›</div>
     </button>
 
   </div>
@@ -1547,160 +1550,11 @@ window.doChangePass = async function(){
   }
 };
 
-
-/* ════════ MÓDULO PROYECTOS (localStorage) ════════ */
-function proyLoad(){ try{ return JSON.parse(localStorage.getItem('mp_proyectos')||'[]'); }catch(e){ return []; } }
-function proySave(d){ try{ localStorage.setItem('mp_proyectos', JSON.stringify(d)); }catch(e){} }
-
-function proyGenCode(){
-  var d=proyLoad(), yr=new Date().getFullYear();
-  var n=d.filter(function(p){ return p.code&&p.code.indexOf('MAX-'+yr)===0; }).length+1;
-  return 'MAX-'+yr+'-'+String(n).padStart(4,'0');
-}
-
-var _proyEditId=null;
-
-window.goProy=function(){ _proyEditId=null; proyTab('list'); proyRenderList(); _gs('proy-screen'); };
-
-window.proyTab=function(tab){
-  ['list','new','buscar'].forEach(function(t){
-    var v=document.getElementById('proy-'+t+'-view');
-    var b=document.getElementById('ptab-'+t);
-    if(v) v.style.display=t===tab?'block':'none';
-    if(b){ b.style.background=t===tab?'#e83a2f':'#242424'; b.style.color=t===tab?'#fff':'#aaa'; b.style.fontWeight=t===tab?'700':'400'; }
-  });
-  if(tab==='new'&&!_proyEditId){ proyLimpiarForm(); }
-};
-
-function proyRenderList(){
-  var d=proyLoad(); var el=document.getElementById('proy-lista');
-  if(!el) return;
-  if(!d.length){ el.innerHTML='<div style="color:#666;text-align:center;padding:32px;font-size:14px;">No hay proyectos aún.<br>Toca ➕ para crear uno.</div>'; return; }
-  var ESTADOS={'En diseño':'#58a','En producción':'#fa0','Listo para instalar':'#4af','Instalado':'#a6f','Entregado':'#3fb'};
-  el.innerHTML=d.map(function(p){
-    var col=ESTADOS[p.estado]||'#888';
-    return '<div style="background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:14px;">'
-      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">'
-      +'<div style="flex:1;">'
-      +'<div style="font-size:12px;color:#e83a2f;font-weight:700;margin-bottom:2px;">'+p.code+'</div>'
-      +'<div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:2px;">'+p.nombre+'</div>'
-      +'<div style="font-size:12px;color:#888;">'+p.cliente+'</div>'
-      +'</div>'
-      +'<span style="background:'+col+'22;color:'+col+';border:1px solid '+col+'55;border-radius:20px;padding:3px 10px;font-size:11px;white-space:nowrap;">'+p.estado+'</span>'
-      +'</div>'
-      +'<div style="display:flex;gap:8px;margin-top:10px;">'
-      +'<button onclick="proyEditar(''+p.id+'')" style="flex:1;background:#333;border:none;border-radius:8px;padding:8px;color:#fff;font-size:12px;cursor:pointer;">✏️ Editar</button>'
-      +'<button onclick="proyEliminar(''+p.id+'')" style="background:#3a0a0a;border:1px solid #e83a2f44;border-radius:8px;padding:8px 12px;color:#e83a2f;font-size:12px;cursor:pointer;">🗑</button>'
-      +'<button onclick="proyCopiarCodigo(''+p.code+'')" style="background:#1a3a1a;border:1px solid #3fb95044;border-radius:8px;padding:8px 12px;color:#3fb950;font-size:12px;cursor:pointer;">📋</button>'
-      +'</div>'
-      +'</div>';
-  }).join('');
-}
-
-window.proyCopiarCodigo=function(code){
-  navigator.clipboard.writeText(code).then(function(){ toast('✅ Código copiado: '+code); }).catch(function(){ toast('Código: '+code); });
-};
-
-window.proyEliminar=function(id){
-  if(!confirm('¿Eliminar este proyecto?')) return;
-  var d=proyLoad().filter(function(p){ return p.id!==id; });
-  proySave(d); proyRenderList();
-};
-
-window.proyEditar=function(id){
-  var p=proyLoad().find(function(x){ return x.id===id; });
-  if(!p) return;
-  _proyEditId=id;
-  document.getElementById('proy-nombre').value=p.nombre||'';
-  document.getElementById('proy-cliente').value=p.cliente||'';
-  document.getElementById('proy-desc').value=p.desc||'';
-  document.getElementById('proy-tipo').value=p.tipo||'';
-  document.getElementById('proy-estado').value=p.estado||'';
-  document.getElementById('proy-fecha').value=p.fecha||'';
-  document.getElementById('proy-form-title').textContent='EDITAR PROYECTO — '+p.code;
-  var pl=document.getElementById('proy-parts-list'); pl.innerHTML='';
-  (p.participantes||[]).forEach(function(pt){ proyAddPartRow(pt.nombre,pt.rol); });
-  proyTab('new');
-};
-
-function proyLimpiarForm(){
-  ['proy-nombre','proy-cliente','proy-desc','proy-fecha'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
-  ['proy-tipo','proy-estado'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
-  document.getElementById('proy-parts-list').innerHTML='';
-  document.getElementById('proy-form-title').textContent='NUEVO PROYECTO';
-}
-
-function proyAddPartRow(nombre,rol){
-  var pl=document.getElementById('proy-parts-list');
-  var div=document.createElement('div');
-  div.style.cssText='display:flex;gap:8px;align-items:center;';
-  div.innerHTML='<input placeholder="Nombre" value="'+(nombre||'')+'" style="flex:1;background:#242424;border:1px solid #444;border-radius:8px;padding:8px 10px;color:#fff;font-size:13px;" class="ppart-nombre"/>'
-    +'<select style="background:#242424;border:1px solid #444;border-radius:8px;padding:8px;color:#fff;font-size:12px;" class="ppart-rol">'
-    +'<option>Diseñador</option><option>Operario de producción</option><option>Instalador</option><option>Asesor comercial</option><option>Supervisor</option>'
-    +'</select>'
-    +'<button onclick="this.parentElement.remove()" style="background:#3a0a0a;border:none;border-radius:6px;padding:6px 10px;color:#e83a2f;cursor:pointer;font-size:14px;">✕</button>';
-  pl.appendChild(div);
-  if(rol){ div.querySelector('.ppart-rol').value=rol; }
-}
-
-window.proyAddPart=function(){ proyAddPartRow('',''); };
-
-window.proyGuardar=function(){
-  var nombre=document.getElementById('proy-nombre').value.trim();
-  var cliente=document.getElementById('proy-cliente').value.trim();
-  var desc=document.getElementById('proy-desc').value.trim();
-  var tipo=document.getElementById('proy-tipo').value;
-  var estado=document.getElementById('proy-estado').value;
-  var fecha=document.getElementById('proy-fecha').value;
-  if(!nombre||!cliente||!estado){ toast('⚠️ Nombre, cliente y estado son obligatorios'); return; }
-  var parts=[];
-  document.querySelectorAll('#proy-parts-list > div').forEach(function(row){
-    var n=row.querySelector('.ppart-nombre').value.trim();
-    var r=row.querySelector('.ppart-rol').value;
-    if(n) parts.push({nombre:n,rol:r});
-  });
-  var d=proyLoad();
-  if(_proyEditId){
-    d=d.map(function(p){ return p.id===_proyEditId?Object.assign(p,{nombre:nombre,cliente:cliente,desc:desc,tipo:tipo,estado:estado,fecha:fecha,participantes:parts}):p; });
-  } else {
-    d.push({id:Date.now().toString(),code:proyGenCode(),nombre:nombre,cliente:cliente,desc:desc,tipo:tipo,estado:estado,fecha:fecha,participantes:parts,creado:new Date().toISOString()});
-  }
-  proySave(d); _proyEditId=null;
-  proyLimpiarForm(); proyRenderList(); proyTab('list');
-  toast('✅ Proyecto guardado');
-};
-
-window.proyBuscar=function(){
-  var codigo=document.getElementById('proy-buscar-input').value.trim().toUpperCase();
-  var res=document.getElementById('proy-buscar-resultado');
-  if(!codigo){ res.innerHTML='<div style="color:#666;font-size:13px;">Ingresa un código.</div>'; return; }
-  var p=proyLoad().find(function(x){ return x.code===codigo; });
-  if(!p){ res.innerHTML='<div style="color:#e83a2f;font-size:14px;text-align:center;padding:24px;">❌ No se encontró el código <strong>'+codigo+'</strong></div>'; return; }
-  var PROG={'En diseño':20,'En producción':40,'Listo para instalar':60,'Instalado':80,'Entregado':100};
-  var pct=PROG[p.estado]||0;
-  var ESTADOS_COL={'En diseño':'#58a','En producción':'#fa0','Listo para instalar':'#4af','Instalado':'#a6f','Entregado':'#3fb'};
-  var col=ESTADOS_COL[p.estado]||'#888';
-  res.innerHTML='<div style="background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:16px;">'
-    +'<div style="font-size:12px;color:#e83a2f;font-weight:700;">'+p.code+'</div>'
-    +'<div style="font-size:18px;font-weight:700;color:#fff;margin:4px 0;">'+p.nombre+'</div>'
-    +'<div style="font-size:13px;color:#aaa;margin-bottom:12px;">'+p.cliente+'</div>'
-    +(p.tipo?'<div style="font-size:12px;color:#888;margin-bottom:8px;">'+p.tipo+'</div>':'')
-    +(p.desc?'<div style="font-size:13px;color:#bbb;margin-bottom:12px;">'+p.desc+'</div>':'')
-    +'<div style="font-size:12px;color:#888;margin-bottom:6px;">ESTADO: <span style="color:'+col+';font-weight:700;">'+p.estado+'</span></div>'
-    +'<div style="background:#242424;border-radius:6px;height:10px;margin-bottom:12px;">'
-    +'<div style="background:'+col+';height:10px;border-radius:6px;width:'+pct+'%;transition:width .5s;"></div></div>'
-    +(p.fecha?'<div style="font-size:12px;color:#888;margin-bottom:12px;">📅 Entrega: '+p.fecha+'</div>':'')
-    +((p.participantes&&p.participantes.length)?'<div style="font-size:12px;color:#888;margin-bottom:6px;">EQUIPO</div>'
-    +p.participantes.map(function(pt){ return '<div style="background:#242424;border-radius:8px;padding:8px 12px;margin-bottom:6px;font-size:13px;color:#fff;">'+pt.nombre+' <span style="color:#888;font-size:11px;">· '+pt.rol+'</span></div>'; }).join('')
-    :'')
-    +'</div>';
-};
-
 /* Start */
 _gs('login-screen');
 </script>
 
-<!-- ════════ PROYECTOS DE INSTALACIÓN ════════ -->
+<!-- ════════ PROYECTOS ════════ -->
 <div class="screen" id="proy-screen">
   <div class="sub-hdr">
     <button class="sub-back" onclick="_gs('adm-screen')">← Admin</button>
@@ -1708,18 +1562,14 @@ _gs('login-screen');
   </div>
   <div style="padding:0 16px 24px;">
     <div style="display:flex;gap:8px;margin-bottom:16px;">
-      <button id="ptab-list" onclick="proyTab('list')" style="flex:1;padding:10px;border-radius:10px;border:none;font-size:13px;cursor:pointer;background:#e83a2f;color:#fff;font-weight:700;">📋 Proyectos</button>
+      <button id="ptab-list" onclick="proyTab('list')" style="flex:1;padding:10px;border-radius:10px;border:none;font-size:13px;cursor:pointer;background:#e83a2f;color:#fff;font-weight:700;">📋 Lista</button>
       <button id="ptab-new" onclick="proyTab('new')" style="flex:1;padding:10px;border-radius:10px;border:none;font-size:13px;cursor:pointer;background:#242424;color:#aaa;">➕ Nuevo</button>
       <button id="ptab-buscar" onclick="proyTab('buscar')" style="flex:1;padding:10px;border-radius:10px;border:none;font-size:13px;cursor:pointer;background:#242424;color:#aaa;">🔍 Buscar</button>
     </div>
-    <!-- Lista -->
-    <div id="proy-list-view">
-      <div id="proy-lista" style="display:flex;flex-direction:column;gap:12px;"></div>
-    </div>
-    <!-- Nuevo / Editar -->
+    <div id="proy-list-view"><div id="proy-lista" style="display:flex;flex-direction:column;gap:12px;"></div></div>
     <div id="proy-new-view" style="display:none;">
       <div style="background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px;">
-        <div style="font-size:13px;color:#e83a2f;font-weight:700;margin-bottom:4px;" id="proy-form-title">NUEVO PROYECTO</div>
+        <div id="proy-form-title" style="font-size:13px;color:#e83a2f;font-weight:700;">NUEVO PROYECTO</div>
         <input id="proy-nombre" placeholder="Nombre del proyecto" style="background:#242424;border:1px solid #444;border-radius:8px;padding:10px 12px;color:#fff;font-size:14px;width:100%;"/>
         <input id="proy-cliente" placeholder="Cliente" style="background:#242424;border:1px solid #444;border-radius:8px;padding:10px 12px;color:#fff;font-size:14px;width:100%;"/>
         <textarea id="proy-desc" placeholder="Descripción" rows="3" style="background:#242424;border:1px solid #444;border-radius:8px;padding:10px 12px;color:#fff;font-size:14px;width:100%;resize:none;"></textarea>
@@ -1735,24 +1585,39 @@ _gs('login-screen');
           <option>Instalado</option><option>Entregado</option>
         </select>
         <input id="proy-fecha" type="date" style="background:#242424;border:1px solid #444;border-radius:8px;padding:10px 12px;color:#fff;font-size:14px;width:100%;"/>
-        <div style="font-size:12px;color:#888;margin-top:4px;">PARTICIPANTES</div>
+        <div style="font-size:12px;color:#888;">PARTICIPANTES</div>
         <div id="proy-parts-list" style="display:flex;flex-direction:column;gap:8px;"></div>
         <button onclick="proyAddPart()" style="background:#333;border:none;border-radius:8px;padding:10px;color:#aaa;font-size:13px;cursor:pointer;">+ Agregar participante</button>
-        <button onclick="proyGuardar()" style="background:#e83a2f;border:none;border-radius:10px;padding:14px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;">GUARDAR PROYECTO</button>
+        <button onclick="proyGuardar()" style="background:#e83a2f;border:none;border-radius:10px;padding:14px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;">GUARDAR</button>
       </div>
     </div>
-    <!-- Buscar -->
     <div id="proy-buscar-view" style="display:none;">
       <div style="display:flex;gap:8px;margin-bottom:16px;">
         <input id="proy-buscar-input" placeholder="Código MAX-2026-0001" style="flex:1;background:#242424;border:1px solid #444;border-radius:8px;padding:10px 12px;color:#fff;font-size:14px;" oninput="this.value=this.value.toUpperCase()"/>
-        <button onclick="proyBuscar()" style="background:#e83a2f;border:none;border-radius:8px;padding:10px 16px;color:#fff;font-weight:700;cursor:pointer;">BUSCAR</button>
+        <button onclick="proyBuscar()" style="background:#e83a2f;border:none;border-radius:8px;padding:10px 16px;color:#fff;font-weight:700;cursor:pointer;">IR</button>
       </div>
       <div id="proy-buscar-resultado"></div>
     </div>
   </div>
 </div>
+<script>
+function proyLoad(){try{return JSON.parse(localStorage.getItem('mp_proyectos')||'[]');}catch(e){return[];}}
+function proySave(d){try{localStorage.setItem('mp_proyectos',JSON.stringify(d));}catch(e){}}
+function proyGenCode(){var d=proyLoad(),yr=new Date().getFullYear(),n=d.filter(function(p){return p.code&&p.code.indexOf('MAX-'+yr)===0;}).length+1;return 'MAX-'+yr+'-'+String(n).padStart(4,'0');}
+var _proyEditId=null;
+window.goProy=function(){_proyEditId=null;proyTab('list');proyRenderList();_gs('proy-screen');};
+window.proyTab=function(tab){['list','new','buscar'].forEach(function(t){var v=document.getElementById('proy-'+t+'-view'),b=document.getElementById('ptab-'+t);if(v)v.style.display=t===tab?'block':'none';if(b){b.style.background=t===tab?'#e83a2f':'#242424';b.style.color=t===tab?'#fff':'#aaa';b.style.fontWeight=t===tab?'700':'400';}});if(tab==='new'&&!_proyEditId)proyLimpiarForm();};
+function proyRenderList(){var d=proyLoad(),el=document.getElementById('proy-lista');if(!el)return;if(!d.length){el.innerHTML='<div style="color:#666;text-align:center;padding:32px;font-size:14px;">No hay proyectos.<br>Toca ➕ para crear uno.</div>';return;}var C={'En diseño':'#58a','En producción':'#fa0','Listo para instalar':'#4af','Instalado':'#a6f','Entregado':'#3fb'};el.innerHTML=d.map(function(p){var c=C[p.estado]||'#888';return '<div style="background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:14px;"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;"><div style="flex:1;"><div style="font-size:12px;color:#e83a2f;font-weight:700;">'+p.code+'</div><div style="font-size:15px;font-weight:700;color:#fff;">'+p.nombre+'</div><div style="font-size:12px;color:#888;">'+p.cliente+'</div></div><span style="background:'+c+'22;color:'+c+';border:1px solid '+c+'55;border-radius:20px;padding:3px 10px;font-size:11px;white-space:nowrap;">'+p.estado+'</span></div><div style="display:flex;gap:8px;margin-top:10px;"><button onclick="proyEditar(''+p.id+'')" style="flex:1;background:#333;border:none;border-radius:8px;padding:8px;color:#fff;font-size:12px;cursor:pointer;">✏️ Editar</button><button onclick="proyEliminar(''+p.id+'')" style="background:#3a0a0a;border:1px solid #e83a2f44;border-radius:8px;padding:8px 12px;color:#e83a2f;font-size:12px;cursor:pointer;">🗑</button><button onclick="proyCopiar(''+p.code+'')" style="background:#1a3a1a;border:1px solid #3fb95044;border-radius:8px;padding:8px 12px;color:#3fb950;font-size:12px;cursor:pointer;">📋</button></div></div>';}).join('');}
+window.proyCopiar=function(code){navigator.clipboard.writeText(code).then(function(){alert('Código copiado: '+code);}).catch(function(){alert('Código: '+code);});};
+window.proyEliminar=function(id){if(!confirm('¿Eliminar?'))return;proySave(proyLoad().filter(function(p){return p.id!==id;}));proyRenderList();};
+window.proyEditar=function(id){var p=proyLoad().find(function(x){return x.id===id;});if(!p)return;_proyEditId=id;document.getElementById('proy-nombre').value=p.nombre||'';document.getElementById('proy-cliente').value=p.cliente||'';document.getElementById('proy-desc').value=p.desc||'';document.getElementById('proy-tipo').value=p.tipo||'';document.getElementById('proy-estado').value=p.estado||'';document.getElementById('proy-fecha').value=p.fecha||'';document.getElementById('proy-form-title').textContent='EDITAR — '+p.code;var pl=document.getElementById('proy-parts-list');pl.innerHTML='';(p.participantes||[]).forEach(function(pt){proyAddPartRow(pt.nombre,pt.rol);});proyTab('new');};
+function proyLimpiarForm(){['proy-nombre','proy-cliente','proy-desc','proy-fecha'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});['proy-tipo','proy-estado'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});document.getElementById('proy-parts-list').innerHTML='';document.getElementById('proy-form-title').textContent='NUEVO PROYECTO';}
+function proyAddPartRow(nombre,rol){var pl=document.getElementById('proy-parts-list'),div=document.createElement('div');div.style.cssText='display:flex;gap:8px;align-items:center;';div.innerHTML='<input placeholder="Nombre" value="'+(nombre||'')+'" style="flex:1;background:#242424;border:1px solid #444;border-radius:8px;padding:8px 10px;color:#fff;font-size:13px;" class="ppart-nombre"/><select style="background:#242424;border:1px solid #444;border-radius:8px;padding:8px;color:#fff;font-size:12px;" class="ppart-rol"><option>Diseñador</option><option>Operario de producción</option><option>Instalador</option><option>Asesor comercial</option><option>Supervisor</option></select><button onclick="this.parentElement.remove()" style="background:#3a0a0a;border:none;border-radius:6px;padding:6px 10px;color:#e83a2f;cursor:pointer;">✕</button>';pl.appendChild(div);if(rol)div.querySelector('.ppart-rol').value=rol;}
+window.proyAddPart=function(){proyAddPartRow('','');};
+window.proyGuardar=function(){var nombre=document.getElementById('proy-nombre').value.trim(),cliente=document.getElementById('proy-cliente').value.trim(),estado=document.getElementById('proy-estado').value;if(!nombre||!cliente||!estado){alert('Nombre, cliente y estado son obligatorios');return;}var parts=[];document.querySelectorAll('#proy-parts-list > div').forEach(function(row){var n=row.querySelector('.ppart-nombre').value.trim(),r=row.querySelector('.ppart-rol').value;if(n)parts.push({nombre:n,rol:r});});var d=proyLoad();if(_proyEditId){d=d.map(function(p){return p.id===_proyEditId?Object.assign(p,{nombre:nombre,cliente:cliente,desc:document.getElementById('proy-desc').value.trim(),tipo:document.getElementById('proy-tipo').value,estado:estado,fecha:document.getElementById('proy-fecha').value,participantes:parts}):p;});}else{d.push({id:Date.now().toString(),code:proyGenCode(),nombre:nombre,cliente:cliente,desc:document.getElementById('proy-desc').value.trim(),tipo:document.getElementById('proy-tipo').value,estado:estado,fecha:document.getElementById('proy-fecha').value,participantes:parts,creado:new Date().toISOString()});}proySave(d);_proyEditId=null;proyLimpiarForm();proyRenderList();proyTab('list');alert('✅ Proyecto guardado');};
+window.proyBuscar=function(){var codigo=document.getElementById('proy-buscar-input').value.trim().toUpperCase(),res=document.getElementById('proy-buscar-resultado');if(!codigo){res.innerHTML='<div style="color:#666;font-size:13px;">Ingresa un código.</div>';return;}var p=proyLoad().find(function(x){return x.code===codigo;});if(!p){res.innerHTML='<div style="color:#e83a2f;text-align:center;padding:24px;">❌ No se encontró <strong>'+codigo+'</strong></div>';return;}var PROG={'En diseño':20,'En producción':40,'Listo para instalar':60,'Instalado':80,'Entregado':100},C={'En diseño':'#58a','En producción':'#fa0','Listo para instalar':'#4af','Instalado':'#a6f','Entregado':'#3fb'},pct=PROG[p.estado]||0,col=C[p.estado]||'#888';res.innerHTML='<div style="background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:16px;"><div style="font-size:12px;color:#e83a2f;font-weight:700;">'+p.code+'</div><div style="font-size:18px;font-weight:700;color:#fff;margin:4px 0;">'+p.nombre+'</div><div style="font-size:13px;color:#aaa;margin-bottom:12px;">'+p.cliente+'</div>'+(p.tipo?'<div style="font-size:12px;color:#888;margin-bottom:8px;">'+p.tipo+'</div>':'')+(p.desc?'<div style="font-size:13px;color:#bbb;margin-bottom:12px;">'+p.desc+'</div>':'')+'<div style="font-size:12px;color:#888;margin-bottom:6px;">ESTADO: <span style="color:'+col+';font-weight:700;">'+p.estado+'</span></div><div style="background:#242424;border-radius:6px;height:10px;margin-bottom:12px;"><div style="background:'+col+';height:10px;border-radius:6px;width:'+pct+'%;"></div></div>'+(p.fecha?'<div style="font-size:12px;color:#888;margin-bottom:12px;">📅 Entrega: '+p.fecha+'</div>':'')+((p.participantes&&p.participantes.length)?'<div style="font-size:12px;color:#888;margin-bottom:6px;">EQUIPO</div>'+p.participantes.map(function(pt){return '<div style="background:#242424;border-radius:8px;padding:8px 12px;margin-bottom:6px;font-size:13px;color:#fff;">'+pt.nombre+' <span style="color:#888;font-size:11px;">· '+pt.rol+'</span></div>';}).join(''):'')+'</div>';};
+</script>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#333;pointer-events:none;">v2.0 — 2026-10-10</div>
 
-
-<div style="position:fixed;bottom:12px;left:0;right:0;text-align:center;font-size:11px;color:#444;pointer-events:none;">v1.9 — 2026-10-10</div>
 </body>
 </html>
