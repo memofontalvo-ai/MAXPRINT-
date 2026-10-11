@@ -1891,6 +1891,16 @@ _gs('login-screen');
   </div>
   <div id="pdf-body" style="padding:24px 20px;max-width:680px;margin:0 auto;font-family:Arial,sans-serif;color:#111;"></div>
 </div>
+
+<!-- Overlay visor de descarga -->
+<div id="dl-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#111;z-index:13000;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+  <div style="position:sticky;top:0;background:#e83a2f;padding:12px 16px;display:flex;align-items:center;gap:8px;z-index:10;">
+    <button onclick="dlClose()" style="background:#fff;border:none;border-radius:8px;padding:8px 14px;color:#e83a2f;font-size:13px;font-weight:700;cursor:pointer;">← Volver</button>
+    <div style="font-size:14px;font-weight:700;color:#fff;flex:1;">ARCHIVOS — Mantén presionado para guardar</div>
+  </div>
+  <div id="dl-body" style="padding:16px;display:flex;flex-direction:column;gap:20px;max-width:700px;margin:0 auto;"></div>
+</div>
+
 <div id="proy-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#0d0d0d;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;">
   <div style="max-width:520px;margin:0 auto;padding:0 0 80px;">
     <div style="display:flex;align-items:center;gap:12px;padding:16px;border-bottom:1px solid #2a2a2a;position:sticky;top:0;background:#0d0d0d;z-index:10;">
@@ -1990,7 +2000,7 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v6.0 - 2026-10-11</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v6.1 - 2026-10-11</div>
 
 <!-- SheetJS for reading .xlsx in browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2992,68 +3002,136 @@ function _descargarBlob(blob,nombre){
   setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},1000);
 }
 
+window.dlClose=function(){
+  document.getElementById('dl-overlay').style.display='none';
+  document.getElementById('dl-body').innerHTML='';
+};
+
 window.pdfDescargar=function(){
   var hv=window._hvData||{};
-  var nombre=(hv.nombre||'empleado');
-  // 1. Abrir tarjeta en nueva pestaña (funciona en iOS Safari — usuario guarda desde ahí)
-  toast('⏳ Generando tarjeta...');
-  try {
+  try{
+    var body=document.getElementById('dl-body');
+    body.innerHTML='';
+
+    // --- 1. Tarjeta canvas ---
     var canvas=document.createElement('canvas');
-    var W=800,H=520;
+    var W=800,H=560;
     canvas.width=W; canvas.height=H;
     var ctx=canvas.getContext('2d');
-    // Encabezado rojo
+    // Header
     ctx.fillStyle='#e83a2f';
-    ctx.fillRect(0,0,W,80);
-    // Logo texto
+    ctx.fillRect(0,0,W,90);
     ctx.fillStyle='#fff';
-    ctx.font='bold 28px Arial';
-    ctx.fillText('MAXPRINT S.A.S.',20,50);
-    ctx.font='14px Arial';
-    ctx.fillText('HOJA DE VIDA LABORAL',20,70);
-    // Fondo blanco
+    ctx.font='bold 30px Arial';
+    ctx.fillText('MAXPRINT S.A.S.',20,52);
+    ctx.font='15px Arial';
+    ctx.fillText('HOJA DE VIDA LABORAL',20,76);
+    // Body bg
     ctx.fillStyle='#fff';
-    ctx.fillRect(0,80,W,H-110);
-    // Nombre empleado
+    ctx.fillRect(0,90,W,H-120);
+    // Nombre
     ctx.fillStyle='#111';
-    ctx.font='bold 22px Arial';
-    ctx.fillText(hv.nombre||'',20,115);
-    // Campos en 2 columnas
+    ctx.font='bold 24px Arial';
+    ctx.fillText(hv.nombre||'',20,128);
+    ctx.font='15px Arial';
+    ctx.fillStyle='#555';
+    ctx.fillText((hv.cargo||'')+(hv.area?' · '+hv.area:''),20,152);
+    // Separador
+    ctx.strokeStyle='#e83a2f';
+    ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(20,165); ctx.lineTo(W-20,165); ctx.stroke();
+    // Campos
     var campos=[
-      ['Cédula',hv.numDoc],['Cargo',hv.cargo],['Área',hv.area],
-      ['Sede',hv.sede],['Contrato',hv.tipoContrato],['Inicio',hv.fechaIngreso],
-      ['EPS',hv.eps],['AFP',hv.afp],['ARL',hv.arl],['Caja',hv.cajaCom]
+      ['Cédula',hv.numDoc],['Cargo',hv.cargo],
+      ['Área',hv.area],['Sede',hv.sede],
+      ['Contrato',hv.tipoContrato],['Ingreso',hv.fechaIngreso],
+      ['EPS',hv.eps],['AFP',hv.afp],
+      ['ARL',hv.arl],['Caja',hv.cajaCom]
     ];
-    ctx.font='12px Arial';
-    var col1x=20,col2x=410,y=145,rowH=26;
+    ctx.font='13px Arial';
+    var cx=[20,410],y=195,rowH=30;
     campos.forEach(function(c,i){
-      var x=i%2===0?col1x:col2x;
+      var x=cx[i%2];
       if(i%2===0&&i>0)y+=rowH;
       ctx.fillStyle='#888'; ctx.fillText(c[0]+':',x,y);
-      ctx.fillStyle='#111'; ctx.fillText(c[1]||'—',x+80,y);
+      ctx.fillStyle='#111'; ctx.fillText(c[1]||'—',x+90,y);
     });
-    // Pie rojo
+    // Footer
     ctx.fillStyle='#e83a2f';
     ctx.fillRect(0,H-30,W,30);
     ctx.fillStyle='#fff';
-    ctx.font='11px Arial';
-    ctx.fillText('MAXPRINT S.A.S. · Generado '+new Date().toLocaleDateString('es-CO'),20,H-10);
-    // Abrir tarjeta en nueva pestaña
-    var imgURL=canvas.toDataURL('image/png');
-    window.open(imgURL,'_blank');
-    // 2. Abrir cada certificado en nueva pestaña con retardo
+    ctx.font='12px Arial';
+    ctx.fillText('MAXPRINT S.A.S. · '+new Date().toLocaleDateString('es-CO'),20,H-10);
+
+    var imgDataURL=canvas.toDataURL('image/png');
+
+    // Sección tarjeta
+    var sec0=document.createElement('div');
+    sec0.style.cssText='background:#222;border-radius:12px;padding:14px;';
+    sec0.innerHTML='<div style="color:#aaa;font-size:12px;margin-bottom:8px;font-weight:700;">TARJETA DEL EMPLEADO — Mantén presionado la imagen para guardar</div>';
+    var img=document.createElement('img');
+    img.src=imgDataURL;
+    img.style.cssText='width:100%;border-radius:8px;display:block;';
+    sec0.appendChild(img);
+    body.appendChild(sec0);
+
+    // --- 2. Certificados ---
     var docs=hv.docsCerts||{};
     var keys=Object.keys(docs).filter(function(k){return docs[k]&&docs[k].data;});
-    keys.forEach(function(k,i){
-      setTimeout(function(){
-        var d=docs[k];
-        var raw=d.data.indexOf(',')>-1?d.data:d.data;
-        var prefix=d.tipo==='pdf'?'data:application/pdf;base64,':'data:image/jpeg;base64,';
-        var src=raw.indexOf(',')>-1?raw:(prefix+raw);
-        window.open(src,'_blank');
-      },600*(i+1));
+    keys.forEach(function(k){
+      var d=docs[k];
+      var raw=d.data.indexOf(',')>-1?d.data.split(',')[1]:d.data;
+      var sec=document.createElement('div');
+      sec.style.cssText='background:#222;border-radius:12px;padding:14px;';
+      var label=document.createElement('div');
+      label.style.cssText='color:#aaa;font-size:12px;margin-bottom:8px;font-weight:700;';
+      label.textContent=(d.nombre||k).toUpperCase()+(d.tipo==='pdf'?' — Mantén presionado para guardar':' — Mantén presionado la imagen para guardar');
+      sec.appendChild(label);
+      if(d.tipo==='pdf'){
+        // Mostrar PDF embebido — funciona en iOS Safari
+        var obj=document.createElement('object');
+        obj.data='data:application/pdf;base64,'+raw;
+        obj.type='application/pdf';
+        obj.style.cssText='width:100%;height:500px;border-radius:8px;border:none;background:#333;';
+        // Fallback link para iOS (object no siempre funciona en iOS)
+        var fb=document.createElement('div');
+        fb.style.cssText='margin-top:10px;';
+        // Botón de compartir si está disponible
+        if(navigator.share){
+          var btn=document.createElement('button');
+          btn.textContent='📤 Compartir / Guardar PDF';
+          btn.style.cssText='width:100%;background:#e83a2f;border:none;border-radius:8px;padding:14px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;';
+          (function(r,nombre){
+            btn.onclick=function(){
+              var blob=_b64toBlob2(r,'application/pdf');
+              var file=new File([blob],(nombre||k)+'.pdf',{type:'application/pdf'});
+              navigator.share({files:[file],title:nombre||k}).catch(function(){});
+            };
+          })(raw, d.nombre||k);
+          fb.appendChild(btn);
+        }
+        sec.appendChild(obj);
+        sec.appendChild(fb);
+      } else {
+        var img2=document.createElement('img');
+        img2.src='data:image/jpeg;base64,'+raw;
+        img2.style.cssText='width:100%;border-radius:8px;display:block;';
+        sec.appendChild(img2);
+      }
+      body.appendChild(sec);
     });
-    toast('✅ Tarjeta abierta'+(keys.length?' + '+keys.length+' archivo(s)':'')+' — guardá desde el visor');
+
+    if(keys.length===0){
+      var noDoc=document.createElement('div');
+      noDoc.style.cssText='color:#aaa;font-size:13px;text-align:center;padding:20px;';
+      noDoc.textContent='No hay certificados adjuntos para este empleado.';
+      body.appendChild(noDoc);
+    }
+
+    // Mostrar overlay
+    var ov=document.getElementById('dl-overlay');
+    ov.style.display='block';
+    ov.scrollTop=0;
   } catch(e){toast('❌ Error: '+e.message);}
 };
 
