@@ -1513,6 +1513,7 @@ if(dcKeys.length){
 }
 h+='</div>';if(e.cedulaFront||e.cedulaBack){h+='<div class="ps"><h4>🪪 Cédula</h4><div class="pip">'+(e.cedulaFront?'<div><div class="pl2">Frontal</div><img src="'+e.cedulaFront+'"/></div>':'')+(e.cedulaBack?'<div><div class="pl2">Trasera</div><img src="'+e.cedulaBack+'"/></div>':'')+'</div></div>';}h+='<button class="bep" data-eid="'+eid+'" onclick="showEF(this.dataset.eid)">✏️ EDITAR</button>';h+='<button class="bdp" data-eid="'+eid+'" data-ename="'+e.name.replace(/"/g,'&quot;')+'" onclick="confDelE(this.dataset.eid,this.dataset.ename)">🗑 ELIMINAR EMPLEADO</button>';document.getElementById('rpc').innerHTML=h;};
 window.confDelE=async function(id,name){if(!confirm('¿Eliminar a '+name+'?'))return;try{await deleteDoc(doc(db,"empleados",id));toast('🗑 Eliminado');window.backRH();}catch(e){toast('❌ Error');}};
+window.backRH=function(){document.getElementById('rlv').style.display='';document.getElementById('rfv').style.display='none';document.getElementById('rpv').style.display='none';document.getElementById('dfv').style.display='none';};
 
 // DOTACIONES
 var dotCI=[];var curDE=null;
@@ -1987,7 +1988,7 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v5.1 - 2026-10-11</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v5.2 - 2026-10-11</div>
 
 <!-- SheetJS for reading .xlsx in browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2844,6 +2845,36 @@ window.hvImprimir=function(){
 };
 window.portalVerHV=function(ptData){
   var CERT_L={alturas:'Trabajo en Alturas',electrico:'Riesgo Eléctrico',confinados:'Espacios Confinados',primeros:'Primeros Auxilios',quimicos:'Riesgo Químico'};
+  // Enrich ptData with full employee record from Firestore emps
+  var fullEmp=null;
+  if(window.emps&&window.emps.length){
+    // Match by cedula/numDoc first, then by name
+    var cedula=(ptData.numDoc||ptData.cedula||'').trim();
+    var nombre=(ptData.nombre||'').trim().toUpperCase();
+    if(cedula){fullEmp=window.emps.find(function(e){return (e.cedula||'').trim()===cedula;});}
+    if(!fullEmp&&nombre){fullEmp=window.emps.find(function(e){return (e.name||'').trim().toUpperCase()===nombre;});}
+  }
+  if(fullEmp){
+    // Merge: full employee data overrides sparse participant data
+    ptData=Object.assign({},ptData,{
+      nombre:fullEmp.name||ptData.nombre,
+      rol:fullEmp.cargo||ptData.rol,
+      tipoDoc:ptData.tipoDoc||'CC',
+      numDoc:fullEmp.cedula||ptData.numDoc,
+      fechaNac:fullEmp.birth||ptData.fechaNac,
+      lugarNac:fullEmp.lugarNac||ptData.lugarNac,
+      grupoSang:fullEmp.grupoSang||ptData.grupoSang,
+      celular:fullEmp.phone||ptData.celular,
+      eps:fullEmp.eps||ptData.eps,
+      arl:fullEmp.arl||ptData.arl,
+      arlVence:fullEmp.arlVence||ptData.arlVence,
+      observaciones:fullEmp.obs||ptData.observaciones,
+      certificados:fullEmp.certs||ptData.certificados||[],
+      foto:fullEmp.foto||ptData.foto
+    });
+    // Also load docs from localStorage using the full employee id
+    try{var lsDocs=JSON.parse(localStorage.getItem('empDocs_'+fullEmp.id)||'{}');if(Object.keys(lsDocs).length)ptData.docsCerts=lsDocs;}catch(le){}
+  }
   window._hvData=ptData;
   var body=document.getElementById('hv-body');
   if(!body)return;
