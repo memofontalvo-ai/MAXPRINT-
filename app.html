@@ -1602,7 +1602,7 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v2.3 - 2026-10-10</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v2.4 - 2026-10-10</div>
 
 <script>
 var _pEditId=null;
@@ -1613,7 +1613,37 @@ window.goProy=function(){_pEditId=null;pfLimpiar();proyTab('list');pRenderList()
 function proyClose(){document.getElementById('proy-overlay').style.display='none';}
 function proyTab(tab){['list','new','find'].forEach(function(t){var v=document.getElementById('pv-'+t),b=document.getElementById('pt-'+t);if(v)v.style.display=(t===tab)?'block':'none';if(b){b.style.background=(t===tab)?'#e83a2f':'#1e1e1e';b.style.color=(t===tab)?'#fff':'#aaa';b.style.fontWeight=(t===tab)?'700':'400';}});if(tab==='new'&&!_pEditId)pfLimpiar();}
 var ECOL={'En diseno':'#5b8af5','En produccion':'#f5a623','Listo para instalar':'#4af','Instalado':'#a78bfa','Entregado':'#3fb950'};
-function pRenderList(){var d=pLoad(),el=document.getElementById('proy-lista');if(!el)return;if(!d.length){el.innerHTML='<div style="color:#555;text-align:center;padding:40px 0;font-size:14px;">No hay proyectos.<br><span style="color:#888;">Toca + Nuevo para crear uno.</span></div>';return;}el.innerHTML=d.map(function(p){var c=ECOL[p.estado]||'#888';return '<div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:14px 16px;"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px;"><div style="flex:1;"><div style="font-size:11px;color:#e83a2f;font-weight:700;letter-spacing:.5px;margin-bottom:2px;">'+p.code+'</div><div style="font-size:15px;font-weight:700;color:#fff;">'+p.nombre+'</div><div style="font-size:12px;color:#888;margin-top:2px;">'+p.cliente+'</div></div><span style="background:'+c+'22;color:'+c+';border:1px solid '+c+'55;border-radius:20px;padding:3px 10px;font-size:11px;white-space:nowrap;flex-shrink:0;">'+p.estado+'</span></div><div style="display:flex;gap:8px;"><button onclick="pEditar(''+p.id+'')" style="flex:1;background:#222;border:1px solid #333;border-radius:8px;padding:8px;color:#fff;font-size:12px;cursor:pointer;">Editar</button><button onclick="pEliminar(''+p.id+'')" style="background:#1a0808;border:1px solid #e83a2f44;border-radius:8px;padding:8px 14px;color:#e83a2f;font-size:12px;cursor:pointer;">Elim</button><button onclick="pCopiar(''+p.code+'')" style="background:#0a1a0a;border:1px solid #3fb95044;border-radius:8px;padding:8px 14px;color:#3fb950;font-size:12px;cursor:pointer;">Copiar</button></div></div>';}).join('');}
+function pRenderList(){
+  var d=pLoad(),el=document.getElementById('proy-lista');
+  if(!el)return;
+  el.innerHTML='';
+  if(!d.length){
+    el.innerHTML='<p style="color:#555;text-align:center;padding:40px 0;font-size:14px;">No hay proyectos.<br><span style=\"color:#888\">Toca + Nuevo para crear uno.</span></p>';
+    return;
+  }
+  d.forEach(function(p){
+    var c=ECOL[p.estado]||'#888';
+    var card=document.createElement('div');
+    card.style.cssText='background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:14px 16px;';
+    card.innerHTML='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px;">'
+      +'<div style="flex:1;">'
+      +'<div style="font-size:11px;color:#e83a2f;font-weight:700;letter-spacing:.5px;margin-bottom:2px;">'+p.code+'</div>'
+      +'<div style="font-size:15px;font-weight:700;color:#fff;">'+p.nombre+'</div>'
+      +'<div style="font-size:12px;color:#888;margin-top:2px;">'+p.cliente+'</div>'
+      +'</div>'
+      +'<span style="background:'+c+'22;color:'+c+';border:1px solid '+c+'55;border-radius:20px;padding:3px 10px;font-size:11px;white-space:nowrap;flex-shrink:0;">'+p.estado+'</span>'
+      +'</div>'
+      +'<div style="display:flex;gap:8px;">'
+      +'<button class="pe-btn" data-id="'+p.id+'" style="flex:1;background:#222;border:1px solid #333;border-radius:8px;padding:8px;color:#fff;font-size:12px;cursor:pointer;">Editar</button>'
+      +'<button class="pd-btn" data-id="'+p.id+'" style="background:#1a0808;border:1px solid #e83a2f44;border-radius:8px;padding:8px 14px;color:#e83a2f;font-size:12px;cursor:pointer;">Eliminar</button>'
+      +'<button class="pc-btn" data-code="'+p.code+'" style="background:#0a1a0a;border:1px solid #3fb95044;border-radius:8px;padding:8px 14px;color:#3fb950;font-size:12px;cursor:pointer;">Copiar</button>'
+      +'</div>';
+    card.querySelector('.pe-btn').addEventListener('click',function(){pEditar(this.getAttribute('data-id'));});
+    card.querySelector('.pd-btn').addEventListener('click',function(){pEliminar(this.getAttribute('data-id'));});
+    card.querySelector('.pc-btn').addEventListener('click',function(){pCopiar(this.getAttribute('data-code'));});
+    el.appendChild(card);
+  });
+}
 function pCopiar(code){if(navigator.clipboard){navigator.clipboard.writeText(code).catch(function(){});}alert('Codigo: '+code);}
 function pEliminar(id){if(!confirm('Eliminar este proyecto?'))return;pSave(pLoad().filter(function(p){return p.id!==id;}));pRenderList();}
 function pEditar(id){var p=pLoad().find(function(x){return x.id===id;});if(!p)return;_pEditId=id;document.getElementById('pf-nombre').value=p.nombre||'';document.getElementById('pf-cliente').value=p.cliente||'';document.getElementById('pf-desc').value=p.desc||'';document.getElementById('pf-tipo').value=p.tipo||'';document.getElementById('pf-estado').value=p.estado||'';document.getElementById('pf-fecha').value=p.fecha||'';document.getElementById('pf-title').textContent='EDITAR - '+p.code;var pl=document.getElementById('pf-parts');pl.innerHTML='';(p.participantes||[]).forEach(function(pt){pfAddPartRow(pt.nombre,pt.rol);});proyTab('new');}
