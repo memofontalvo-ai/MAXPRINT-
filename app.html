@@ -1757,7 +1757,7 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v4.0 - 2026-10-11</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v4.1 - 2026-10-11</div>
 
 <!-- SheetJS for reading .xlsx in browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2478,7 +2478,7 @@ window.portalBuscarProy=function(){
       +'<div style="font-size:11px;color:#666;letter-spacing:.5px;margin-bottom:10px;">👷 EQUIPO DE INSTALACIÓN</div>';
     p.participantes.forEach(function(pt,pi){
       var ptId='portal-pt-'+pi;
-      partsHtml+='<div id="'+ptId+'" style="background:#111;border:1px solid #2a2a2a;border-radius:10px;padding:12px;margin-bottom:8px;cursor:pointer;transition:border-color .2s;" onclick="portalVerHV(''+ptId+'')">';
+      partsHtml+='<div id="'+ptId+'" style="background:#111;border:1px solid #2a2a2a;border-radius:10px;padding:12px;margin-bottom:8px;cursor:pointer;transition:border-color .2s;" onclick="portalVerHV(\''+ptId+'\')">';
       partsHtml+='<div style="display:flex;align-items:center;gap:10px;">';
       if(pt.foto){
         partsHtml+='<img src="'+pt.foto+'" style="width:48px;height:48px;border-radius:8px;object-fit:cover;flex-shrink:0;"/>';
