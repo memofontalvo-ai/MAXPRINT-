@@ -1757,7 +1757,7 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v3.9 - 2026-10-11</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v4.0 - 2026-10-11</div>
 
 <!-- SheetJS for reading .xlsx in browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2200,7 +2200,7 @@ function pfAddPartRow(pt){
   docsLabel.style.cssText='font-size:11px;color:#666;letter-spacing:.5px;margin-top:8px;margin-bottom:6px;';
   var docsWrap=document.createElement('div');
   docsWrap._docs=pt.documentos?JSON.parse(JSON.stringify(pt.documentos)):[];
-  function renderDocs(){
+  var renderDocs=function(){
     docsWrap.innerHTML='';
     docsWrap._docs.forEach(function(d,i){
       var row=document.createElement('div');
@@ -2209,11 +2209,10 @@ function pfAddPartRow(pt){
       var name=document.createElement('div');name.style.cssText='flex:1;font-size:12px;color:#ccc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';name.textContent=d.nombre;
       var btnDel=document.createElement('button');btnDel.textContent='✕';
       btnDel.style.cssText='background:transparent;border:none;color:#e83a2f;cursor:pointer;font-size:14px;flex-shrink:0;';
-      btnDel.onclick=function(){docsWrap._docs.splice(i,1);renderDocs();};
+      (function(idx){btnDel.onclick=function(){docsWrap._docs.splice(idx,1);renderDocs();};})(i);
       row.appendChild(icon);row.appendChild(name);row.appendChild(btnDel);
       docsWrap.appendChild(row);
     });
-    // Botón agregar
     var addDocBtn=document.createElement('button');
     addDocBtn.textContent='+ Agregar documento (PDF / imagen)';
     addDocBtn.type='button';
@@ -2233,7 +2232,7 @@ function pfAddPartRow(pt){
     addDocBtn.onclick=function(){docFileInput.click();};
     docsWrap.appendChild(addDocBtn);
     docsWrap.appendChild(docFileInput);
-  }
+  };
   renderDocs();
 
   wrap.appendChild(hdr);
