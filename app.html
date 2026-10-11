@@ -1809,10 +1809,15 @@ _gs('login-screen');
           <div id="pf-xlsx-msg" style="font-size:11px;color:#555;margin-top:8px;"></div>
         </div>
         <div style="font-size:12px;color:#666;letter-spacing:.4px;margin-bottom:6px;">👷 EQUIPO DE TRABAJO</div>
-        <div style="display:flex;gap:8px;margin-bottom:8px;">
-          <input id="pf-emp-buscar" type="text" placeholder="🔍 Buscar empleado por nombre o cédula..." style="flex:1;background:#111;border:1px solid #333;border-radius:8px;padding:10px 12px;color:#fff;font-size:13px;" oninput="pfBuscarEmp(this.value)"/>
+        <div style="background:#111;border:1px solid #333;border-radius:10px;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid #222;">
+            <input id="pf-emp-buscar" type="text" placeholder="🔍 Filtrar por nombre o cédula..." style="flex:1;background:transparent;border:none;outline:none;color:#fff;font-size:13px;" oninput="pfFiltrarEmps(this.value)"/>
+          </div>
+          <div id="pf-emp-lista" style="max-height:220px;overflow-y:auto;"></div>
+          <div style="padding:10px 12px;border-top:1px solid #222;">
+            <button onclick="pfAgregarSeleccionados()" style="width:100%;background:#1a3a1a;border:1px solid #3fb950;border-radius:8px;color:#3fb950;font-size:13px;font-weight:700;padding:10px;cursor:pointer;letter-spacing:.5px;">✚ AGREGAR SELECCIONADOS</button>
+          </div>
         </div>
-        <div id="pf-emp-resultados" style="display:none;background:#111;border:1px solid #333;border-radius:8px;margin-bottom:8px;max-height:200px;overflow-y:auto;"></div>
         <div id="pf-parts" style="display:flex;flex-direction:column;gap:8px;"></div>
         <button onclick="pfGuardar()" style="background:#e83a2f;border:none;border-radius:10px;padding:14px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;">GUARDAR PROYECTO</button>
       </div>
@@ -1827,7 +1832,7 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v4.2 - 2026-10-11</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v4.3 - 2026-10-11</div>
 
 <!-- SheetJS for reading .xlsx in browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2103,6 +2108,7 @@ function pEditar(id){
   var pl=document.getElementById('pf-parts');
   pl.innerHTML='';
   (p.participantes||[]).forEach(function(pt){pfAddPartRow(pt);});
+  pfRenderListaEmps('');
   proyTab('new');
 }
 
@@ -2113,6 +2119,7 @@ function pfLimpiar(){
   var ft=document.getElementById('pf-title');if(ft)ft.textContent='NUEVO PROYECTO';
   var cb=document.getElementById('pf-code-badge');if(cb)cb.textContent=pGenCode();
   var msg=document.getElementById('pf-xlsx-msg');if(msg)msg.textContent='';
+  pfRenderListaEmps('');
 }
 
 var CERTS=['Trabajo en alturas','Electrico','Espacios confinados','Primeros auxilios','Manejo de quimicos'];
@@ -2323,42 +2330,74 @@ function pfAddPartRow(pt){
 }
 
 
-/* ── Buscar y asignar empleados a proyecto ── */
-window.pfBuscarEmp=function(q){
-  var res=document.getElementById('pf-emp-resultados');
-  if(!q||q.length<2){res.style.display='none';return;}
-  var ql=q.toLowerCase();
-  var found=emps.filter(function(e){
-    return (e.name||'').toLowerCase().indexOf(ql)>=0||(e.cedula||'').indexOf(ql)>=0;
-  });
-  // Quitar los ya agregados
+/* ── Listar / filtrar empleados con checkboxes ── */
+window.pfRenderListaEmps=function(filtro){
+  var lista=document.getElementById('pf-emp-lista');
+  if(!lista)return;
   var yaIds=[];
   document.querySelectorAll('#pf-parts [data-empid]').forEach(function(el){yaIds.push(el.dataset.empid);});
-  found=found.filter(function(e){return yaIds.indexOf(e.id)<0;});
-  if(!found.length){res.innerHTML='<div style="padding:12px;color:#666;font-size:13px;">Sin resultados</div>';res.style.display='block';return;}
-  res.innerHTML=found.map(function(e){
-    var CERT_L={alturas:'Alturas',electrico:'Eléctrico',confinados:'Confinados',primeros:'Primeros aux.',quimicos:'Químicos'};
+  var ql=(filtro||'').toLowerCase();
+  var found=emps.filter(function(e){
+    if(yaIds.indexOf(e.id)>=0)return false;
+    if(!ql)return true;
+    return (e.name||'').toLowerCase().indexOf(ql)>=0||(e.cedula||'').indexOf(ql)>=0;
+  });
+  if(!found.length){
+    lista.innerHTML='<div style="padding:14px;color:#555;font-size:13px;text-align:center;">'+(emps.length?'Sin resultados':'No hay empleados registrados')+'</div>';
+    return;
+  }
+  var CERT_L={alturas:'Alturas',electrico:'Eléctrico',confinados:'Confinados',primeros:'Primeros aux.',quimicos:'Químicos'};
+  lista.innerHTML=found.map(function(e){
     var certs=(e.certificados||[]).map(function(k){return CERT_L[k]||k;}).join(', ');
-    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid #1a1a1a;cursor:pointer;" onclick="pfAgregarEmpProy(\''+e.id+'\')">'
-      +'<div style="width:38px;height:38px;border-radius:8px;background:#1a2a1a;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">👷</div>'
+    return '<label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid #1a1a1a;cursor:pointer;" onclick="event.stopPropagation()">'
+      +'<input type="checkbox" class="pf-emp-chk" data-empid="'+e.id+'" style="width:18px;height:18px;accent-color:#3fb950;flex-shrink:0;cursor:pointer;"/>'
       +'<div style="flex:1;min-width:0;">'
       +'<div style="font-size:13px;font-weight:700;color:#fff;">'+e.name+'</div>'
-      +'<div style="font-size:11px;color:#888;">CI: '+(e.cedula||'—')+(e.cargo?' · '+e.cargo:'')+'</div>'
-      +(certs?'<div style="font-size:10px;color:#3fb950;">✓ '+certs+'</div>':'')
+      +'<div style="font-size:11px;color:#888;">CC: '+(e.cedula||'—')+(e.cargo?' · '+e.cargo:'')+'</div>'
+      +(certs?'<div style="font-size:10px;color:#3fb950;margin-top:2px;">✓ '+certs+'</div>':'')
       +'</div>'
-      +'<div style="font-size:20px;color:#3fb950;">+</div>'
-      +'</div>';
+      +'</label>';
   }).join('');
-  res.style.display='block';
 };
 
+window.pfFiltrarEmps=function(q){
+  pfRenderListaEmps(q);
+};
+
+window.pfAgregarSeleccionados=function(){
+  var checks=document.querySelectorAll('.pf-emp-chk:checked');
+  if(!checks.length)return;
+  checks.forEach(function(chk){
+    var empId=chk.dataset.empid;
+    var e=emps.find(function(x){return x.id===empId;});
+    if(!e)return;
+    pfAddPartRow({
+      nombre:e.name,
+      rol:e.cargo||'',
+      tipoDoc:'CC',
+      numDoc:e.cedula||'',
+      fechaNac:e.birth||'',
+      lugarNac:e.lugarNac||'',
+      grupoSang:e.grupoSang||'',
+      celular:e.phone||'',
+      eps:e.eps||'',
+      arl:e.arl||'',
+      arlVence:e.arlVence||'',
+      observaciones:'',
+      certificados:e.certificados||[],
+      documentos:[],
+      foto:null,
+      _empId:e.id
+    });
+  });
+  document.getElementById('pf-emp-buscar').value='';
+  pfRenderListaEmps('');
+};
+
+/* legacy — kept for compatibility */
 window.pfAgregarEmpProy=function(empId){
   var e=emps.find(function(x){return x.id===empId;});
   if(!e)return;
-  // Limpiar búsqueda
-  document.getElementById('pf-emp-buscar').value='';
-  document.getElementById('pf-emp-resultados').style.display='none';
-  // Agregar como participante con todos los datos del empleado
   pfAddPartRow({
     nombre:e.name,
     rol:e.cargo||'',
