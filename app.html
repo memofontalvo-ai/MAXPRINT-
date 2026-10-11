@@ -1570,21 +1570,56 @@ _gs('login-screen');
     <div id="pv-new" style="display:none;padding:16px;">
       <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px;">
         <div id="pf-title" style="font-size:13px;color:#e83a2f;font-weight:700;">NUEVO PROYECTO</div>
-        <input id="pf-nombre"  placeholder="Nombre del proyecto *" style="background:#111;border:1px solid #333;border-radius:8px;padding:11px 12px;color:#fff;font-size:14px;width:100%;"/>
-        <input id="pf-cliente" placeholder="Cliente *" style="background:#111;border:1px solid #333;border-radius:8px;padding:11px 12px;color:#fff;font-size:14px;width:100%;"/>
-        <textarea id="pf-desc" placeholder="Descripcion" rows="3" style="background:#111;border:1px solid #333;border-radius:8px;padding:11px 12px;color:#fff;font-size:14px;width:100%;resize:none;font-family:inherit;"></textarea>
-        <select id="pf-tipo" style="background:#111;border:1px solid #333;border-radius:8px;padding:11px 12px;color:#fff;font-size:14px;width:100%;">
-          <option value="">Tipo de servicio</option>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <label style="font-size:11px;color:#888;font-weight:600;letter-spacing:.5px;">NOMBRE DEL PROYECTO *</label>
+          <input id="pf-nombre" placeholder="Ej: Aviso fachada principal" style="background:#111;border:1px solid #333;border-radius:8px;padding:11px 12px;color:#fff;font-size:14px;width:100%;"/>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <label style="font-size:11px;color:#888;font-weight:600;letter-spacing:.5px;">CLIENTE *</label>
+          <input id="pf-cliente" placeholder="Nombre del cliente" style="background:#111;border:1px solid #333;border-radius:8px;padding:11px 12px;color:#fff;font-size:14px;width:100%;"/>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <label style="font-size:11px;color:#888;font-weight:600;letter-spacing:.5px;">DESCRIPCIÓN</label>
+          <textarea id="pf-desc" placeholder="Descripcion del trabajo a realizar" rows="3" style="background:#111;border:1px solid #333;border-radius:8px;padding:11px 12px;color:#fff;font-size:14px;width:100%;resize:none;font-family:inherit;"></textarea>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <label style="font-size:11px;color:#888;font-weight:600;letter-spacing:.5px;">TIPO DE SERVICIO</label>
+          <select id="pf-tipo" style="background:#111;border:1px solid #333;border-radius:8px;padding:11px 12px;color:#fff;font-size:14px;width:100%;">
+          <option value="">Seleccionar...</option>
           <option>Gran Formato</option><option>Avisos LED</option><option>Impresion Digital</option>
           <option>Impresion Offset</option><option>Impresion Textil</option><option>Corte Laser</option>
           <option>Muebles y Decoracion</option><option>Diseno Grafico</option>
-        </select>
-        <select id="pf-estado" style="background:#111;border:1px solid #333;border-radius:8px;padding:11px 12px;color:#fff;font-size:14px;width:100%;">
-          <option value="">Estado *</option>
-          <option>En diseno</option><option>En produccion</option><option>Listo para instalar</option>
-          <option>Instalado</option><option>Entregado</option>
-        </select>
-        <input id="pf-fecha" type="date" style="background:#111;border:1px solid #333;border-radius:8px;padding:11px 12px;color:#fff;font-size:14px;width:100%;"/>
+          </select>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <div style="display:flex;flex-direction:column;gap:4px;flex:1;">
+            <label style="font-size:11px;color:#888;font-weight:600;letter-spacing:.5px;">ESTADO *</label>
+            <select id="pf-estado" style="background:#111;border:1px solid #333;border-radius:8px;padding:11px 12px;color:#fff;font-size:14px;width:100%;">
+              <option value="">Seleccionar...</option>
+              <option>En diseno</option><option>En produccion</option><option>Listo para instalar</option>
+              <option>Instalado</option><option>Entregado</option>
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;flex:1;">
+            <label style="font-size:11px;color:#888;font-weight:600;letter-spacing:.5px;">FECHA DE INSTALACIÓN</label>
+            <div style="display:flex;gap:4px;">
+              <select id="pf-fecha-d" style="background:#111;border:1px solid #333;border-radius:8px;padding:10px 4px;color:#fff;font-size:13px;flex:1;text-align:center;">
+                <option value="">Día</option>
+              </select>
+              <select id="pf-fecha-m" style="background:#111;border:1px solid #333;border-radius:8px;padding:10px 4px;color:#fff;font-size:13px;flex:1.4;text-align:center;">
+                <option value="">Mes</option>
+                <option value="01">Enero</option><option value="02">Febrero</option><option value="03">Marzo</option>
+                <option value="04">Abril</option><option value="05">Mayo</option><option value="06">Junio</option>
+                <option value="07">Julio</option><option value="08">Agosto</option><option value="09">Septiembre</option>
+                <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+              </select>
+              <select id="pf-fecha-y" style="background:#111;border:1px solid #333;border-radius:8px;padding:10px 4px;color:#fff;font-size:13px;flex:1.2;text-align:center;">
+                <option value="">Año</option>
+              </select>
+            </div>
+            <input id="pf-fecha" type="hidden"/>
+          </div>
+        </div>
         <!-- Excel upload -->
         <div style="border:1px dashed #3a3a3a;border-radius:10px;padding:14px;text-align:center;">
           <div style="font-size:12px;color:#888;margin-bottom:10px;">&#128196; Subir Excel del equipo<br><span style="font-size:11px;color:#555;">Formato: Equipo_Instalacion_Avisos.xlsx</span></div>
@@ -1608,12 +1643,46 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v2.8 - 2026-10-11</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v3.0 - 2026-10-11</div>
 
 <!-- SheetJS for reading .xlsx in browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 var _pEditId=null;
+
+/* ---- Date picker init ---- */
+function pfInitDatePicker(){
+  var sd=document.getElementById('pf-fecha-d');
+  var sy=document.getElementById('pf-fecha-y');
+  if(!sd||!sy)return;
+  // Populate days
+  for(var d=1;d<=31;d++){var o=document.createElement('option');o.value=String(d).padStart(2,'0');o.textContent=String(d).padStart(2,'0');sd.appendChild(o);}
+  // Populate years (current year + 3 ahead, 2 behind)
+  var yr=new Date().getFullYear();
+  for(var y=yr-2;y<=yr+3;y++){var o2=document.createElement('option');o2.value=String(y);o2.textContent=String(y);sy.appendChild(o2);}
+  // Sync hidden input on change
+  function syncFecha(){
+    var dv=sd.value,mv=document.getElementById('pf-fecha-m').value,yv=sy.value;
+    document.getElementById('pf-fecha').value=(yv&&mv&&dv)?(yv+'-'+mv+'-'+dv):'';
+  }
+  sd.addEventListener('change',syncFecha);
+  document.getElementById('pf-fecha-m').addEventListener('change',syncFecha);
+  sy.addEventListener('change',syncFecha);
+}
+
+function pfSetFecha(val){
+  // val = 'yyyy-mm-dd'
+  if(!val)return;
+  var parts=val.split('-');
+  if(parts.length!==3)return;
+  var sd=document.getElementById('pf-fecha-d');
+  var sm=document.getElementById('pf-fecha-m');
+  var sy=document.getElementById('pf-fecha-y');
+  if(sd)sd.value=parts[2];
+  if(sm)sm.value=parts[1];
+  if(sy)sy.value=parts[0];
+  document.getElementById('pf-fecha').value=val;
+}
 
 function pLoad(){try{return JSON.parse(localStorage.getItem('mp_proyectos')||'[]');}catch(e){return[];}}
 function pSave(d){try{localStorage.setItem('mp_proyectos',JSON.stringify(d));}catch(e){}}
@@ -1647,6 +1716,7 @@ var ECOL={'En diseno':'#5b8af5','En produccion':'#f5a623','Listo para instalar':
 
 /* ---- Excel upload ---- */
 document.addEventListener('DOMContentLoaded',function(){
+  pfInitDatePicker();
   var inp=document.getElementById('pf-xlsx-input');
   if(!inp)return;
   inp.addEventListener('change',function(){
@@ -1719,7 +1789,7 @@ document.addEventListener('DOMContentLoaded',function(){
         if(cliente){var el2=document.getElementById('pf-cliente');if(el2)el2.value=cliente;}
         if(tipo){var el3=document.getElementById('pf-tipo');if(el3)el3.value=tipo;}
         if(estado){var el4=document.getElementById('pf-estado');if(el4)el4.value=estado;}
-        if(fechaFmt){var el5=document.getElementById('pf-fecha');if(el5)el5.value=fechaFmt;}
+        if(fechaFmt){pfSetFecha(fechaFmt);}
         if(desc){var el6=document.getElementById('pf-desc');if(el6)el6.value=desc;}
 
         // Clear existing participant rows before adding new ones
@@ -1833,7 +1903,7 @@ function pEditar(id){
   document.getElementById('pf-desc').value=p.desc||'';
   document.getElementById('pf-tipo').value=p.tipo||'';
   document.getElementById('pf-estado').value=p.estado||'';
-  document.getElementById('pf-fecha').value=p.fecha||'';
+  pfSetFecha(p.fecha||'');
   document.getElementById('pf-title').textContent='EDITAR - '+p.code;
   var pl=document.getElementById('pf-parts');
   pl.innerHTML='';
@@ -1843,7 +1913,7 @@ function pEditar(id){
 
 function pfLimpiar(){
   ['pf-nombre','pf-cliente','pf-desc','pf-fecha'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
-  ['pf-tipo','pf-estado'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  ['pf-tipo','pf-estado','pf-fecha-d','pf-fecha-m','pf-fecha-y'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   var pl=document.getElementById('pf-parts');if(pl)pl.innerHTML='';
   var ft=document.getElementById('pf-title');if(ft)ft.textContent='NUEVO PROYECTO';
   var msg=document.getElementById('pf-xlsx-msg');if(msg)msg.textContent='';
