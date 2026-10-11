@@ -1653,7 +1653,7 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v3.4 - 2026-10-11</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v3.5 - 2026-10-11</div>
 
 <!-- SheetJS for reading .xlsx in browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1959,17 +1959,30 @@ function pfAddPartRow(pt){
   var info=document.createElement('div');
   info.style.cssText='flex:1;display:flex;flex-direction:column;gap:6px;';
 
-  function mkInput(ph,val,cls,extraStyle){
+  function mkInput(val,cls,extraStyle){
     var el=document.createElement('input');
-    el.placeholder=ph;el.value=val||'';el.className=cls;
+    el.placeholder='';el.value=val||'';el.className=cls;
     el.style.cssText='background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:8px 10px;color:#fff;font-size:13px;width:100%;'+(extraStyle||'');
     return el;
   }
+  function mkLabel(text){
+    var lb=document.createElement('div');
+    lb.textContent=text;
+    lb.style.cssText='font-size:10px;color:#666;font-weight:600;letter-spacing:.4px;margin-bottom:2px;';
+    return lb;
+  }
+  function mkField(labelText,input){
+    var wrap=document.createElement('div');
+    wrap.style.cssText='display:flex;flex-direction:column;flex:1;';
+    wrap.appendChild(mkLabel(labelText));
+    wrap.appendChild(input);
+    return wrap;
+  }
 
-  var nombreIn=mkInput('Nombres y apellidos *',pt.nombre,'ppart-n');
-  var cargoIn=mkInput('Cargo / funcion',pt.rol,'ppart-r');
-  info.appendChild(nombreIn);
-  info.appendChild(cargoIn);
+  var nombreIn=mkInput(pt.nombre,'ppart-n');
+  var cargoIn=mkInput(pt.rol,'ppart-r');
+  info.appendChild(mkField('NOMBRES Y APELLIDOS *',nombreIn));
+  info.appendChild(mkField('CARGO / FUNCIÓN',cargoIn));
 
   var btnDel=document.createElement('button');
   btnDel.innerHTML='&#10005;';btnDel.type='button';
@@ -1986,40 +1999,57 @@ function pfAddPartRow(pt){
   tipoDocSel.style.cssText='width:70px;background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:8px;color:#fff;font-size:12px;flex-shrink:0;';
   ['CC','CE','TI','PA','NIT'].forEach(function(t){var o=document.createElement('option');o.value=t;o.textContent=t;tipoDocSel.appendChild(o);});
   tipoDocSel.value=pt.tipoDoc||'CC';
-  var numDocIn=mkInput('No. de documento',pt.numDoc,'ppart-ndoc');
-  docRow.appendChild(tipoDocSel);docRow.appendChild(numDocIn);
+  var numDocIn=mkInput(pt.numDoc,'ppart-ndoc');
+  var tipoWrap=document.createElement('div');
+  tipoWrap.style.cssText='display:flex;flex-direction:column;flex-shrink:0;';
+  tipoWrap.appendChild(mkLabel('TIPO DOC'));tipoWrap.appendChild(tipoDocSel);
+  docRow.appendChild(tipoWrap);docRow.appendChild(mkField('NÚMERO DE DOCUMENTO',numDocIn));
 
-  /* Fecha nacimiento + Lugar */
+  /* Fecha nacimiento + Lugar + Grupo sanguíneo */
   var nacRow=document.createElement('div');
   nacRow.style.cssText='display:flex;gap:8px;margin-bottom:8px;';
   var fnacIn=document.createElement('input');
-  fnacIn.type='date';fnacIn.value=pt.fechaNac||'';fnacIn.className='ppart-fnac';fnacIn.title='Fecha de nacimiento';
-  fnacIn.style.cssText='flex:1;background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:8px 10px;color:#fff;font-size:12px;';
-  var lnacIn=mkInput('Lugar nacimiento',pt.lugarNac,'ppart-lnac');
-  lnacIn.style.cssText+='flex:1;';
-  nacRow.appendChild(fnacIn);nacRow.appendChild(lnacIn);
+  fnacIn.type='date';fnacIn.value=pt.fechaNac||'';fnacIn.className='ppart-fnac';
+  fnacIn.style.cssText='width:100%;background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:8px 10px;color:#fff;font-size:12px;';
+  var lnacIn=mkInput(pt.lugarNac,'ppart-lnac');
+  nacRow.appendChild(mkField('FECHA DE NACIMIENTO',fnacIn));
+  nacRow.appendChild(mkField('LUGAR DE NACIMIENTO',lnacIn));
+
+  /* Grupo sanguíneo */
+  var grupoRow=document.createElement('div');
+  grupoRow.style.cssText='display:flex;gap:8px;margin-bottom:8px;';
+  var grupoSel=document.createElement('select');
+  grupoSel.className='ppart-grupo';
+  grupoSel.style.cssText='width:100%;background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:8px 10px;color:#fff;font-size:13px;';
+  ['','O+','O-','A+','A-','B+','B-','AB+','AB-'].forEach(function(g){
+    var o=document.createElement('option');o.value=g;o.textContent=g||'Seleccionar...';grupoSel.appendChild(o);
+  });
+  grupoSel.value=pt.grupoSang||'';
+  grupoRow.appendChild(mkField('GRUPO SANGUÍNEO',grupoSel));
 
   /* Celular + EPS */
   var contactRow=document.createElement('div');
   contactRow.style.cssText='display:flex;gap:8px;margin-bottom:8px;';
-  var celIn=mkInput('Celular',pt.celular,'ppart-cel');
-  var epsIn=mkInput('EPS',pt.eps,'ppart-eps');
-  contactRow.appendChild(celIn);contactRow.appendChild(epsIn);
+  var celIn=mkInput(pt.celular,'ppart-cel');
+  var epsIn=mkInput(pt.eps,'ppart-eps');
+  contactRow.appendChild(mkField('CELULAR',celIn));
+  contactRow.appendChild(mkField('EPS',epsIn));
 
   /* ARL */
   var arlRow=document.createElement('div');
   arlRow.style.cssText='display:flex;gap:8px;margin-bottom:8px;';
-  var arlIn=mkInput('No. Poliza ARL',pt.arl,'ppart-arl');
+  var arlIn=mkInput(pt.arl,'ppart-arl');
   var arlVIn=document.createElement('input');
-  arlVIn.type='date';arlVIn.value=pt.arlVence||'';arlVIn.className='ppart-arlv';arlVIn.title='Vencimiento ARL';
-  arlVIn.style.cssText='width:130px;background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:8px 10px;color:#fff;font-size:12px;flex-shrink:0;';
-  arlRow.appendChild(arlIn);arlRow.appendChild(arlVIn);
+  arlVIn.type='date';arlVIn.value=pt.arlVence||'';arlVIn.className='ppart-arlv';
+  arlVIn.style.cssText='width:100%;background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:8px 10px;color:#fff;font-size:12px;';
+  arlRow.appendChild(mkField('NO. PÓLIZA ARL',arlIn));
+  arlRow.appendChild(mkField('VENCIMIENTO ARL',arlVIn));
 
   /* Observaciones */
   var telEmRow=document.createElement('div');
   telEmRow.style.cssText='display:flex;gap:8px;margin-bottom:8px;';
-  var obsIn=mkInput('Observaciones',pt.observaciones,'ppart-obs');
-  telEmRow.appendChild(obsIn);
+  var obsIn=mkInput(pt.observaciones,'ppart-obs');
+  telEmRow.appendChild(mkField('OBSERVACIONES',obsIn));
 
   /* Certificados */
   var certLabel=document.createElement('div');
@@ -2043,6 +2073,7 @@ function pfAddPartRow(pt){
   wrap.appendChild(hdr);
   wrap.appendChild(docRow);
   wrap.appendChild(nacRow);
+  wrap.appendChild(grupoRow);
   wrap.appendChild(contactRow);
   wrap.appendChild(arlRow);
   wrap.appendChild(telEmRow);
@@ -2073,6 +2104,7 @@ function pfGuardar(){
       numDoc:(row.querySelector('.ppart-ndoc')||{value:''}).value.trim(),
       fechaNac:(row.querySelector('.ppart-fnac')||{value:''}).value,
       lugarNac:(row.querySelector('.ppart-lnac')||{value:''}).value.trim(),
+      grupoSang:(row.querySelector('.ppart-grupo')||{value:''}).value,
       celular:(row.querySelector('.ppart-cel')||{value:''}).value.trim(),
       eps:(row.querySelector('.ppart-eps')||{value:''}).value.trim(),
       arl:(row.querySelector('.ppart-arl')||{value:''}).value.trim(),
