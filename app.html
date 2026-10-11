@@ -1619,8 +1619,13 @@ function pLoad(){try{return JSON.parse(localStorage.getItem('mp_proyectos')||'[]
 function pSave(d){try{localStorage.setItem('mp_proyectos',JSON.stringify(d));}catch(e){}}
 function pGenCode(){
   var d=pLoad(),yr=new Date().getFullYear();
-  var n=d.filter(function(p){return p.code&&p.code.indexOf('MAX-'+yr)===0;}).length+1;
-  return 'MAX-'+yr+'-'+String(n).padStart(4,'0');
+  var MIN=307;
+  var existing=d.filter(function(p){return p.code&&p.code.indexOf('MAX-'+yr)===0;});
+  var maxN=existing.reduce(function(acc,p){
+    var num=parseInt(p.code.split('-')[2]||'0',10);
+    return num>acc?num:acc;
+  },MIN-1);
+  return 'MAX-'+yr+'-'+String(maxN+1).padStart(4,'0');
 }
 
 window.goProy=function(){
