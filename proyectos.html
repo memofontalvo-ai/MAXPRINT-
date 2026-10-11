@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proyectos de Instalación — MAXPRINT</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f0f0f;--s:#1a1a1a;--s2:#242424;--b:#2e2e2e;
+  --t:#f0f0f0;--tm:#888;--a:#e83a2f;--a2:#c42d23;
+  --g:#3ecf6a;--y:#f5a623;--bl:#4a9ede;
+  --r:#e05c5c;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);min-height:100vh;}
+
+/* NAV */
+.nav{background:var(--s);border-bottom:2px solid var(--a);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.nav-logo{display:flex;align-items:center;gap:10px;}
+.nav-logo span{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--a);letter-spacing:1px;}
+.nav-tabs{display:flex;gap:4px;}
+.nav-tab{background:transparent;border:1px solid var(--b);color:var(--tm);font-size:12px;font-weight:600;padding:7px 14px;border-radius:8px;cursor:pointer;transition:.2s;letter-spacing:.5px;}
+.nav-tab.active{background:var(--a);border-color:var(--a);color:#fff;}
+
+/* SCREENS */
+.screen{display:none;padding:20px;max-width:800px;margin:0 auto;}
+.screen.active{display:block;}
+
+/* ADMIN LIST */
+.hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.hdr h2{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--a);letter-spacing:1px;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:.2s;letter-spacing:.3px;}
+.btn-red{background:var(--a);color:#fff;}
+.btn-red:hover{background:var(--a2);}
+.btn-ghost{background:transparent;border:1px solid var(--b);color:var(--tm);}
+.btn-ghost:hover{border-color:var(--tm);color:var(--t);}
+.btn-sm{padding:6px 12px;font-size:12px;}
+
+.proj-list{display:flex;flex-direction:column;gap:10px;}
+.proj-card{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:16px;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:14px;}
+.proj-card:hover{border-color:var(--a);background:var(--s2);}
+.proj-code{font-family:monospace;font-size:11px;color:var(--a);background:#2d0a08;padding:4px 8px;border-radius:6px;white-space:nowrap;}
+.proj-info{flex:1;min-width:0;}
+.proj-name{font-size:14px;font-weight:600;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.proj-client{font-size:12px;color:var(--tm);}
+.proj-meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;}
+.badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;letter-spacing:.5px;text-transform:uppercase;}
+.badge-design{background:#1a1a3a;color:#8888ff;}
+.badge-prod{background:#1a2a1a;color:var(--g);}
+.badge-ready{background:#2a2a0a;color:var(--y);}
+.badge-inst{background:#0a1a2a;color:var(--bl);}
+.badge-done{background:#0a2a0a;color:#5ef08a;}
+.proj-date{font-size:11px;color:var(--tm);}
+
+.empty{text-align:center;padding:60px 20px;color:var(--tm);}
+.empty-ico{font-size:48px;margin-bottom:12px;}
+.empty p{font-size:14px;}
+
+/* FORM */
+.form-wrap{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:24px;}
+.form-section{margin-bottom:24px;}
+.form-section h3{font-size:12px;font-weight:700;color:var(--a);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--b);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-grid.full{grid-template-columns:1fr;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{font-size:12px;color:var(--tm);font-weight:500;}
+.field input,.field select,.field textarea{background:var(--s2);border:1px solid var(--b);color:var(--t);padding:10px 12px;border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;transition:.2s;width:100%;}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--a);}
+.field textarea{resize:vertical;min-height:80px;}
+.field select option{background:var(--s2);}
+
+/* PARTICIPANTS */
+.part-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
+.part-row{display:flex;gap:8px;align-items:center;}
+.part-row input,.part-row select{flex:1;}
+.part-row .btn-icon{background:transparent;border:1px solid var(--r);color:var(--r);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.2s;}
+.part-row .btn-icon:hover{background:var(--r);color:#fff;}
+
+/* CODE DISPLAY */
+.code-display{background:#2d0a08;border:2px solid var(--a);border-radius:12px;padding:20px;text-align:center;margin:16px 0;}
+.code-display .lbl{font-size:11px;color:var(--tm);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;}
+.code-display .code{font-family:monospace;font-size:32px;color:var(--a);font-weight:700;letter-spacing:3px;}
+.code-display .hint{font-size:12px;color:var(--tm);margin-top:6px;}
+
+/* FORM ACTIONS */
+.form-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap;}
+
+/* PROJECT DETAIL */
+.detail-wrap{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:24px;}
+.detail-code{font-family:monospace;font-size:13px;color:var(--a);background:#2d0a08;padding:6px 12px;border-radius:8px;display:inline-block;margin-bottom:8px;}
+.detail-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;margin-bottom:4px;}
+.detail-client{font-size:14px;color:var(--tm);margin-bottom:20px;}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;}
+.detail-field{background:var(--s2);border-radius:10px;padding:12px;}
+.detail-field .lbl{font-size:11px;color:var(--tm);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+.detail-field .val{font-size:14px;font-weight:500;}
+.detail-desc{background:var(--s2);border-radius:10px;padding:14px;margin-bottom:16px;}
+.detail-desc .lbl{font-size:11px;color:var(--tm);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.detail-desc p{font-size:13px;color:var(--t);line-height:1.6;}
+
+/* PROGRESS */
+.progress-section{margin-bottom:20px;}
+.progress-section .lbl{font-size:12px;color:var(--tm);margin-bottom:8px;font-weight:500;}
+.progress-bar{background:var(--b);border-radius:20px;height:10px;overflow:hidden;}
+.progress-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--a),var(--y));transition:width .5s ease;}
+.progress-pct{font-size:12px;color:var(--tm);margin-top:4px;text-align:right;}
+.status-steps{display:flex;justify-content:space-between;margin-top:10px;}
+.step-dot{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;}
+.step-dot .dot{width:10px;height:10px;border-radius:50%;background:var(--b);}
+.step-dot.done .dot{background:var(--a);}
+.step-dot span{font-size:9px;color:var(--tm);text-align:center;letter-spacing:.2px;}
+.step-dot.done span{color:var(--t);}
+
+/* PARTICIPANTS DISPLAY */
+.parts-section{margin-bottom:20px;}
+.parts-section h3{font-size:12px;font-weight:700;color:var(--tm);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;}
+.parts-grid{display:flex;flex-direction:column;gap:8px;}
+.part-item{background:var(--s2);border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;}
+.part-item .name{font-size:13px;font-weight:500;}
+.part-item .role{font-size:11px;color:var(--tm);}
+
+/* CLIENT SEARCH */
+.search-wrap{max-width:480px;margin:40px auto;}
+.search-box{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:28px;text-align:center;}
+.search-box .ico{font-size:48px;margin-bottom:12px;}
+.search-box h2{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--a);letter-spacing:1px;margin-bottom:6px;}
+.search-box p{font-size:13px;color:var(--tm);margin-bottom:20px;}
+.search-input-row{display:flex;gap:8px;}
+.search-input-row input{flex:1;background:var(--s2);border:1px solid var(--b);color:var(--t);padding:12px 14px;border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;text-transform:uppercase;letter-spacing:1px;}
+.search-input-row input:focus{outline:none;border-color:var(--a);}
+.search-err{color:var(--r);font-size:12px;margin-top:8px;}
+
+/* CLIENT RESULT */
+.client-result{margin-top:24px;}
+
+/* COPY BTN */
+.copy-btn{background:var(--s2);border:1px solid var(--b);color:var(--tm);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;transition:.2s;margin-top:10px;}
+.copy-btn:hover{border-color:var(--a);color:var(--a);}
+.copy-btn.copied{border-color:var(--g);color:var(--g);}
+
+/* DELETE */
+.btn-danger{background:transparent;border:1px solid var(--r);color:var(--r);}
+.btn-danger:hover{background:var(--r);color:#fff;}
+
+@media(max-width:520px){
+  .form-grid{grid-template-columns:1fr;}
+  .detail-grid{grid-template-columns:1fr;}
+  .part-row{flex-wrap:wrap;}
+  .nav-tab{padding:6px 10px;font-size:11px;}
+  .search-input-row{flex-direction:column;}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo">
+    <span>MAXPRINT</span>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchTab('admin')">⚙ Admin</button>
+    <button class="nav-tab" onclick="switchTab('cliente')">🔍 Consulta</button>
+  </div>
+</nav>
+
+<!-- ===== ADMIN: LISTA ===== -->
+<div class="screen active" id="sc-list">
+  <div class="hdr">
+    <h2>📋 Proyectos</h2>
+    <button class="btn btn-red" onclick="showCreate()">+ Nuevo proyecto</button>
+  </div>
+  <div class="proj-list" id="projList"></div>
+</div>
+
+<!-- ===== ADMIN: CREAR / EDITAR ===== -->
+<div class="screen" id="sc-form">
+  <div class="hdr">
+    <h2 id="formTitle">➕ Nuevo Proyecto</h2>
+    <button class="btn btn-ghost" onclick="showList()">← Volver</button>
+  </div>
+
+  <div id="codeBox" style="display:none" class="code-display">
+    <div class="lbl">Código del proyecto</div>
+    <div class="code" id="codeVal"></div>
+    <div class="hint">Comparte este código con el cliente para que consulte su proyecto</div>
+    <button class="copy-btn" id="copyCodeBtn" onclick="copyCode()">📋 Copiar código</button>
+  </div>
+
+  <div class="form-wrap">
+    <div class="form-section">
+      <h3>Información del proyecto</h3>
+      <div class="form-grid">
+        <div class="field">
+          <label>Nombre del proyecto *</label>
+          <input type="text" id="fNombre" placeholder="Ej: Letras en fachada Almacén XYZ">
+        </div>
+        <div class="field">
+          <label>Nombre del cliente *</label>
+          <input type="text" id="fCliente" placeholder="Ej: Carlos Martínez">
+        </div>
+      </div>
+      <div class="form-grid full" style="margin-top:12px;">
+        <div class="field">
+          <label>Descripción del trabajo</label>
+          <textarea id="fDesc" placeholder="Describe el trabajo a realizar..."></textarea>
+        </div>
+      </div>
+      <div class="form-grid" style="margin-top:12px;">
+        <div class="field">
+          <label>Tipo de servicio</label>
+          <select id="fTipo">
+            <option value="Gran Formato">Gran Formato</option>
+            <option value="Avisos LED">Avisos LED</option>
+            <option value="Impresión Digital">Impresión Digital</option>
+            <option value="Impresión Offset">Impresión Offset</option>
+            <option value="Impresión Textil">Impresión Textil</option>
+            <option value="Corte Láser">Corte Láser</option>
+            <option value="Muebles y Decoración">Muebles y Decoración</option>
+            <option value="Diseño Gráfico">Diseño Gráfico</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Estado</label>
+          <select id="fEstado">
+            <option value="En diseño">En diseño</option>
+            <option value="En producción">En producción</option>
+            <option value="Listo para instalar">Listo para instalar</option>
+            <option value="Instalado">Instalado</option>
+            <option value="Entregado">Entregado</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-grid full" style="margin-top:12px;">
+        <div class="field">
+          <label>Fecha estimada de entrega</label>
+          <input type="date" id="fFecha">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>Participantes</h3>
+      <div class="part-list" id="partList"></div>
+      <button class="btn btn-ghost btn-sm" onclick="addPart()">+ Agregar participante</button>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn btn-ghost" id="btnDelete" style="display:none" onclick="deleteProj()">🗑 Eliminar</button>
+      <button class="btn btn-ghost" onclick="showList()">Cancelar</button>
+      <button class="btn btn-red" onclick="saveProj()">💾 Guardar proyecto</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ADMIN: DETALLE ===== -->
+<div class="screen" id="sc-detail">
+  <div class="hdr">
+    <h2>📄 Detalle</h2>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-ghost" onclick="editCurrent()">✏️ Editar</button>
+      <button class="btn btn-ghost" onclick="showList()">← Volver</button>
+    </div>
+  </div>
+  <div class="detail-wrap" id="detailContent"></div>
+</div>
+
+<!-- ===== CLIENTE: CONSULTA ===== -->
+<div class="screen" id="sc-cliente">
+  <div class="search-wrap">
+    <div class="search-box">
+      <div class="ico">🔍</div>
+      <h2>Consulta tu proyecto</h2>
+      <p>Ingresa el código que te proporcionó MAXPRINT</p>
+      <div class="search-input-row">
+        <input type="text" id="codeInput" placeholder="MAX-2026-0001" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')searchProj()">
+        <button class="btn btn-red" onclick="searchProj()">Buscar</button>
+      </div>
+      <div class="search-err" id="searchErr"></div>
+    </div>
+    <div class="client-result" id="clientResult"></div>
+  </div>
+</div>
+
+<script>
+// ===== STORAGE =====
+var STORE = 'mp_proyectos';
+var editId = null;
+var parts = [];
+
+function load(){ try{ return JSON.parse(localStorage.getItem(STORE)||'[]'); }catch(e){ return []; } }
+function save(d){ localStorage.setItem(STORE,JSON.stringify(d)); }
+
+// ===== CODE GEN =====
+function genCode(){
+  var d = load();
+  var yr = new Date().getFullYear();
+  var same = d.filter(function(p){ return p.code && p.code.indexOf('MAX-'+yr)===0; });
+  var n = same.length + 1;
+  return 'MAX-'+yr+'-'+String(n).padStart(4,'0');
+}
+
+// ===== NAV =====
+function switchTab(t){
+  document.querySelectorAll('.nav-tab').forEach(function(b,i){ b.classList.toggle('active', (i===0&&t==='admin')||(i===1&&t==='cliente')); });
+  if(t==='admin'){ showList(); }
+  else { showScreen('sc-cliente'); }
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function showList(){
+  renderList();
+  showScreen('sc-list');
+}
+
+// ===== LIST =====
+function stateClass(s){
+  var m={'En diseño':'badge-design','En producción':'badge-prod','Listo para instalar':'badge-ready','Instalado':'badge-inst','Entregado':'badge-done'};
+  return m[s]||'badge-design';
+}
+
+function fmtDate(d){
+  if(!d) return '—';
+  var p=d.split('-');
+  return p[2]+'/'+p[1]+'/'+p[0];
+}
+
+function renderList(){
+  var data = load();
+  var el = document.getElementById('projList');
+  if(!data.length){
+    el.innerHTML='<div class="empty"><div class="empty-ico">📋</div><p>No hay proyectos aún.<br>Crea el primero con el botón de arriba.</p></div>';
+    return;
+  }
+  el.innerHTML = data.map(function(p){
+    return '<div class="proj-card" onclick="showDetail(\''+p.id+'\')">'
+      +'<div class="proj-code">'+p.code+'</div>'
+      +'<div class="proj-info"><div class="proj-name">'+esc(p.nombre)+'</div><div class="proj-client">'+esc(p.cliente)+'</div></div>'
+      +'<div class="proj-meta"><span class="badge '+stateClass(p.estado)+'">'+p.estado+'</span><span class="proj-date">'+fmtDate(p.fecha)+'</span></div>'
+      +'</div>';
+  }).join('');
+}
+
+// ===== CREATE =====
+function showCreate(){
+  editId = null;
+  parts = [];
+  document.getElementById('formTitle').textContent = '➕ Nuevo Proyecto';
+  document.getElementById('fNombre').value='';
+  document.getElementById('fCliente').value='';
+  document.getElementById('fDesc').value='';
+  document.getElementById('fTipo').value='Gran Formato';
+  document.getElementById('fEstado').value='En diseño';
+  document.getElementById('fFecha').value='';
+  document.getElementById('codeBox').style.display='none';
+  document.getElementById('btnDelete').style.display='none';
+  renderParts();
+  showScreen('sc-form');
+}
+
+// ===== EDIT =====
+function editCurrent(){
+  if(!editId) return;
+  var data = load();
+  var p = data.find(function(x){ return x.id===editId; });
+  if(!p) return;
+  parts = p.participantes ? p.participantes.slice() : [];
+  document.getElementById('formTitle').textContent = '✏️ Editar Proyecto';
+  document.getElementById('fNombre').value = p.nombre||'';
+  document.getElementById('fCliente').value = p.cliente||'';
+  document.getElementById('fDesc').value = p.desc||'';
+  document.getElementById('fTipo').value = p.tipo||'Gran Formato';
+  document.getElementById('fEstado').value = p.estado||'En diseño';
+  document.getElementById('fFecha').value = p.fecha||'';
+  document.getElementById('codeBox').style.display='block';
+  document.getElementById('codeVal').textContent = p.code;
+  document.getElementById('btnDelete').style.display='';
+  renderParts();
+  showScreen('sc-form');
+}
+
+// ===== PARTICIPANTS =====
+function addPart(){ parts.push({nombre:'',rol:'Diseñador'}); renderParts(); }
+
+function renderParts(){
+  var el = document.getElementById('partList');
+  if(!parts.length){ el.innerHTML='<p style="font-size:12px;color:var(--tm);margin-bottom:8px;">Sin participantes agregados.</p>'; return; }
+  el.innerHTML = parts.map(function(p,i){
+    return '<div class="part-row">'
+      +'<input type="text" placeholder="Nombre completo" value="'+esc(p.nombre)+'" oninput="parts['+i+'].nombre=this.value">'
+      +'<select onchange="parts['+i+'].rol=this.value">'
+      +['Diseñador','Operario de producción','Instalador','Asesor comercial','Supervisor'].map(function(r){
+        return '<option value="'+r+'"'+(p.rol===r?' selected':'')+'>'+r+'</option>';
+      }).join('')
+      +'</select>'
+      +'<button class="btn-icon" onclick="parts.splice('+i+',1);renderParts()">✕</button>'
+      +'</div>';
+  }).join('');
+}
+
+// ===== SAVE =====
+function saveProj(){
+  var nombre = document.getElementById('fNombre').value.trim();
+  var cliente = document.getElementById('fCliente').value.trim();
+  if(!nombre||!cliente){ alert('Nombre del proyecto y cliente son obligatorios.'); return; }
+  var data = load();
+  var now = Date.now();
+  if(editId){
+    var idx = data.findIndex(function(x){ return x.id===editId; });
+    if(idx>=0){
+      data[idx].nombre=nombre;
+      data[idx].cliente=cliente;
+      data[idx].desc=document.getElementById('fDesc').value.trim();
+      data[idx].tipo=document.getElementById('fTipo').value;
+      data[idx].estado=document.getElementById('fEstado').value;
+      data[idx].fecha=document.getElementById('fFecha').value;
+      data[idx].participantes=parts.filter(function(p){ return p.nombre.trim(); });
+      data[idx].updated=now;
+    }
+  } else {
+    var code = genCode();
+    var proj = {
+      id: 'p'+now,
+      code: code,
+      nombre: nombre,
+      cliente: cliente,
+      desc: document.getElementById('fDesc').value.trim(),
+      tipo: document.getElementById('fTipo').value,
+      estado: document.getElementById('fEstado').value,
+      fecha: document.getElementById('fFecha').value,
+      participantes: parts.filter(function(p){ return p.nombre.trim(); }),
+      created: now,
+      updated: now
+    };
+    data.unshift(proj);
+    editId = proj.id;
+    document.getElementById('codeBox').style.display='block';
+    document.getElementById('codeVal').textContent = code;
+    document.getElementById('btnDelete').style.display='';
+  }
+  save(data);
+  var btn = document.getElementById('copyCodeBtn');
+  btn.textContent = '✅ Guardado';
+  setTimeout(function(){ btn.textContent = '📋 Copiar código'; }, 2000);
+}
+
+// ===== DELETE =====
+function deleteProj(){
+  if(!editId) return;
+  if(!confirm('¿Eliminar este proyecto? Esta acción no se puede deshacer.')) return;
+  var data = load().filter(function(x){ return x.id!==editId; });
+  save(data);
+  editId = null;
+  showList();
+}
+
+// ===== COPY =====
+function copyCode(){
+  var code = document.getElementById('codeVal').textContent;
+  var btn = document.getElementById('copyCodeBtn');
+  navigator.clipboard.writeText(code).then(function(){
+    btn.textContent='✅ ¡Copiado!';
+    btn.classList.add('copied');
+    setTimeout(function(){ btn.textContent='📋 Copiar código'; btn.classList.remove('copied'); },2000);
+  }).catch(function(){
+    var ta = document.createElement('textarea');
+    ta.value=code; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    btn.textContent='✅ ¡Copiado!';
+    btn.classList.add('copied');
+    setTimeout(function(){ btn.textContent='📋 Copiar código'; btn.classList.remove('copied'); },2000);
+  });
+}
+
+// ===== DETAIL =====
+var PCT = {'En diseño':20,'En producción':40,'Listo para instalar':60,'Instalado':80,'Entregado':100};
+var ESTADOS = ['En diseño','En producción','Listo para instalar','Instalado','Entregado'];
+
+function showDetail(id){
+  var data = load();
+  var p = data.find(function(x){ return x.id===id; });
+  if(!p) return;
+  editId = id;
+  var pct = PCT[p.estado]||0;
+  var partsHtml = p.participantes&&p.participantes.length
+    ? p.participantes.map(function(pr){
+        return '<div class="part-item"><span class="name">'+esc(pr.nombre)+'</span><span class="role badge badge-prod">'+esc(pr.rol)+'</span></div>';
+      }).join('')
+    : '<p style="font-size:13px;color:var(--tm);">Sin participantes registrados.</p>';
+
+  var stepsHtml = ESTADOS.map(function(s){
+    var done = pct >= PCT[s];
+    return '<div class="step-dot'+(done?' done':'')+'"><div class="dot"></div><span>'+s.replace('Listo para instalar','Listo')+'</span></div>';
+  }).join('');
+
+  document.getElementById('detailContent').innerHTML =
+    '<div class="detail-code">'+p.code+'</div>'
+    +'<div class="detail-title">'+esc(p.nombre)+'</div>'
+    +'<div class="detail-client">👤 '+esc(p.cliente)+'</div>'
+    +(p.desc?'<div class="detail-desc"><div class="lbl">Descripción</div><p>'+esc(p.desc)+'</p></div>':'')
+    +'<div class="detail-grid">'
+    +'<div class="detail-field"><div class="lbl">Tipo de servicio</div><div class="val">'+esc(p.tipo)+'</div></div>'
+    +'<div class="detail-field"><div class="lbl">Fecha estimada</div><div class="val">'+fmtDate(p.fecha)+'</div></div>'
+    +'<div class="detail-field"><div class="lbl">Estado</div><div class="val"><span class="badge '+stateClass(p.estado)+'">'+p.estado+'</span></div></div>'
+    +'</div>'
+    +'<div class="progress-section">'
+    +'<div class="lbl">Progreso</div>'
+    +'<div class="progress-bar"><div class="progress-fill" style="width:'+pct+'%"></div></div>'
+    +'<div class="progress-pct">'+pct+'% completado</div>'
+    +'<div class="status-steps">'+stepsHtml+'</div>'
+    +'</div>'
+    +'<div class="parts-section"><h3>Equipo de trabajo</h3><div class="parts-grid">'+partsHtml+'</div></div>'
+    +'<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--b);display:flex;gap:10px;flex-wrap:wrap;">'
+    +'<button class="copy-btn" onclick="copyCodeStr(\''+p.code+'\',this)">📋 Copiar código para cliente</button>'
+    +'</div>';
+
+  showScreen('sc-detail');
+}
+
+function copyCodeStr(code,btn){
+  navigator.clipboard.writeText(code).then(function(){
+    btn.textContent='✅ ¡Copiado!'; btn.classList.add('copied');
+    setTimeout(function(){ btn.textContent='📋 Copiar código para cliente'; btn.classList.remove('copied'); },2000);
+  }).catch(function(){
+    var ta=document.createElement('textarea'); ta.value=code;
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    btn.textContent='✅ ¡Copiado!'; btn.classList.add('copied');
+    setTimeout(function(){ btn.textContent='📋 Copiar código para cliente'; btn.classList.remove('copied'); },2000);
+  });
+}
+
+// ===== CLIENT SEARCH =====
+function searchProj(){
+  var code = document.getElementById('codeInput').value.trim().toUpperCase();
+  var err = document.getElementById('searchErr');
+  var res = document.getElementById('clientResult');
+  err.textContent=''; res.innerHTML='';
+  if(!code){ err.textContent='Ingresa el código de tu proyecto.'; return; }
+  var data = load();
+  var p = data.find(function(x){ return x.code===code; });
+  if(!p){ err.textContent='❌ No se encontró ningún proyecto con ese código. Verifica e intenta de nuevo.'; return; }
+
+  var pct = PCT[p.estado]||0;
+  var partsHtml = p.participantes&&p.participantes.length
+    ? p.participantes.map(function(pr){
+        return '<div class="part-item"><span class="name">'+esc(pr.nombre)+'</span><span class="role badge badge-prod">'+esc(pr.rol)+'</span></div>';
+      }).join('')
+    : '<p style="font-size:13px;color:var(--tm);">Equipo por asignar.</p>';
+
+  var stepsHtml = ESTADOS.map(function(s){
+    var done = pct >= PCT[s];
+    return '<div class="step-dot'+(done?' done':'')+'"><div class="dot"></div><span>'+s.replace('Listo para instalar','Listo')+'</span></div>';
+  }).join('');
+
+  res.innerHTML = '<div class="detail-wrap">'
+    +'<div class="detail-code">'+p.code+'</div>'
+    +'<div class="detail-title">'+esc(p.nombre)+'</div>'
+    +'<div class="detail-client">👤 '+esc(p.cliente)+'</div>'
+    +(p.desc?'<div class="detail-desc"><div class="lbl">Descripción</div><p>'+esc(p.desc)+'</p></div>':'')
+    +'<div class="detail-grid">'
+    +'<div class="detail-field"><div class="lbl">Tipo de servicio</div><div class="val">'+esc(p.tipo)+'</div></div>'
+    +'<div class="detail-field"><div class="lbl">Fecha estimada</div><div class="val">'+fmtDate(p.fecha)+'</div></div>'
+    +'<div class="detail-field"><div class="lbl">Estado actual</div><div class="val"><span class="badge '+stateClass(p.estado)+'">'+p.estado+'</span></div></div>'
+    +'</div>'
+    +'<div class="progress-section">'
+    +'<div class="lbl">Progreso de tu proyecto</div>'
+    +'<div class="progress-bar"><div class="progress-fill" style="width:'+pct+'%"></div></div>'
+    +'<div class="progress-pct">'+pct+'% completado</div>'
+    +'<div class="status-steps">'+stepsHtml+'</div>'
+    +'</div>'
+    +'<div class="parts-section"><h3>Equipo asignado</h3><div class="parts-grid">'+partsHtml+'</div></div>'
+    +'</div>';
+}
+
+// ===== UTILS =====
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ===== INIT =====
+renderList();
+</script>
+</body>
+</html>
