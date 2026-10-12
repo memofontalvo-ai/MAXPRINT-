@@ -936,6 +936,8 @@ main{padding:12px;max-width:700px;margin:0 auto;}
             <div><div class="pb2"><input type="file" id="picf" accept="image/*" onchange="prevID(this,'pipf')"/><span class="pbi">📷</span><div class="pbl">Foto FRONTAL</div></div><img id="pipf" class="pbp" alt=""/></div>
             <div><div class="pb2"><input type="file" id="picb" accept="image/*" onchange="prevID(this,'pipb')"/><span class="pbi">📷</span><div class="pbl">Foto TRASERA</div></div><img id="pipb" class="pbp" alt=""/></div>
           </div>
+          <button id="btnLeerIA" onclick="leerCedulaManual()" style="width:100%;margin-top:10px;padding:11px;background:linear-gradient(135deg,#f5a623,#e05c2e);border:none;border-radius:9px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;">🤖 LEER CÉDULA CON IA</button>
+          <div id="iaerr" style="display:none;margin-top:8px;padding:10px;background:#1a0a00;border:1px solid #f5a623;border-radius:8px;font-size:12px;color:#f5a623;word-break:break-all;"></div>
         </div>
         <div id="eferr" style="font-size:12px;color:var(--r);margin-bottom:9px;"></div>
         <button class="ba" style="width:100%;padding:11px;font-size:14px;" onclick="saveEmp()">GUARDAR EMPLEADO</button>
@@ -1159,15 +1161,32 @@ function prevID(inp, pid) {
   r.readAsDataURL(f);
 }
 
+function iaErr(msg) {
+  var box = document.getElementById('iaerr');
+  if (box) { box.style.display = 'block'; box.textContent = '❌ ' + msg; }
+  toast('⚠️ ' + msg.substring(0, 70));
+}
+
+function leerCedulaManual() {
+  var box = document.getElementById('iaerr');
+  if (box) { box.style.display = 'none'; box.textContent = ''; }
+  var d = window['_pid_pipf'];
+  if (!d) {
+    iaErr('Primero cargue la foto FRONTAL de la cédula (lado con la foto de la cara)');
+    return;
+  }
+  toast('🤖 Leyendo cédula...');
+  _leerCedulaIA(d);
+}
+
 function _leerCedulaIA(dataURL) {
   var _k=['AQ.Ab8RN6KnSxvR7_AdQGIjUl4C','JkltXuYmTMjFxS0KyC2E7-VdcQ'];var GEMINI_KEY=_k[0]+_k[1];
-  toast('🤖 Leyendo cédula...');
   var b64 = dataURL.split(',')[1];
   var mime = dataURL.split(';')[0].split(':')[1] || 'image/jpeg';
   var body = {
     contents: [{
       parts: [
-        { text: 'Esta es la foto de una cédula de ciudadanía colombiana (puede ser cara frontal o trasera). Extrae exactamente los siguientes datos y responde SOLO con un objeto JSON válido, sin texto adicional, sin markdown:\n{\n  "nombre": "Nombres y apellidos completos en mayúsculas, combinando los campos APELLIDOS y NOMBRES si los ves, si no vacío",\n  "cedula": "Solo los dígitos del número de documento sin puntos ni espacios, si no vacío",\n  "fechaNacimiento": "Fecha de nacimiento en formato YYYY-MM-DD, si no vacío",\n  "lugarNacimiento": "Ciudad o municipio de nacimiento, si no vacío",\n  "grupoSanguineo": "Grupo sanguíneo con RH, por ejemplo O+, A-, B+, si no vacío"\n}\nSi algún dato no es legible o no aparece, deja el campo como cadena vacía.' },
+        { text: 'Esta es la foto de una cédula de ciudadanía colombiana. Extrae los datos y responde SOLO con un objeto JSON válido, sin texto adicional, sin markdown:\n{\n  "nombre": "Nombres y apellidos completos en mayúsculas, combinando APELLIDOS y NOMBRES, si no vacío",\n  "cedula": "Solo los dígitos del número de documento sin puntos ni espacios, si no vacío",\n  "fechaNacimiento": "Fecha de nacimiento en formato YYYY-MM-DD, si no vacío",\n  "lugarNacimiento": "Ciudad o municipio de nacimiento, si no vacío",\n  "grupoSanguineo": "Grupo sanguíneo con RH, por ejemplo O+, A-, B+, si no vacío"\n}\nSi algún dato no aparece deja el campo como cadena vacía.' },
         { inline_data: { mime_type: mime, data: b64 } }
       ]
     }],
@@ -1178,25 +1197,26 @@ function _leerCedulaIA(dataURL) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
   })
-  .then(function(r) { return r.json(); })
+  .then(function(r) {
+    if (!r.ok) {
+      return r.json().then(function(e) { iaErr('HTTP ' + r.status + ': ' + (e.error && e.error.message ? e.error.message : JSON.stringify(e))); throw new Error('handled'); });
+    }
+    return r.json();
+  })
   .then(function(res) {
-    // Detectar error de API (key inválida, cuota, etc.)
     if (res.error) {
-      toast('⚠️ API Error ' + res.error.code + ': ' + (res.error.message || '').substring(0, 60));
+      iaErr('API ' + res.error.code + ': ' + (res.error.message || JSON.stringify(res.error)));
       return;
     }
     var text = '';
     try { text = res.candidates[0].content.parts[0].text.trim(); } catch(e) {
-      // Mostrar respuesta cruda para diagnóstico
-      toast('⚠️ Respuesta inesperada de Gemini');
-      console.error('Gemini raw response:', JSON.stringify(res));
+      iaErr('Respuesta inesperada: ' + JSON.stringify(res).substring(0, 120));
       return;
     }
-    // Limpiar markdown si viene con ```json
     text = text.replace(/^```json\s*/i,'').replace(/^```\s*/,'').replace(/```\s*$/,'').trim();
     var datos;
     try { datos = JSON.parse(text); } catch(e) {
-      toast('⚠️ JSON inválido: ' + text.substring(0, 50));
+      iaErr('JSON inválido recibido: ' + text.substring(0, 80));
       return;
     }
     var llenados = 0;
@@ -1226,14 +1246,16 @@ function _leerCedulaIA(dataURL) {
         }
       }
     }
+    var box = document.getElementById('iaerr');
     if (llenados > 0) {
+      if (box) { box.style.display = 'none'; box.textContent = ''; }
       toast('✅ ' + llenados + ' campo(s) llenados automáticamente');
     } else {
-      toast('⚠️ Datos ya ingresados o no detectados');
+      iaErr('No se detectaron datos nuevos. Verifique que sea la foto FRONTAL de la cédula.');
     }
   })
   .catch(function(e) {
-    toast('⚠️ Error de red: ' + (e.message || String(e)).substring(0,60));
+    if (e && e.message !== 'handled') iaErr('Error de red: ' + (e.message || String(e)));
   });
 }
 
