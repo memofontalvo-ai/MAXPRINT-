@@ -878,8 +878,6 @@ main{padding:12px;max-width:700px;margin:0 auto;}
               <select class="efi" id="efgrupo"><option value="">—</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select>
             </div>
             <div class="eff"><label class="efl">EPS</label><input type="text" class="efi" id="efeps" placeholder="Ej: Sura, Compensar..."/></div>
-            <div class="eff"><label class="efl">No. Póliza ARL</label><input type="text" class="efi" id="efarl" placeholder="Número de póliza"/></div>
-            <div class="eff"><label class="efl">Vencimiento ARL</label><input type="date" class="efi" id="efarlv"/></div>
           </div>
           <div style="margin-top:16px;">
             <div class="efl" style="margin-bottom:10px;letter-spacing:.5px;">📄 DOCUMENTOS DE SEGURIDAD <span style="font-size:10px;color:#555;font-weight:400;">(Opcionales)</span></div>
@@ -1153,7 +1151,7 @@ function prevID(inp, pid) {
       URL.revokeObjectURL(objURL);
       if (pid === 'pipf') {
         toast('🤖 Leyendo cédula...');
-        _leerCedulaIA(d);
+        _leerCedulaIA(d, window['_pid_pipb'], 0);
       }
     };
     img.src = e.target.result;
@@ -1176,26 +1174,28 @@ function leerCedulaManual() {
   var box = document.getElementById('iaerr');
   if (box) { box.style.display = 'none'; box.textContent = ''; }
   iaLog('⏳ Paso 1: verificando foto cargada...');
-  var d = window['_pid_pipf'];
-  if (!d) {
+  var dF = window['_pid_pipf'];
+  var dB = window['_pid_pipb'];
+  if (!dF) {
     iaErr('No hay foto FRONTAL cargada. Toque el cuadro "Foto FRONTAL" y seleccione la foto de la cédula con la cara.');
     return;
   }
-  iaLog('⏳ Paso 2: foto OK (' + Math.round(d.length/1024) + ' KB), enviando a Gemini...');
-  _leerCedulaIA(d);
+  var kb = Math.round(dF.length/1024) + (dB ? ' + ' + Math.round(dB.length/1024) : '') + ' KB';
+  iaLog('⏳ Paso 2: foto(s) OK (' + kb + '), enviando a Gemini...');
+  _leerCedulaIA(dF, dB, 0);
 }
 
-function _leerCedulaIA(dataURL, _retry) {
+function _leerCedulaIA(dataURLf, dataURLb, _retry) {
   var _a='AQ.Ab8RN6IA',_b='qXwzpnMweOl',_c='Ka8YLAHO0U2WREx',_d='GAqCpwzd6DQmVQ2A';var GEMINI_KEY=_a+_b+_c+_d;
-  var b64 = dataURL.split(',')[1];
-  var mime = dataURL.split(';')[0].split(':')[1] || 'image/jpeg';
+  var parts = [
+    { text: 'Estas son fotos de una cédula de ciudadanía colombiana (frontal' + (dataURLb ? ' y trasera' : '') + '). Extrae los datos y responde SOLO con un objeto JSON válido, sin texto adicional, sin markdown:\n{\n  "nombre": "Nombres y apellidos completos en mayúsculas, combinando APELLIDOS y NOMBRES, si no vacío",\n  "cedula": "Solo los dígitos del número de documento sin puntos ni espacios, si no vacío",\n  "fechaNacimiento": "Fecha de nacimiento en formato YYYY-MM-DD, si no vacío",\n  "lugarNacimiento": "Ciudad o municipio de nacimiento, si no vacío",\n  "grupoSanguineo": "Grupo sanguíneo con RH, por ejemplo O+, A-, B+, si no vacío"\n}\nSi algún dato no aparece deja el campo como cadena vacía.' },
+    { inline_data: { mime_type: dataURLf.split(';')[0].split(':')[1] || 'image/jpeg', data: dataURLf.split(',')[1] } }
+  ];
+  if (dataURLb) {
+    parts.push({ inline_data: { mime_type: dataURLb.split(';')[0].split(':')[1] || 'image/jpeg', data: dataURLb.split(',')[1] } });
+  }
   var body = {
-    contents: [{
-      parts: [
-        { text: 'Esta es la foto de una cédula de ciudadanía colombiana. Extrae los datos y responde SOLO con un objeto JSON válido, sin texto adicional, sin markdown:\n{\n  "nombre": "Nombres y apellidos completos en mayúsculas, combinando APELLIDOS y NOMBRES, si no vacío",\n  "cedula": "Solo los dígitos del número de documento sin puntos ni espacios, si no vacío",\n  "fechaNacimiento": "Fecha de nacimiento en formato YYYY-MM-DD, si no vacío",\n  "lugarNacimiento": "Ciudad o municipio de nacimiento, si no vacío",\n  "grupoSanguineo": "Grupo sanguíneo con RH, por ejemplo O+, A-, B+, si no vacío"\n}\nSi algún dato no aparece deja el campo como cadena vacía.' },
-        { inline_data: { mime_type: mime, data: b64 } }
-      ]
-    }],
+    contents: [{ parts: parts }],
     generationConfig: { temperature: 0, maxOutputTokens: 1024 }
   };
   fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=' + GEMINI_KEY, {
@@ -1209,7 +1209,7 @@ function _leerCedulaIA(dataURL, _retry) {
       var intento = (_retry || 0) + 1;
       if (intento <= 3) {
         iaLog('⏳ Servidor ocupado, reintentando en 5s... (intento ' + intento + '/3)');
-        setTimeout(function() { _leerCedulaIA(dataURL, intento); }, 5000);
+        setTimeout(function() { _leerCedulaIA(dataURLf, dataURLb, intento); }, 5000);
         return Promise.reject(new Error('handled'));
       }
     }
@@ -1457,7 +1457,7 @@ window.saveEmp=async function(){var name=document.getElementById('efn').value.tr
       docsCertsMeta:(function(){var d={};['ss','med','arl','alt'].forEach(function(k){if(window._efDocs&&window._efDocs[k])d[k]={nombre:window._efDocs[k].nombre,tipo:window._efDocs[k].tipo};});return d;})()
     };try{var savedId=editEId;if(editEId){await updateDoc(doc(db,"empleados",editEId),data);toast('✅ Actualizado');}else{data.createdAt=serverTimestamp();var ref=await addDoc(collection(db,"empleados"),data);savedId=ref.id;toast('✅ Empleado registrado');}try{var lsDocs={};['ss','med','arl','alt'].forEach(function(k){if(window._efDocs&&window._efDocs[k])lsDocs[k]=window._efDocs[k];});localStorage.setItem('empDocs_'+savedId,JSON.stringify(lsDocs));}catch(le){}window.backRH();}catch(e){document.getElementById('eferr').textContent='❌ Error: '+e.message;}};
 window.showProf=function(eid){var e=emps.find(function(x){return x.id===eid;});if(!e)return;document.getElementById('rlv').style.display='none';document.getElementById('rfv').style.display='none';document.getElementById('rpv').style.display='';document.getElementById('dfv').style.display='none';var c=avc(e.name);var p=tasks.filter(function(t){return t.assignedTo===eid&&!t.done;}).length;var d2=tasks.filter(function(t){return t.assignedTo===eid&&t.done;}).length;function pf(l,v){return '<div class="pf2"><div class="pl2">'+l+'</div><div class="pv">'+(v||'—')+'</div></div>';}function fd(d){if(!d)return'—';var pts=d.split('-');return pts.length===3?pts[2]+'/'+pts[1]+'/'+pts[0]:d;}var h='<div class="ph"><div class="pha" style="background:linear-gradient(135deg,'+c+')">'+ini(e.name)+'</div><div><div class="phn">'+e.name+'</div><div class="phd">'+DI[e.dept]+' '+DN[e.dept]+(e.cargo?' · '+e.cargo:'')+'</div><div style="font-size:10px;color:var(--tm);margin-top:2px">'+p+' pend. · '+d2+' hechas</div></div></div>';h+='<div class="ps"><h4>📋 Datos Personales</h4><div class="pg">'+pf('Cédula',e.cedula)+pf('Teléfono',e.phone)+pf('Nacimiento',fd(e.birth))+pf('Ingreso',fd(e.ingreso))+'</div>'+(e.address?'<div style="margin-top:9px"><div class="pl2">Dirección</div><div class="pv">'+e.address+'</div></div>':'')+'</div>';h+='<div class="ps"><h4>👕 Tallas</h4><div class="pg">'+pf('Camisa',e.camisa)+pf('Pantalón',e.pantalon)+pf('Zapatos',e.zapatos)+'</div></div>';
-h+='<div class="ps"><h4>🛡️ Seguridad</h4><div class="pg">'+pf('Lugar nacimiento',e.lugarNac)+pf('Grupo sanguíneo',e.grupoSang)+pf('EPS',e.eps)+pf('ARL / Póliza',e.arl)+pf('Vence ARL',fd(e.arlVence))+'</div>';
+h+='<div class="ps"><h4>🛡️ Seguridad</h4><div class="pg">'+pf('Lugar nacimiento',e.lugarNac)+pf('Grupo sanguíneo',e.grupoSang)+pf('EPS',e.eps)+'</div>';
 var DC_LABELS={ss:'Aportes Seg. Social',med:'Aptitud Médica Ocup.',arl:'Afiliación ARL',alt:'Trabajo en Alturas'};
 var dc={};try{dc=JSON.parse(localStorage.getItem('empDocs_'+eid)||'{}');}catch(le){}
 var dcKeys=Object.keys(dc).filter(function(k){return dc[k];});
@@ -1959,7 +1959,7 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v7.12 - 2026-10-11</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v7.14 - 2026-10-11</div>
 
 <!-- SheetJS for reading .xlsx in browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2368,11 +2368,6 @@ function pfAddPartRow(pt){
   var arlRow=document.createElement('div');
   arlRow.style.cssText='display:flex;gap:8px;margin-bottom:8px;';
   var arlIn=mkInput(pt.arl,'ppart-arl');
-  var arlVIn=document.createElement('input');
-  arlVIn.type='date';arlVIn.value=pt.arlVence||'';arlVIn.className='ppart-arlv';
-  arlVIn.style.cssText='width:100%;background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:8px 10px;color:#fff;font-size:12px;';
-  arlRow.appendChild(mkField('NO. PÓLIZA ARL',arlIn));
-  arlRow.appendChild(mkField('VENCIMIENTO ARL',arlVIn));
 
   /* Observaciones */
   var telEmRow=document.createElement('div');
@@ -2882,8 +2877,7 @@ function _dibujarTarjeta(hv){
         ['Celular',hv.celular||hv.phone||'-'],
         ['Grupo sanguíneo',hv.grupoSang||'-'],
         ['EPS',hv.eps||'-'],
-        ['ARL',hv.arl||'-'],
-        ['Vence ARL',hv.arlVence||'-']
+        ['ARL',hv.arl||'-']
       ].filter(function(c){return c[1]&&c[1]!=='-';});
 
       var colW=(W-56)/2;
@@ -3166,8 +3160,6 @@ window.hvImprimir=function(){
     row('Grupo sanguíneo',data.grupoSang),
     row('Celular',data.celular),
     row('EPS',data.eps),
-    row('ARL / Póliza',data.arl),
-    row('Vencimiento ARL',data.arlVence),
     row('Observaciones',data.observaciones)
   ].join('');
   var body=document.getElementById('pdf-body');
@@ -3267,8 +3259,6 @@ window.portalVerHV=function(ptData){
     +row('🩸','GRUPO SANGUÍNEO',ptData.grupoSang)
     +row('📱','CELULAR',ptData.celular)
     +row('🏥','EPS',ptData.eps)
-    +row('🛡️','ARL / PÓLIZA',ptData.arl)
-    +row('📅','VENCIMIENTO ARL',ptData.arlVence)
     +(ptData.observaciones?row('📝','OBSERVACIONES',ptData.observaciones):'')
     +'</div>'
     +certsHtml+docsHtml;
@@ -3362,7 +3352,6 @@ function pfBuscar(){
       var rows2=[];
       if(pt.fechaNac||pt.lugarNac)rows2.push(['Nacimiento',pt.fechaNac+(pt.lugarNac?' &middot; '+pt.lugarNac:'')]);
       if(pt.eps)rows2.push(['EPS',pt.eps]);
-      if(pt.arl)rows2.push(['ARL',pt.arl+(pt.arlVence?' (vence '+pt.arlVence+')':'')]);
       if(pt.contactoEmerg)rows2.push(['Emergencia',pt.contactoEmerg+(pt.parentesco?' ('+pt.parentesco+')':'')+(pt.telEmerg?' '+pt.telEmerg:'')]);
       if(pt.observaciones)rows2.push(['Obs.',pt.observaciones]);
       if(rows2.length){
