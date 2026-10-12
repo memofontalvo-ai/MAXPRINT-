@@ -1185,7 +1185,7 @@ function leerCedulaManual() {
   _leerCedulaIA(d);
 }
 
-function _leerCedulaIA(dataURL) {
+function _leerCedulaIA(dataURL, _retry) {
   var _a='AQ.Ab8RN6IA',_b='qXwzpnMweOl',_c='Ka8YLAHO0U2WREx',_d='GAqCpwzd6DQmVQ2A';var GEMINI_KEY=_a+_b+_c+_d;
   var b64 = dataURL.split(',')[1];
   var mime = dataURL.split(';')[0].split(':')[1] || 'image/jpeg';
@@ -1205,6 +1205,14 @@ function _leerCedulaIA(dataURL) {
   })
   .then(function(r) {
     iaLog('⏳ Paso 3: respuesta HTTP ' + r.status + ', procesando...');
+    if (r.status === 503) {
+      var intento = (_retry || 0) + 1;
+      if (intento <= 3) {
+        iaLog('⏳ Servidor ocupado, reintentando en 5s... (intento ' + intento + '/3)');
+        setTimeout(function() { _leerCedulaIA(dataURL, intento); }, 5000);
+        return Promise.reject(new Error('handled'));
+      }
+    }
     if (!r.ok) {
       return r.json().then(function(e) { iaErr('HTTP ' + r.status + ': ' + (e.error && e.error.message ? e.error.message : JSON.stringify(e))); throw new Error('handled'); });
     }
@@ -1951,7 +1959,7 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v7.11 - 2026-10-11</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v7.12 - 2026-10-11</div>
 
 <!-- SheetJS for reading .xlsx in browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
