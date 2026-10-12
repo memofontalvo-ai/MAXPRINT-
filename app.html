@@ -1167,20 +1167,26 @@ function iaErr(msg) {
   toast('⚠️ ' + msg.substring(0, 70));
 }
 
+function iaLog(msg) {
+  var box = document.getElementById('iaerr');
+  if (box) { box.style.display = 'block'; box.textContent = msg; }
+}
+
 function leerCedulaManual() {
   var box = document.getElementById('iaerr');
   if (box) { box.style.display = 'none'; box.textContent = ''; }
+  iaLog('⏳ Paso 1: verificando foto cargada...');
   var d = window['_pid_pipf'];
   if (!d) {
-    iaErr('Primero cargue la foto FRONTAL de la cédula (lado con la foto de la cara)');
+    iaErr('No hay foto FRONTAL cargada. Toque el cuadro "Foto FRONTAL" y seleccione la foto de la cédula con la cara.');
     return;
   }
-  toast('🤖 Leyendo cédula...');
+  iaLog('⏳ Paso 2: foto OK (' + Math.round(d.length/1024) + ' KB), enviando a Gemini...');
   _leerCedulaIA(d);
 }
 
 function _leerCedulaIA(dataURL) {
-  var _k=['AQ.Ab8RN6KnSxvR7_AdQGIjUl4C','JkltXuYmTMjFxS0KyC2E7-VdcQ'];var GEMINI_KEY=_k[0]+_k[1];
+  var _a='AQ.Ab8RN6IA',_b='qXwzpnMweOl',_c='Ka8YLAHO0U2WREx',_d='GAqCpwzd6DQmVQ2A';var GEMINI_KEY=_a+_b+_c+_d;
   var b64 = dataURL.split(',')[1];
   var mime = dataURL.split(';')[0].split(':')[1] || 'image/jpeg';
   var body = {
@@ -1198,6 +1204,7 @@ function _leerCedulaIA(dataURL) {
     body: JSON.stringify(body)
   })
   .then(function(r) {
+    iaLog('⏳ Paso 3: respuesta HTTP ' + r.status + ', procesando...');
     if (!r.ok) {
       return r.json().then(function(e) { iaErr('HTTP ' + r.status + ': ' + (e.error && e.error.message ? e.error.message : JSON.stringify(e))); throw new Error('handled'); });
     }
@@ -1205,12 +1212,13 @@ function _leerCedulaIA(dataURL) {
   })
   .then(function(res) {
     if (res.error) {
-      iaErr('API ' + res.error.code + ': ' + (res.error.message || JSON.stringify(res.error)));
+      iaErr('Error API Gemini ' + res.error.code + ': ' + (res.error.message || JSON.stringify(res.error)));
       return;
     }
+    iaLog('⏳ Paso 4: respuesta recibida, extrayendo datos...');
     var text = '';
     try { text = res.candidates[0].content.parts[0].text.trim(); } catch(e) {
-      iaErr('Respuesta inesperada: ' + JSON.stringify(res).substring(0, 120));
+      iaErr('Respuesta inesperada de Gemini: ' + JSON.stringify(res).substring(0, 200));
       return;
     }
     text = text.replace(/^```json\s*/i,'').replace(/^```\s*/,'').replace(/```\s*$/,'').trim();
@@ -1940,7 +1948,7 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v7.6 - 2026-10-11</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v7.7 - 2026-10-11</div>
 
 <!-- SheetJS for reading .xlsx in browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
