@@ -1196,7 +1196,7 @@ function _leerCedulaIA(dataURL) {
         { inline_data: { mime_type: mime, data: b64 } }
       ]
     }],
-    generationConfig: { temperature: 0, maxOutputTokens: 256 }
+    generationConfig: { temperature: 0, maxOutputTokens: 1024 }
   };
   fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=' + GEMINI_KEY, {
     method: 'POST',
@@ -1224,7 +1224,7 @@ function _leerCedulaIA(dataURL) {
     text = text.replace(/^```json\s*/i,'').replace(/^```\s*/,'').replace(/```\s*$/,'').trim();
     var datos;
     try { datos = JSON.parse(text); } catch(e) {
-      iaErr('JSON inválido recibido: ' + text.substring(0, 80));
+      iaErr('Gemini respondió: ' + text.substring(0, 200));
       return;
     }
     var llenados = 0;
@@ -1951,7 +1951,7 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v7.10 - 2026-10-11</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v7.11 - 2026-10-11</div>
 
 <!-- SheetJS for reading .xlsx in browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
