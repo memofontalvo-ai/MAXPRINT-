@@ -1238,23 +1238,23 @@ function _leerCedulaIA(dataURLf, dataURLb, _retry) {
     var llenados = 0;
     if (datos.nombre) {
       var fn = document.getElementById('efn');
-      if (fn && !fn.value) { fn.value = datos.nombre; llenados++; }
+      if (fn) { fn.value = datos.nombre; llenados++; }
     }
     if (datos.cedula) {
       var fc = document.getElementById('efc');
-      if (fc && !fc.value) { fc.value = datos.cedula; llenados++; }
+      if (fc) { fc.value = datos.cedula; llenados++; }
     }
     if (datos.fechaNacimiento) {
       var fb = document.getElementById('efb');
-      if (fb && !fb.value) { fb.value = datos.fechaNacimiento; llenados++; }
+      if (fb) { fb.value = datos.fechaNacimiento; llenados++; }
     }
     if (datos.lugarNacimiento) {
       var fl = document.getElementById('eflnac');
-      if (fl && !fl.value) { fl.value = datos.lugarNacimiento; llenados++; }
+      if (fl) { fl.value = datos.lugarNacimiento; llenados++; }
     }
     if (datos.grupoSanguineo) {
       var fg = document.getElementById('efgrupo');
-      if (fg && !fg.value) {
+      if (fg) {
         var gs = datos.grupoSanguineo.trim().toUpperCase();
         var opts = fg.options;
         for (var i = 0; i < opts.length; i++) {
@@ -1959,7 +1959,7 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v7.15 - 2026-10-11</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v7.16 - 2026-10-11</div>
 
 <!-- SheetJS for reading .xlsx in browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
