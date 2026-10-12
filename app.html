@@ -1316,6 +1316,78 @@ function prevID(inp, pid) {
   compress(f, 800, 0.6, function(d) {
     var p = document.getElementById(pid); p.src = d; p.style.display = 'block';
     window['_pid_' + pid] = d;
+    // Si es la foto FRONTAL de la cédula, leer datos con IA
+    if (pid === 'pipf') {
+      _leerCedulaIA(d);
+    }
+  });
+}
+
+function _leerCedulaIA(dataURL) {
+  var GEMINI_KEY = 'AQ.Ab8RN6KFOYeWsnHY_oR4kpak8MTzLJgg53iZUYeB7tmFuzn2XQ';
+  toast('🤖 Leyendo cédula...');
+  var b64 = dataURL.split(',')[1];
+  var mime = dataURL.split(';')[0].split(':')[1] || 'image/jpeg';
+  var body = {
+    contents: [{
+      parts: [
+        { text: 'Esta es la foto de una cédula de ciudadanía colombiana (puede ser cara frontal o trasera). Extrae exactamente los siguientes datos y responde SOLO con un objeto JSON válido, sin texto adicional, sin markdown:\n{\n  "nombre": "Nombres y apellidos completos en mayúsculas, combinando los campos APELLIDOS y NOMBRES si los ves, si no vacío",\n  "cedula": "Solo los dígitos del número de documento sin puntos ni espacios, si no vacío",\n  "fechaNacimiento": "Fecha de nacimiento en formato YYYY-MM-DD, si no vacío",\n  "lugarNacimiento": "Ciudad o municipio de nacimiento, si no vacío",\n  "grupoSanguineo": "Grupo sanguíneo con RH, por ejemplo O+, A-, B+, si no vacío"\n}\nSi algún dato no es legible o no aparece, deja el campo como cadena vacía.' },
+        { inline_data: { mime_type: mime, data: b64 } }
+      ]
+    }],
+    generationConfig: { temperature: 0, maxOutputTokens: 256 }
+  };
+  fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + GEMINI_KEY, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(res) {
+    var text = '';
+    try { text = res.candidates[0].content.parts[0].text.trim(); } catch(e) {}
+    // Limpiar markdown si viene con ```json
+    text = text.replace(/^```json\s*/i,'').replace(/^```\s*/,'').replace(/```\s*$/,'').trim();
+    var datos;
+    try { datos = JSON.parse(text); } catch(e) {
+      toast('⚠️ No se pudo leer la cédula automáticamente');
+      return;
+    }
+    var llenados = 0;
+    if (datos.nombre) {
+      var fn = document.getElementById('efn');
+      if (fn && !fn.value) { fn.value = datos.nombre; llenados++; }
+    }
+    if (datos.cedula) {
+      var fc = document.getElementById('efc');
+      if (fc && !fc.value) { fc.value = datos.cedula; llenados++; }
+    }
+    if (datos.fechaNacimiento) {
+      var fb = document.getElementById('efb');
+      if (fb && !fb.value) { fb.value = datos.fechaNacimiento; llenados++; }
+    }
+    if (datos.lugarNacimiento) {
+      var fl = document.getElementById('eflnac');
+      if (fl && !fl.value) { fl.value = datos.lugarNacimiento; llenados++; }
+    }
+    if (datos.grupoSanguineo) {
+      var fg = document.getElementById('efgrupo');
+      if (fg && !fg.value) {
+        var gs = datos.grupoSanguineo.trim().toUpperCase();
+        var opts = fg.options;
+        for (var i = 0; i < opts.length; i++) {
+          if (opts[i].value === gs) { fg.value = gs; llenados++; break; }
+        }
+      }
+    }
+    if (llenados > 0) {
+      toast('✅ ' + llenados + ' campo(s) llenados automáticamente');
+    } else {
+      toast('⚠️ Datos ya ingresados o no detectados');
+    }
+  })
+  .catch(function(e) {
+    toast('⚠️ Error al leer cédula: ' + e.message);
   });
 }
 
@@ -2000,7 +2072,7 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v6.1 - 2026-10-11</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v6.3 - 2026-10-11</div>
 
 <!-- SheetJS for reading .xlsx in browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
