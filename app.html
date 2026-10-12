@@ -1310,7 +1310,10 @@ var pendCId=null, editEId=null, curDEId=null, dotCI=[];
 var aSub='t', eSub='t', rhSub='e', dtSub='n', selEId=null;
 var fEMode='todos', fSelE=[], fSelI={}, fItemQ={};
 
-function toast(m) { var t=document.getElementById('tst'); t.textContent=m; t.classList.add('show'); setTimeout(function(){t.classList.remove('show');},2400); }
+function toast(m) { var t=document.getElementById('tst'); if(!t) return; t.textContent=m; t.classList.add('show'); setTimeout(function(){t.classList.remove('show');},2400); }
+window.toast = toast;
+window.iaErr = function(msg) { var box=document.getElementById('iaerr'); if(box){box.style.display='block';box.textContent='❌ '+msg;} toast('⚠️ '+msg.substring(0,70)); };
+window.iaLog = function(msg) { var box=document.getElementById('iaerr'); if(box){box.style.display='block';box.textContent=msg;} };
 
 // Firebase
 var q1=query(collection(db,"tareas"),orderBy("createdAt","desc"));
@@ -1948,7 +1951,7 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v7.7 - 2026-10-11</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v7.8 - 2026-10-11</div>
 
 <!-- SheetJS for reading .xlsx in browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
