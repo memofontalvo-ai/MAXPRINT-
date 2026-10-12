@@ -933,8 +933,8 @@ main{padding:12px;max-width:700px;margin:0 auto;}
         </div>
         <div class="efs"><h4>🪪 Cédula</h4>
           <div class="pig">
-            <div><div class="pb2" onclick="document.getElementById('picf').click()"><input type="file" id="picf" accept="image/*" style="position:fixed;top:-100px;left:-100px;width:1px;height:1px;opacity:0;" onchange="prevID(this,'pipf')"/><span class="pbi">📷</span><div class="pbl">Foto FRONTAL</div></div><img id="pipf" class="pbp" alt=""/></div>
-            <div><div class="pb2" onclick="document.getElementById('picb').click()"><input type="file" id="picb" accept="image/*" style="position:fixed;top:-100px;left:-100px;width:1px;height:1px;opacity:0;" onchange="prevID(this,'pipb')"/><span class="pbi">📷</span><div class="pbl">Foto TRASERA</div></div><img id="pipb" class="pbp" alt=""/></div>
+            <div><label class="pb2" for="picf" style="cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;"><input type="file" id="picf" accept="image/*" style="position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;" onchange="prevID(this,'pipf')"/><span class="pbi">📷</span><div class="pbl">Foto FRONTAL</div></label><img id="pipf" class="pbp" alt=""/></div>
+            <div><label class="pb2" for="picb" style="cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;"><input type="file" id="picb" accept="image/*" style="position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;" onchange="prevID(this,'pipb')"/><span class="pbi">📷</span><div class="pbl">Foto TRASERA</div></label><img id="pipb" class="pbp" alt=""/></div>
           </div>
         </div>
         <div id="eferr" style="font-size:12px;color:var(--r);margin-bottom:9px;"></div>
@@ -1090,193 +1090,6 @@ main{padding:12px;max-width:700px;margin:0 auto;}
 </div>
 
 </div>
-<div id="rv" style="display:none">
-<div id="rv" style="display:none">
-  <main>
-    <div id="rlv">
-      <div class="rh">
-        <h2>👥 Recursos Humanos</h2>
-        <button class="bne" id="bne" onclick="showEF()">+ NUEVO</button>
-      </div>
-      <div class="st">
-        <div class="sv on" onclick="setRS('e',this)">👤 Empleados</div>
-        <div class="sv" onclick="setRS('d',this)">👕 Dotaciones</div>
-      </div>
-      <div id="rep">
-        <select id="rhf" onchange="renderRH()" style="width:100%;background:var(--s2);border:1.5px solid var(--b);border-radius:7px;color:var(--t);font-size:12px;padding:8px 10px;outline:none;margin-bottom:11px;">
-          <option value="">— Todos los departamentos —</option>
-          <option value="carpinteria">🪵 Carpintería</option>
-          <option value="soldadura">🔥 Soldadura</option>
-          <option value="armado">🔧 Armado</option>
-          <option value="impresion">🖨 Impresión</option>
-          <option value="instalaciones">🪧 Inst. de Avisos</option>
-          <option value="otras">🔩 Otras Instalaciones</option>
-          <option value="diseno">🎨 Diseño</option>
-          <option value="acrilicos">🔷 Acrílicos</option>
-        </select>
-        <div id="rel"></div>
-      </div>
-      <div id="rdp" style="display:none">
-        <div class="st">
-          <div class="sv on" onclick="setDT('n',this)">📦 Nueva Entrega</div>
-          <div class="sv" onclick="setDT('h',this)">📋 Historial</div>
-        </div>
-        <div id="dnp"><div id="del2"></div></div>
-        <div id="dhp" style="display:none">
-          <div class="eb">
-            <button class="be gr" onclick="expDE()">📊 Excel</button>
-            <button class="be bl" onclick="expDP()">📄 PDF</button>
-            <button class="be ac" onclick="openFmt()">📋 Formato</button>
-          </div>
-          <div style="background:var(--s);border:1.5px dashed var(--a);border-radius:10px;padding:13px;margin-bottom:12px;">
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1.5px;color:var(--a);margin-bottom:5px;">📂 Cargar Excel de Entregas</div>
-            <div style="font-size:11px;color:var(--tm);margin-bottom:9px;">Cargá el Excel completado para registrar las entregas del día.</div>
-            <input type="file" id="dxu" accept=".xlsx,.xls" style="display:none" onchange="loadDotXL(this)"/>
-            <button onclick="document.getElementById('dxu').click()" style="width:100%;background:var(--a);color:#000;border:none;border-radius:8px;padding:9px;font-family:'Bebas Neue',sans-serif;font-size:13px;cursor:pointer;">📤 SELECCIONAR EXCEL</button>
-            <div id="dxs" style="font-size:11px;color:var(--tm);margin-top:7px;text-align:center;"></div>
-          </div>
-          <div id="dhl"></div>
-        </div>
-      </div>
-    </div>
-    <div id="rfv" style="display:none">
-      <button class="bb" onclick="backRH()">← Volver</button>
-      <div class="ap">
-        <h2 id="eft">+ Nuevo Empleado</h2>
-        <div class="efs"><h4>📋 Datos Personales</h4>
-          <div class="efg">
-            <div class="eff efu"><label class="efl">Nombre *</label><input type="text" class="efi" id="efn" placeholder="Nombre completo"/></div>
-            <div class="eff"><label class="efl">Cédula *</label><input type="text" class="efi" id="efc" placeholder="Número cédula"/></div>
-            <div class="eff"><label class="efl">Nacimiento</label><input type="date" class="efi" id="efb"/></div>
-            <div class="eff efu"><label class="efl">Teléfono</label><input type="tel" class="efi" id="eft2" placeholder="0414-1234567"/></div>
-            <div class="eff efu"><label class="efl">Dirección</label><input type="text" class="efi" id="efa" placeholder="Dirección de residencia"/></div>
-          </div>
-        </div>
-        <div class="efs"><h4>🏭 Cargo y Depto</h4>
-          <div class="efg">
-            <div class="eff efu"><label class="efl">Departamento *</label>
-              <select class="efi" id="efd">
-                <option value="">— Seleccionar —</option>
-                <option value="carpinteria">🪵 Carpintería</option>
-                <option value="soldadura">🔥 Soldadura</option>
-                <option value="armado">🔧 Armado</option>
-                <option value="impresion">🖨 Impresión</option>
-                <option value="instalaciones">🪧 Inst. de Avisos</option>
-                <option value="otras">🔩 Otras Instalaciones</option>
-                <option value="diseno">🎨 Diseño</option>
-                <option value="acrilicos">🔷 Acrílicos</option>
-              </select>
-            </div>
-            <div class="eff"><label class="efl">Cargo</label><input type="text" class="efi" id="efcg" placeholder="Ej: Operario"/></div>
-            <div class="eff"><label class="efl">Ingreso</label><input type="date" class="efi" id="efi2"/></div>
-          </div>
-        </div>
-        <div class="efs"><h4>👕 Tallas</h4>
-          <div class="efg">
-            <div class="eff"><label class="efl">Camisa</label>
-              <select class="efi" id="efcs"><option value="">—</option><option>XS</option><option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option><option>XXXL</option></select>
-            </div>
-            <div class="eff"><label class="efl">Pantalón</label><input type="text" class="efi" id="efp" placeholder="Ej: 32, 34..."/></div>
-            <div class="eff"><label class="efl">Zapatos</label><input type="text" class="efi" id="efz" placeholder="Ej: 40, 42..."/></div>
-          </div>
-        </div>
-        <div class="efs"><h4>🛡️ Seguridad</h4>
-          <div class="efg">
-            <div class="eff"><label class="efl">Lugar de nacimiento</label><input type="text" class="efi" id="eflnac" placeholder="Ej: Barranquilla"/></div>
-            <div class="eff"><label class="efl">Grupo sanguíneo</label>
-              <select class="efi" id="efgrupo"><option value="">—</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select>
-            </div>
-            <div class="eff"><label class="efl">EPS</label><input type="text" class="efi" id="efeps" placeholder="Ej: Sura, Compensar..."/></div>
-            <div class="eff"><label class="efl">No. Póliza ARL</label><input type="text" class="efi" id="efarl" placeholder="Número de póliza"/></div>
-            <div class="eff"><label class="efl">Vencimiento ARL</label><input type="date" class="efi" id="efarlv"/></div>
-          </div>
-          <div style="margin-top:16px;">
-            <div class="efl" style="margin-bottom:10px;letter-spacing:.5px;">📄 DOCUMENTOS DE SEGURIDAD <span style="font-size:10px;color:#555;font-weight:400;">(Opcionales)</span></div>
-            <div style="display:flex;flex-direction:column;gap:8px;">
-              <div style="background:#111;border:1px solid #222;border-radius:10px;overflow:hidden;">
-                <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;">
-                  <div style="flex:1;">
-                    <div style="font-size:12px;font-weight:700;color:#ddd;">1. Aportes a Seguridad Social</div>
-                    <div style="font-size:10px;color:#555;margin-top:2px;">Certificado de aportes a seguridad social</div>
-                  </div>
-                  <button onclick="document.getElementById('efdc-ss').click()" style="background:#1a1a2e;border:1px solid #333;border-radius:7px;padding:6px 12px;color:#5b8af5;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">📎 Cargar</button>
-                </div>
-                <input type="file" id="efdc-ss" accept="image/*,application/pdf" style="display:none;" onchange="efPrevDoc(this,'efdc-ss-prev')"/>
-                <div id="efdc-ss-prev" style="display:none;padding:0 12px 10px;border-top:1px solid #1a1a1a;margin-top:0;"></div>
-              </div>
-              <div style="background:#111;border:1px solid #222;border-radius:10px;overflow:hidden;">
-                <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;">
-                  <div style="flex:1;">
-                    <div style="font-size:12px;font-weight:700;color:#ddd;">2. Aptitud Médica Ocupacional</div>
-                    <div style="font-size:10px;color:#555;margin-top:2px;">Certificado de aptitud médica ocupacional</div>
-                  </div>
-                  <button onclick="document.getElementById('efdc-med').click()" style="background:#1a1a2e;border:1px solid #333;border-radius:7px;padding:6px 12px;color:#5b8af5;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">📎 Cargar</button>
-                </div>
-                <input type="file" id="efdc-med" accept="image/*,application/pdf" style="display:none;" onchange="efPrevDoc(this,'efdc-med-prev')"/>
-                <div id="efdc-med-prev" style="display:none;padding:0 12px 10px;border-top:1px solid #1a1a1a;"></div>
-              </div>
-              <div style="background:#111;border:1px solid #222;border-radius:10px;overflow:hidden;">
-                <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;">
-                  <div style="flex:1;">
-                    <div style="font-size:12px;font-weight:700;color:#ddd;">3. Afiliación a la ARL</div>
-                    <div style="font-size:10px;color:#555;margin-top:2px;">Certificado de afiliación a la ARL</div>
-                  </div>
-                  <button onclick="document.getElementById('efdc-arl').click()" style="background:#1a1a2e;border:1px solid #333;border-radius:7px;padding:6px 12px;color:#5b8af5;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">📎 Cargar</button>
-                </div>
-                <input type="file" id="efdc-arl" accept="image/*,application/pdf" style="display:none;" onchange="efPrevDoc(this,'efdc-arl-prev')"/>
-                <div id="efdc-arl-prev" style="display:none;padding:0 12px 10px;border-top:1px solid #1a1a1a;"></div>
-              </div>
-              <div style="background:#111;border:1px solid #222;border-radius:10px;overflow:hidden;">
-                <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;">
-                  <div style="flex:1;">
-                    <div style="font-size:12px;font-weight:700;color:#ddd;">4. Trabajo en Alturas</div>
-                    <div style="font-size:10px;color:#555;margin-top:2px;">Certificado de trabajo en alturas</div>
-                  </div>
-                  <button onclick="document.getElementById('efdc-alt').click()" style="background:#1a1a2e;border:1px solid #333;border-radius:7px;padding:6px 12px;color:#5b8af5;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">📎 Cargar</button>
-                </div>
-                <input type="file" id="efdc-alt" accept="image/*,application/pdf" style="display:none;" onchange="efPrevDoc(this,'efdc-alt-prev')"/>
-                <div id="efdc-alt-prev" style="display:none;padding:0 12px 10px;border-top:1px solid #1a1a1a;"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="efs"><h4>🪪 Cédula</h4>
-          <div class="pig">
-            <div><div class="pb2" onclick="document.getElementById('picf').click()"><input type="file" id="picf" accept="image/*" style="position:fixed;top:-100px;left:-100px;width:1px;height:1px;opacity:0;" onchange="prevID(this,'pipf')"/><span class="pbi">📷</span><div class="pbl">Foto FRONTAL</div></div><img id="pipf" class="pbp" alt=""/></div>
-            <div><div class="pb2" onclick="document.getElementById('picb').click()"><input type="file" id="picb" accept="image/*" style="position:fixed;top:-100px;left:-100px;width:1px;height:1px;opacity:0;" onchange="prevID(this,'pipb')"/><span class="pbi">📷</span><div class="pbl">Foto TRASERA</div></div><img id="pipb" class="pbp" alt=""/></div>
-          </div>
-        </div>
-        <div id="eferr" style="font-size:12px;color:var(--r);margin-bottom:9px;"></div>
-        <button class="ba" style="width:100%;padding:11px;font-size:14px;" onclick="saveEmp()">GUARDAR EMPLEADO</button>
-      </div>
-    </div>
-    <div id="rpv" style="display:none">
-      <button class="bb" onclick="backRH()">← Volver</button>
-      <div id="rpc"></div>
-    </div>
-    <div id="dfv" style="display:none">
-      <button class="bb" onclick="backDL()">← Volver</button>
-      <div class="dfp">
-        <h3>📦 Entrega de Dotación</h3>
-        <div class="dfs" id="dfn"></div>
-        <div class="dst">Prendas estándar</div>
-        <div id="dsi"></div>
-        <div class="dst">Items adicionales</div>
-        <div id="dci"></div>
-        <div class="dcr">
-          <input type="text" class="dci2" id="dcin" placeholder="Nombre del item..."/>
-          <input type="text" class="dci2" id="dcia" placeholder="Talla/Ref." style="max-width:80px"/>
-          <button style="background:var(--a);border:none;border-radius:7px;padding:7px 11px;color:#000;font-size:16px;cursor:pointer;flex-shrink:0;" onclick="addCDot()">+</button>
-        </div>
-        <div class="dst">Observaciones</div>
-        <textarea class="dni" id="dno" placeholder="Notas adicionales..."></textarea>
-        <button class="dbs" onclick="saveDot()">💾 GUARDAR ENTREGA</button>
-      </div>
-    </div>
-  </main>
-</div>
-
-</div>
 
 <div class="toast" id="tst"></div>
 <script>
@@ -1313,15 +1126,35 @@ function prevPho(inp) {
 
 function prevID(inp, pid) {
   var f = inp.files[0]; if (!f) return;
-  if (pid === 'pipf') toast('📷 Foto recibida, procesando...');
-  compress(f, 1200, 0.8, function(d) {
-    var p = document.getElementById(pid); p.src = d; p.style.display = 'block';
-    window['_pid_' + pid] = d;
-    // Si es la foto FRONTAL de la cédula, leer datos con IA
-    if (pid === 'pipf') {
-      _leerCedulaIA(d);
-    }
-  });
+  toast('📷 Cargando foto...');
+  // Mostrar primero con URL del objeto (rápido, funciona en iOS)
+  var objURL = URL.createObjectURL(f);
+  var p = document.getElementById(pid);
+  p.src = objURL;
+  p.style.display = 'block';
+  // Comprimir en segundo plano para guardar
+  var r = new FileReader();
+  r.onload = function(e) {
+    var img = new Image();
+    img.onload = function() {
+      var c = document.createElement('canvas');
+      var w = img.width, h = img.height, mw = 1200;
+      if (w > mw) { h = Math.round(h * mw / w); w = mw; }
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      var d = c.toDataURL('image/jpeg', 0.8);
+      window['_pid_' + pid] = d;
+      URL.revokeObjectURL(objURL);
+      if (pid === 'pipf') {
+        toast('🤖 Leyendo cédula...');
+        _leerCedulaIA(d);
+      }
+    };
+    img.onerror = function() { toast('⚠️ Error al procesar imagen'); };
+    img.src = e.target.result;
+  };
+  r.onerror = function() { toast('⚠️ Error al leer archivo'); };
+  r.readAsDataURL(f);
 }
 
 function _leerCedulaIA(dataURL) {
@@ -2083,7 +1916,7 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v7.0 - 2026-10-11</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v7.1 - 2026-10-11</div>
 
 <!-- SheetJS for reading .xlsx in browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
