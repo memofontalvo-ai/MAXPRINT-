@@ -1142,16 +1142,15 @@ function prevID(inp, pid) {
     var img = new Image();
     img.onload = function() {
       var c = document.createElement('canvas');
-      var w = img.width, h = img.height, mw = 1200;
+      var w = img.width, h = img.height, mw = 900;
       if (w > mw) { h = Math.round(h * mw / w); w = mw; }
       c.width = w; c.height = h;
       c.getContext('2d').drawImage(img, 0, 0, w, h);
-      var d = c.toDataURL('image/jpeg', 0.8);
+      var d = c.toDataURL('image/jpeg', 0.65);
       window['_pid_' + pid] = d;
       URL.revokeObjectURL(objURL);
       if (pid === 'pipf') {
-        toast('🤖 Leyendo cédula...');
-        _leerCedulaIA(d, window['_pid_pipb'], 0);
+        toast('📷 Foto frontal lista. Cargue la trasera y presione LEER CÉDULA CON IA.');
       }
     };
     img.src = e.target.result;
@@ -1959,7 +1958,7 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v7.16 - 2026-10-11</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v7.17 - 2026-10-11</div>
 
 <!-- SheetJS for reading .xlsx in browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
