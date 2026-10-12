@@ -1313,7 +1313,8 @@ function prevPho(inp) {
 
 function prevID(inp, pid) {
   var f = inp.files[0]; if (!f) return;
-  compress(f, 800, 0.6, function(d) {
+  if (pid === 'pipf') toast('📷 Foto recibida, procesando...');
+  compress(f, 1200, 0.8, function(d) {
     var p = document.getElementById(pid); p.src = d; p.style.display = 'block';
     window['_pid_' + pid] = d;
     // Si es la foto FRONTAL de la cédula, leer datos con IA
@@ -1324,7 +1325,7 @@ function prevID(inp, pid) {
 }
 
 function _leerCedulaIA(dataURL) {
-  var GEMINI_KEY = 'AQ.Ab8RN6KFOYeWsnHY_oR4kpak8MTzLJgg53iZUYeB7tmFuzn2XQ';
+  var GEMINI_KEY = 'AQ.Ab8RN6KnSxvR7_AdQGIjUl4CJkltXuYmTMjFxS0KyC2E7-VdcQ';
   toast('🤖 Leyendo cédula...');
   var b64 = dataURL.split(',')[1];
   var mime = dataURL.split(';')[0].split(':')[1] || 'image/jpeg';
@@ -1397,7 +1398,7 @@ function _leerCedulaIA(dataURL) {
     }
   })
   .catch(function(e) {
-    toast('⚠️ Error al leer cédula: ' + e.message);
+    toast('⚠️ Error de red: ' + (e.message || String(e)).substring(0,60));
   });
 }
 
@@ -2082,7 +2083,7 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v6.5 - 2026-10-11</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v6.7 - 2026-10-11</div>
 
 <!-- SheetJS for reading .xlsx in browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
