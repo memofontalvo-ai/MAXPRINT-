@@ -2003,7 +2003,7 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v7.20 - 2026-10-13</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v7.21 - 2026-10-13</div>
 
 <!-- SheetJS for reading .xlsx in browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2652,20 +2652,31 @@ function pfGuardar(){
 }
 
 /* ════════ CONFIGURACIONES CLIENTES (Firebase + localStorage espejo) ════════ */
-function cliLoad(){try{return JSON.parse(localStorage.getItem('mp_clientes')||'[]');}catch(e){return[];}}
-function cliSave(d){try{localStorage.setItem('mp_clientes',JSON.stringify(d));}catch(e){}}
+// localStorage solo como caché de respaldo
+function cliLoadCache(){try{return JSON.parse(localStorage.getItem('mp_clientes')||'[]');}catch(e){return[];}}
+function cliSaveCache(d){try{localStorage.setItem('mp_clientes',JSON.stringify(d));}catch(e){}}
 
-/* Sincronizar lista de clientes a Firestore */
-async function cliSyncFirestore(lista){
+// Cargar clientes SIEMPRE desde Firebase (fuente de verdad)
+async function cliLoadFirebase(){
   try{
-    // Borramos colección existente y reescribimos
-    var col=collection(db,'mp_clientes');
-    var snap=await getDocs(col);
-    var dels=snap.docs.map(function(d){return deleteDoc(doc(db,'mp_clientes',d.id));});
-    await Promise.all(dels);
-    var adds=lista.map(function(c){return setDoc(doc(db,'mp_clientes',c.codigo),{codigo:c.codigo,nombre:c.nombre,pass:c.pass,creado:c.creado});});
-    await Promise.all(adds);
-  }catch(e){console.warn('Firebase clientes sync error:',e);}
+    var snap=await getDocs(collection(db,'mp_clientes'));
+    var lista=snap.docs.map(function(d){return d.data();});
+    cliSaveCache(lista); // actualizar caché local
+    return lista;
+  }catch(e){
+    console.warn('Firebase clientes load error:',e);
+    return cliLoadCache(); // fallback al caché si hay error de red
+  }
+}
+
+// Guardar/actualizar un cliente en Firebase directamente
+async function cliSaveFirebase(c){
+  await setDoc(doc(db,'mp_clientes',c.codigo),{codigo:c.codigo,nombre:c.nombre,pass:c.pass,creado:c.creado});
+}
+
+// Eliminar un cliente de Firebase
+async function cliDeleteFirebase(codigo){
+  await deleteDoc(doc(db,'mp_clientes',codigo));
 }
 
 window.goConfigClientes=function(){
@@ -2683,72 +2694,66 @@ window.cfgAddCliente=async function(){
   if(!codigo||!nombre||!pass){alert('Completa todos los campos: código, nombre y contraseña.');return;}
   var btn=document.getElementById('cfg-btn-agregar');
   var editCodigo=btn?btn._editCodigo:null;
-  var d=cliLoad();
-  if(editCodigo){
-    // Modo edición — actualizar existente
-    var idx=d.findIndex(function(c){return c.codigo===editCodigo;});
-    if(idx>=0){d[idx]={codigo:codigo,nombre:nombre,pass:pass,creado:d[idx].creado};}
-    cliSave(d);await cliSyncFirestore(d);
-    if(btn){btn.textContent='+ Agregar Cliente';btn._editCodigo=null;}
+  try{
+    if(editCodigo){
+      // Modo edición
+      var old=await getDoc(doc(db,'mp_clientes',editCodigo));
+      var creado=(old.exists()&&old.data().creado)||new Date().toISOString().slice(0,10);
+      await cliSaveFirebase({codigo:codigo,nombre:nombre,pass:pass,creado:creado});
+      // Si cambió el código, borrar el anterior
+      if(editCodigo!==codigo)await cliDeleteFirebase(editCodigo);
+      if(btn){btn.textContent='+ Agregar Cliente';btn._editCodigo=null;}
+      alert('✅ Cliente '+codigo+' actualizado.');
+    } else {
+      // Modo nuevo — verificar que no exista
+      var existe=await getDoc(doc(db,'mp_clientes',codigo));
+      if(existe.exists()){alert('Ya existe un cliente con ese código.');return;}
+      await cliSaveFirebase({codigo:codigo,nombre:nombre,pass:pass,creado:new Date().toISOString().slice(0,10)});
+      alert('✅ Cliente '+codigo+' creado.');
+    }
     document.getElementById('cfg-cli-codigo').value='';
     document.getElementById('cfg-cli-nombre').value='';
     document.getElementById('cfg-cli-pass').value='';
     cfgRenderLista();
-    alert('✅ Cliente '+codigo+' actualizado.');
-  } else {
-    // Modo nuevo
-    if(d.find(function(c){return c.codigo===codigo;})){alert('Ya existe un cliente con ese código.');return;}
-    d.push({codigo:codigo,nombre:nombre,pass:pass,creado:new Date().toISOString().slice(0,10)});
-    cliSave(d);await cliSyncFirestore(d);
-    document.getElementById('cfg-cli-codigo').value='';
-    document.getElementById('cfg-cli-nombre').value='';
-    document.getElementById('cfg-cli-pass').value='';
-    cfgRenderLista();
-    alert('✅ Cliente '+codigo+' creado y sincronizado.');
-  }
+  }catch(e){alert('❌ Error: '+e.message);}
 };
 window.cfgDeleteCliente=async function(codigo){
   if(!confirm('¿Eliminar cliente '+codigo+'?'))return;
-  var d=cliLoad().filter(function(c){return c.codigo!==codigo;});
-  cliSave(d);
-  await cliSyncFirestore(d);
-  cfgRenderLista();
+  try{await cliDeleteFirebase(codigo);cfgRenderLista();}catch(e){alert('❌ Error: '+e.message);}
 };
 function cfgRenderLista(){
-  var d=cliLoad();
   var el=document.getElementById('cfg-cli-lista');
   if(!el)return;
-  if(!d.length){el.innerHTML='<div style="color:#555;font-size:13px;text-align:center;padding:16px;">No hay clientes registrados</div>';return;}
-  el.innerHTML='';
-  d.forEach(function(c){
-    var item=document.createElement('div');
-    item.style.cssText='background:#111;border:1px solid #2a2a2a;border-radius:10px;padding:12px 14px;';
-    // Info
-    var infoDiv=document.createElement('div');
-    infoDiv.innerHTML='<div style="font-size:14px;font-weight:700;color:#f5a623;">'+c.codigo+'</div>'
-      +'<div style="font-size:12px;color:#ccc;margin-top:2px;">'+c.nombre+'</div>'
-      +'<div style="font-size:11px;color:#555;margin-top:2px;">Pass: '+'•'.repeat(c.pass.length)+' · Creado: '+c.creado+'</div>';
-    // Botones editar + eliminar
-    var btns=document.createElement('div');
-    btns.style.cssText='display:flex;gap:8px;margin-top:10px;';
-    var btnEdit=document.createElement('button');
-    btnEdit.textContent='✏️ Editar';
-    btnEdit.style.cssText='flex:1;background:#1a1400;border:1px solid #f5a623;border-radius:8px;padding:8px;color:#f5a623;cursor:pointer;font-size:12px;font-weight:600;';
-    btnEdit.onclick=function(){cfgEditarCliente(c.codigo);};
-    var btnDel=document.createElement('button');
-    btnDel.textContent='🗑 Eliminar';
-    btnDel.style.cssText='flex:1;background:#1a0808;border:1px solid #333;border-radius:8px;padding:8px;color:#e83a2f;cursor:pointer;font-size:12px;font-weight:600;';
-    btnDel.onclick=function(){cfgDeleteCliente(c.codigo);};
-    btns.appendChild(btnEdit);btns.appendChild(btnDel);
-    item.appendChild(infoDiv);item.appendChild(btns);
-    el.appendChild(item);
+  el.innerHTML='<div style="color:#555;font-size:13px;text-align:center;padding:16px;">Cargando...</div>';
+  cliLoadFirebase().then(function(d){
+  var el=document.getElementById('cfg-cli-lista');
+    if(!d.length){el.innerHTML='<div style="color:#555;font-size:13px;text-align:center;padding:16px;">No hay clientes registrados</div>';return;}
+    el.innerHTML='';
+    d.forEach(function(c){
+      var item=document.createElement('div');
+      item.style.cssText='background:#111;border:1px solid #2a2a2a;border-radius:10px;padding:12px 14px;margin-bottom:8px;';
+      var infoDiv=document.createElement('div');
+      infoDiv.innerHTML='<div style="font-size:14px;font-weight:700;color:#f5a623;">'+c.codigo+'</div>'
+        +'<div style="font-size:12px;color:#ccc;margin-top:2px;">'+c.nombre+'</div>'
+        +'<div style="font-size:11px;color:#555;margin-top:2px;">Pass: '+'•'.repeat((c.pass||'').length)+' · Creado: '+c.creado+'</div>';
+      var btns=document.createElement('div');
+      btns.style.cssText='display:flex;gap:8px;margin-top:10px;';
+      var btnEdit=document.createElement('button');
+      btnEdit.textContent='✏️ Editar';
+      btnEdit.style.cssText='flex:1;background:#1a1400;border:1px solid #f5a623;border-radius:8px;padding:8px;color:#f5a623;cursor:pointer;font-size:12px;font-weight:600;';
+      btnEdit.onclick=(function(cli){return function(){cfgEditarCliente(cli);};})(c);
+      var btnDel=document.createElement('button');
+      btnDel.textContent='🗑 Eliminar';
+      btnDel.style.cssText='flex:1;background:#1a0808;border:1px solid #333;border-radius:8px;padding:8px;color:#e83a2f;cursor:pointer;font-size:12px;font-weight:600;';
+      btnDel.onclick=(function(cod){return function(){cfgDeleteCliente(cod);};})(c.codigo);
+      btns.appendChild(btnEdit);btns.appendChild(btnDel);
+      item.appendChild(infoDiv);item.appendChild(btns);
+      el.appendChild(item);
+    });
   });
 }
 /* Cargar datos del cliente en el formulario para editar */
-window.cfgEditarCliente=function(codigo){
-  var d=cliLoad();
-  var cli=d.find(function(c){return c.codigo===codigo;});
-  if(!cli)return;
+window.cfgEditarCliente=function(cli){
   document.getElementById('cfg-cli-codigo').value=cli.codigo;
   document.getElementById('cfg-cli-nombre').value=cli.nombre;
   document.getElementById('cfg-cli-pass').value=cli.pass;
