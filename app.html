@@ -1837,7 +1837,10 @@ _gs('login-screen');
         <div style="font-size:11px;color:#666;font-weight:600;letter-spacing:.4px;margin-bottom:2px;">CÓDIGO DE CLIENTE</div>
         <input id="portal-codigo" placeholder="Ej: CLI-001" style="background:#111;border:1px solid #333;border-radius:8px;padding:12px 14px;color:#fff;font-size:15px;width:100%;box-sizing:border-box;margin-bottom:14px;" />
         <div style="font-size:11px;color:#666;font-weight:600;letter-spacing:.4px;margin-bottom:2px;">CONTRASEÑA</div>
-        <input id="portal-pass" type="password" placeholder="Contraseña" style="background:#111;border:1px solid #333;border-radius:8px;padding:12px 14px;color:#fff;font-size:15px;width:100%;box-sizing:border-box;margin-bottom:18px;" />
+        <div style="position:relative;margin-bottom:18px;">
+          <input id="portal-pass" type="password" placeholder="Contraseña" style="background:#111;border:1px solid #333;border-radius:8px;padding:12px 44px 12px 14px;color:#fff;font-size:15px;width:100%;box-sizing:border-box;" />
+          <button type="button" onclick="(function(){var i=document.getElementById('portal-pass');var b=document.getElementById('portal-pass-eye');i.type=i.type==='password'?'text':'password';b.textContent=i.type==='password'?'👁':'🙈';})()" id="portal-pass-eye" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;color:#888;padding:0;line-height:1;">👁</button>
+        </div>
         <div id="portal-err" style="color:#e83a2f;font-size:12px;text-align:center;margin-bottom:10px;display:none;">Código o contraseña incorrectos</div>
         <button onclick="portalLogin()" style="background:#e83a2f;border:none;border-radius:10px;padding:14px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;width:100%;margin-bottom:12px;">INGRESAR</button>
         <button onclick="portalClose()" style="background:transparent;border:1px solid #333;border-radius:10px;padding:10px;color:#888;font-size:13px;cursor:pointer;width:100%;">← Volver</button>
@@ -2000,7 +2003,7 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v7.19 - 2026-10-11</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v7.20 - 2026-10-13</div>
 
 <!-- SheetJS for reading .xlsx in browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2774,21 +2777,27 @@ function portalReset(){
   document.getElementById('portal-proy-res').innerHTML='';
   if(document.getElementById('portal-proy-code'))document.getElementById('portal-proy-code').value='';
 }
-window.portalLogin=function(){
+window.portalLogin=async function(){
   var codigo=document.getElementById('portal-codigo').value.trim().toUpperCase();
   var pass=document.getElementById('portal-pass').value.trim();
+  function _showErr(){document.getElementById('portal-err').style.display='';setTimeout(function(){document.getElementById('portal-err').style.display='none';},3000);document.getElementById('portal-pass').value='';}
+  function _doLogin(cli){document.getElementById('portal-client-name').textContent=cli.nombre+' ('+cli.codigo+')';document.getElementById('portal-login').style.display='none';document.getElementById('portal-dash').style.display='';document.getElementById('portal-proy-res').innerHTML='';}
+  // 1. Buscar en localStorage primero
   var d=cliLoad();
   var cli=d.find(function(c){return c.codigo===codigo&&c.pass===pass;});
-  if(!cli){
-    document.getElementById('portal-err').style.display='';
-    setTimeout(function(){document.getElementById('portal-err').style.display='none';},3000);
-    document.getElementById('portal-pass').value='';
-    return;
-  }
-  document.getElementById('portal-client-name').textContent=cli.nombre+' ('+cli.codigo+')';
-  document.getElementById('portal-login').style.display='none';
-  document.getElementById('portal-dash').style.display='';
-  document.getElementById('portal-proy-res').innerHTML='';
+  if(cli){_doLogin(cli);return;}
+  // 2. Si no encontró, buscar en Firebase (por si el localStorage está vacío en este dispositivo)
+  try{
+    var snap=await getDoc(doc(db,'mp_clientes',codigo));
+    if(snap.exists()){
+      var data=snap.data();
+      if(data.pass===pass){
+        _doLogin({codigo:data.codigo||codigo,nombre:data.nombre||codigo,pass:data.pass});
+        return;
+      }
+    }
+  }catch(fe){console.warn('Firebase portal login:',fe);}
+  _showErr();
 };
 window.portalLogout=function(){
   portalReset();
