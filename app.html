@@ -2003,7 +2003,7 @@ _gs('login-screen');
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v7.21 - 2026-10-13</div>
+<div style="position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#2a2a2a;pointer-events:none;z-index:1;">v7.22 - 2026-10-13</div>
 
 <!-- SheetJS for reading .xlsx in browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2787,8 +2787,8 @@ window.portalLogin=async function(){
   var pass=document.getElementById('portal-pass').value.trim();
   function _showErr(){document.getElementById('portal-err').style.display='';setTimeout(function(){document.getElementById('portal-err').style.display='none';},3000);document.getElementById('portal-pass').value='';}
   function _doLogin(cli){document.getElementById('portal-client-name').textContent=cli.nombre+' ('+cli.codigo+')';document.getElementById('portal-login').style.display='none';document.getElementById('portal-dash').style.display='';document.getElementById('portal-proy-res').innerHTML='';}
-  // 1. Buscar en localStorage primero
-  var d=cliLoad();
+  // 1. Buscar en caché local primero
+  var d=cliLoadCache();
   var cli=d.find(function(c){return c.codigo===codigo&&c.pass===pass;});
   if(cli){_doLogin(cli);return;}
   // 2. Si no encontró, buscar en Firebase (por si el localStorage está vacío en este dispositivo)
